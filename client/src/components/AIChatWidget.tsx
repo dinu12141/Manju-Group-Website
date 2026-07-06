@@ -16,7 +16,8 @@ export default function AIChatWidget() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! I'm the Manju Group assistant. I can help you find products, compare specifications, and answer questions about our brands. How can I help you today?",
+      content:
+        "Hi! I'm the Manju Group assistant. I can help you find products, compare specifications, and answer questions about our brands. How can I help you today?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -43,7 +44,7 @@ export default function AIChatWidget() {
     if (!message || isLoading) return;
 
     const userMsg: Message = { role: "user", content: message };
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages(prev => [...prev, userMsg]);
     setInput("");
     setIsLoading(true);
 
@@ -52,12 +53,19 @@ export default function AIChatWidget() {
         message,
         history: messages.slice(-6),
       });
-      setMessages((prev) => [...prev, { role: "assistant", content: result.reply }]);
+      setMessages(prev => [
+        ...prev,
+        { role: "assistant", content: result.reply },
+      ]);
     } catch {
-      setMessages((prev) => [...prev, {
-        role: "assistant",
-        content: "Sorry, I'm having trouble connecting. Please try again or contact us at info@manjugroup.lk.",
-      }]);
+      setMessages(prev => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "Sorry, I'm having trouble connecting. Please try again or contact us at info@manjugroup.lk.",
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -114,19 +122,35 @@ export default function AIChatWidget() {
             </div>
 
             {/* Messages */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div
+              ref={scrollRef}
+              className="flex-1 overflow-y-auto p-4 space-y-3"
+            >
               {messages.map((msg, i) => (
-                <div key={i} className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    msg.role === "assistant" ? "bg-navy text-white" : "bg-gray-200 text-gray-600"
-                  }`}>
-                    {msg.role === "assistant" ? <Bot size={14} /> : <User size={14} />}
+                <div
+                  key={i}
+                  className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
+                >
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      msg.role === "assistant"
+                        ? "bg-navy text-white"
+                        : "bg-gray-200 text-gray-600"
+                    }`}
+                  >
+                    {msg.role === "assistant" ? (
+                      <Bot size={14} />
+                    ) : (
+                      <User size={14} />
+                    )}
                   </div>
-                  <div className={`max-w-[75%] px-3 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                    msg.role === "assistant"
-                      ? "bg-gray-100 text-gray-800 rounded-tl-sm"
-                      : "bg-navy text-white rounded-tr-sm"
-                  }`}>
+                  <div
+                    className={`max-w-[75%] px-3 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                      msg.role === "assistant"
+                        ? "bg-gray-100 text-gray-800 rounded-tl-sm"
+                        : "bg-navy text-white rounded-tr-sm"
+                    }`}
+                  >
                     {msg.content}
                   </div>
                 </div>
@@ -137,9 +161,18 @@ export default function AIChatWidget() {
                     <Bot size={14} />
                   </div>
                   <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    <span
+                      className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0ms" }}
+                    />
+                    <span
+                      className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "150ms" }}
+                    />
+                    <span
+                      className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "300ms" }}
+                    />
                   </div>
                 </div>
               )}
@@ -148,10 +181,18 @@ export default function AIChatWidget() {
             {/* Quick Prompts */}
             {messages.length === 1 && (
               <div className="px-4 pb-2 flex flex-wrap gap-1.5">
-                {["Electric bikes", "Smart TVs", "Water filters", "AC units"].map((prompt) => (
+                {[
+                  "Electric bikes",
+                  "Smart TVs",
+                  "Water filters",
+                  "AC units",
+                ].map(prompt => (
                   <button
                     key={prompt}
-                    onClick={() => { setInput(prompt); inputRef.current?.focus(); }}
+                    onClick={() => {
+                      setInput(prompt);
+                      inputRef.current?.focus();
+                    }}
                     className="text-xs px-3 py-1.5 rounded-full border border-navy/20 text-navy hover:bg-navy hover:text-white transition-colors"
                   >
                     {prompt}
@@ -166,7 +207,7 @@ export default function AIChatWidget() {
                 <Input
                   ref={inputRef}
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={e => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Ask about products..."
                   className="flex-1 h-10 text-sm border-gray-200 focus:border-navy"
@@ -177,7 +218,11 @@ export default function AIChatWidget() {
                   disabled={!input.trim() || isLoading}
                   className="w-10 h-10 rounded-lg bg-navy text-white flex items-center justify-center disabled:opacity-50 hover:bg-navy-light transition-colors flex-shrink-0"
                 >
-                  {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                  {isLoading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Send size={16} />
+                  )}
                 </button>
               </div>
             </div>

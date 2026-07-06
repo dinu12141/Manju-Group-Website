@@ -7,6 +7,10 @@ export const locationsRouter = router({
   list: publicProcedure.query(async () => {
     const db = await getDb();
     if (!db) return [];
-    return db.select().from(locations).where(eq(locations.isActive, true)).orderBy(locations.sortOrder);
+    return db
+      .select()
+      .from(locations)
+      .where(eq(locations.isActive, true))
+      .orderBy(locations.sortOrder);
   }),
 });

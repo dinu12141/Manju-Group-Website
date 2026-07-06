@@ -6,7 +6,9 @@ import { eq, desc } from "drizzle-orm";
 
 export const blogRouter = router({
   list: publicProcedure
-    .input(z.object({ limit: z.number().default(10), page: z.number().default(1) }))
+    .input(
+      z.object({ limit: z.number().default(10), page: z.number().default(1) })
+    )
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) return { items: [], total: 0 };
@@ -26,7 +28,11 @@ export const blogRouter = router({
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) return null;
-      const [post] = await db.select().from(blogPosts).where(eq(blogPosts.slug, input.slug)).limit(1);
+      const [post] = await db
+        .select()
+        .from(blogPosts)
+        .where(eq(blogPosts.slug, input.slug))
+        .limit(1);
       return post ?? null;
     }),
 });

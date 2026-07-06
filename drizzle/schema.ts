@@ -177,12 +177,21 @@ export const orders = mysqlTable("orders", {
     .default("pending")
     .notNull(),
   subtotal: decimal("subtotal", { precision: 12, scale: 2 }).notNull(),
-  shippingFee: decimal("shippingFee", { precision: 12, scale: 2 }).default("0").notNull(),
-  discount: decimal("discount", { precision: 12, scale: 2 }).default("0").notNull(),
+  shippingFee: decimal("shippingFee", { precision: 12, scale: 2 })
+    .default("0")
+    .notNull(),
+  discount: decimal("discount", { precision: 12, scale: 2 })
+    .default("0")
+    .notNull(),
   total: decimal("total", { precision: 12, scale: 2 }).notNull(),
   currency: varchar("currency", { length: 8 }).default("LKR").notNull(),
   paymentMethod: varchar("paymentMethod", { length: 64 }),
-  paymentStatus: mysqlEnum("paymentStatus", ["pending", "paid", "failed", "refunded"])
+  paymentStatus: mysqlEnum("paymentStatus", [
+    "pending",
+    "paid",
+    "failed",
+    "refunded",
+  ])
     .default("pending")
     .notNull(),
   shippingAddress: json("shippingAddress"),
@@ -251,7 +260,9 @@ export type BlogPost = typeof blogPosts.$inferSelect;
 export const locations = mysqlTable("locations", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 128 }).notNull(),
-  type: mysqlEnum("type", ["showroom", "service_center", "warehouse", "office"]).default("showroom").notNull(),
+  type: mysqlEnum("type", ["showroom", "service_center", "warehouse", "office"])
+    .default("showroom")
+    .notNull(),
   address: text("address").notNull(),
   city: varchar("city", { length: 64 }).notNull(),
   province: varchar("province", { length: 64 }),

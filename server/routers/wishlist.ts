@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { wishlists, products, productImages, brands } from "../../drizzle/schema";
+import {
+  wishlists,
+  products,
+  productImages,
+  brands,
+} from "../../drizzle/schema";
 import { eq, and, inArray } from "drizzle-orm";
 
 export const wishlistRouter = router({
@@ -27,13 +32,25 @@ export const wishlistRouter = router({
       .leftJoin(brands, eq(products.brandId, brands.id))
       .where(eq(wishlists.userId, ctx.user.id));
 
-    const productIds = items.map((i) => i.productId);
-    const images = productIds.length > 0
-      ? await db.select().from(productImages).where(and(inArray(productImages.productId, productIds), eq(productImages.isPrimary, true)))
-      : [];
-    const imageMap = new Map(images.map((img) => [img.productId, img.url]));
+    const productIds = items.map(i => i.productId);
+    const images =
+      productIds.length > 0
+        ? await db
+            .select()
+            .from(productImages)
+            .where(
+              and(
+                inArray(productImages.productId, productIds),
+                eq(productImages.isPrimary, true)
+              )
+            )
+        : [];
+    const imageMap = new Map(images.map(img => [img.productId, img.url]));
 
-    return items.map((i) => ({ ...i, imageUrl: imageMap.get(i.productId) || null }));
+    return items.map(i => ({
+      ...i,
+      imageUrl: imageMap.get(i.productId) || null,
+    }));
   }),
 
   toggle: protectedProcedure
@@ -45,14 +62,21 @@ export const wishlistRouter = router({
       const [existing] = await db
         .select()
         .from(wishlists)
-        .where(and(eq(wishlists.userId, ctx.user.id), eq(wishlists.productId, input.productId)))
+        .where(
+          and(
+            eq(wishlists.userId, ctx.user.id),
+            eq(wishlists.productId, input.productId)
+          )
+        )
         .limit(1);
 
       if (existing) {
         await db.delete(wishlists).where(eq(wishlists.id, existing.id));
         return { added: false };
       } else {
-        await db.insert(wishlists).values({ userId: ctx.user.id, productId: input.productId });
+        await db
+          .insert(wishlists)
+          .values({ userId: ctx.user.id, productId: input.productId });
         return { added: true };
       }
     }),
@@ -65,7 +89,12 @@ export const wishlistRouter = router({
       const [item] = await db
         .select()
         .from(wishlists)
-        .where(and(eq(wishlists.userId, ctx.user.id), eq(wishlists.productId, input.productId)))
+        .where(
+          and(
+            eq(wishlists.userId, ctx.user.id),
+            eq(wishlists.productId, input.productId)
+          )
+        )
         .limit(1);
       return !!item;
     }),

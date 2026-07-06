@@ -7,7 +7,7 @@ const path = require("path");
 
 let raw = "";
 process.stdin.setEncoding("utf8");
-process.stdin.on("data", (chunk) => (raw += chunk));
+process.stdin.on("data", chunk => (raw += chunk));
 process.stdin.on("end", () => {
   let input;
   try {
@@ -24,9 +24,10 @@ process.stdin.on("end", () => {
   const messages = [];
 
   const isDrizzle =
-    /^drizzle\//.test(rel) || /schema.*\.ts$/i.test(rel) || /drizzle\.config\.ts$/.test(rel);
-  const isServerCode =
-    /^server\/.*\.ts$/.test(rel) && !/\.test\.ts$/.test(rel);
+    /^drizzle\//.test(rel) ||
+    /schema.*\.ts$/i.test(rel) ||
+    /drizzle\.config\.ts$/.test(rel);
+  const isServerCode = /^server\/.*\.ts$/.test(rel) && !/\.test\.ts$/.test(rel);
   const isClientCode = /^client\/src\/.*\.(ts|tsx)$/.test(rel);
   const isPackageJson = rel === "package.json";
 
@@ -39,7 +40,10 @@ process.stdin.on("end", () => {
   if (/^server\//.test(rel)) {
     try {
       fs.mkdirSync(path.join(process.cwd(), ".claude"), { recursive: true });
-      fs.writeFileSync(path.join(process.cwd(), ".claude", ".server-touched"), "1");
+      fs.writeFileSync(
+        path.join(process.cwd(), ".claude", ".server-touched"),
+        "1"
+      );
     } catch {
       // best-effort marker
     }
@@ -52,7 +56,9 @@ process.stdin.on("end", () => {
         cwd: process.cwd(),
         shell: true,
       });
-      messages.push(`[backend-engineer] pnpm check passed after editing ${rel}.`);
+      messages.push(
+        `[backend-engineer] pnpm check passed after editing ${rel}.`
+      );
     } catch (err) {
       const out = (err.stdout || "").toString().slice(-4000);
       messages.push(

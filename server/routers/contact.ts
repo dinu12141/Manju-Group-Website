@@ -5,13 +5,15 @@ import { contactMessages } from "../../drizzle/schema";
 
 export const contactRouter = router({
   submit: publicProcedure
-    .input(z.object({
-      name: z.string().min(2),
-      email: z.string().email(),
-      phone: z.string().optional(),
-      subject: z.string().optional(),
-      message: z.string().min(10),
-    }))
+    .input(
+      z.object({
+        name: z.string().min(2),
+        email: z.string().email(),
+        phone: z.string().optional(),
+        subject: z.string().optional(),
+        message: z.string().min(10),
+      })
+    )
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("DB unavailable");

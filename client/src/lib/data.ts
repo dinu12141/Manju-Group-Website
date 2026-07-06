@@ -1,10 +1,13 @@
 // Static brand data for UI (colors, icons, etc.)
-export const BRAND_META: Record<string, {
-  color: string;
-  bgGradient: string;
-  icon: string;
-  emoji: string;
-}> = {
+export const BRAND_META: Record<
+  string,
+  {
+    color: string;
+    bgGradient: string;
+    icon: string;
+    emoji: string;
+  }
+> = {
   "dew-motors": {
     color: "#0F2D5E",
     bgGradient: "from-[#0F2D5E] to-[#1a4a8a]",
@@ -48,11 +51,31 @@ export const NAV_LINKS = [
 ];
 
 export const MEGA_MENU_BRANDS = [
-  { slug: "dew-motors", name: "Dew Motors", tagline: "Electric Bikes", icon: "⚡" },
+  {
+    slug: "dew-motors",
+    name: "Dew Motors",
+    tagline: "Electric Bikes",
+    icon: "⚡",
+  },
   { slug: "dew-plus", name: "Dew Plus", tagline: "Smart TVs", icon: "📺" },
-  { slug: "dew-plus-ac", name: "DEW+ AC", tagline: "Air Conditioners", icon: "❄️" },
-  { slug: "manju-dew-super", name: "Manju Dew Super", tagline: "Water Filters", icon: "💧" },
-  { slug: "manju-exercise-books", name: "Manju Exercise Books", tagline: "School Stationery", icon: "📚" },
+  {
+    slug: "dew-plus-ac",
+    name: "DEW+ AC",
+    tagline: "Air Conditioners",
+    icon: "❄️",
+  },
+  {
+    slug: "manju-dew-super",
+    name: "Manju Dew Super",
+    tagline: "Water Filters",
+    icon: "💧",
+  },
+  {
+    slug: "manju-exercise-books",
+    name: "Manju Exercise Books",
+    tagline: "School Stationery",
+    icon: "📚",
+  },
 ];
 
 export function formatPrice(price: number | string, currency = "LKR"): string {
@@ -60,7 +83,10 @@ export function formatPrice(price: number | string, currency = "LKR"): string {
   return `${currency} ${num.toLocaleString("en-LK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-export function getDiscountPercent(base: number | string, sale: number | string): number {
+export function getDiscountPercent(
+  base: number | string,
+  sale: number | string
+): number {
   const b = typeof base === "string" ? parseFloat(base) : base;
   const s = typeof sale === "string" ? parseFloat(sale) : sale;
   return Math.round(((b - s) / b) * 100);

@@ -1,7 +1,14 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { products, productImages, productVariants, brands, categories, reviews } from "../../drizzle/schema";
+import {
+  products,
+  productImages,
+  productVariants,
+  brands,
+  categories,
+  reviews,
+} from "../../drizzle/schema";
 import { eq, and, like, or, desc, asc, sql, inArray } from "drizzle-orm";
 
 export const productsRouter = router({
@@ -13,7 +20,9 @@ export const productsRouter = router({
         brandId: z.number().optional(),
         categoryId: z.number().optional(),
         search: z.string().optional(),
-        sortBy: z.enum(["newest", "price_asc", "price_desc", "popular"]).default("newest"),
+        sortBy: z
+          .enum(["newest", "price_asc", "price_desc", "popular"])
+          .default("newest"),
         isFeatured: z.boolean().optional(),
         isBestSeller: z.boolean().optional(),
         isNew: z.boolean().optional(),
@@ -25,7 +34,8 @@ export const productsRouter = router({
 
       const conditions = [eq(products.isActive, true)];
       if (input.brandId) conditions.push(eq(products.brandId, input.brandId));
-      if (input.categoryId) conditions.push(eq(products.categoryId, input.categoryId));
+      if (input.categoryId)
+        conditions.push(eq(products.categoryId, input.categoryId));
       if (input.isFeatured) conditions.push(eq(products.isFeatured, true));
       if (input.isBestSeller) conditions.push(eq(products.isBestSeller, true));
       if (input.isNew) conditions.push(eq(products.isNew, true));
@@ -42,10 +52,10 @@ export const productsRouter = router({
         input.sortBy === "price_asc"
           ? asc(products.basePrice)
           : input.sortBy === "price_desc"
-          ? desc(products.basePrice)
-          : input.sortBy === "popular"
-          ? desc(products.isBestSeller)
-          : desc(products.createdAt);
+            ? desc(products.basePrice)
+            : input.sortBy === "popular"
+              ? desc(products.isBestSeller)
+              : desc(products.createdAt);
 
       const offset = (input.page - 1) * input.limit;
 
@@ -88,19 +98,24 @@ export const productsRouter = router({
       ]);
 
       // Fetch primary images
-      const productIds = items.map((p) => p.id);
+      const productIds = items.map(p => p.id);
       const images =
         productIds.length > 0
           ? await db
               .select()
               .from(productImages)
-              .where(and(inArray(productImages.productId, productIds), eq(productImages.isPrimary, true)))
+              .where(
+                and(
+                  inArray(productImages.productId, productIds),
+                  eq(productImages.isPrimary, true)
+                )
+              )
           : [];
 
-      const imageMap = new Map(images.map((img) => [img.productId, img.url]));
+      const imageMap = new Map(images.map(img => [img.productId, img.url]));
 
       return {
-        items: items.map((p) => ({ ...p, imageUrl: imageMap.get(p.id) || null })),
+        items: items.map(p => ({ ...p, imageUrl: imageMap.get(p.id) || null })),
         total: Number(countResult[0]?.count ?? 0),
       };
     }),
@@ -148,16 +163,41 @@ export const productsRouter = router({
       if (!product) return null;
 
       const [images, variants, productReviews] = await Promise.all([
-        db.select().from(productImages).where(eq(productImages.productId, product.id)).orderBy(asc(productImages.sortOrder)),
-        db.select().from(productVariants).where(and(eq(productVariants.productId, product.id), eq(productVariants.isActive, true))),
-        db.select().from(reviews).where(and(eq(reviews.productId, product.id), eq(reviews.isApproved, true))).limit(10),
+        db
+          .select()
+          .from(productImages)
+          .where(eq(productImages.productId, product.id))
+          .orderBy(asc(productImages.sortOrder)),
+        db
+          .select()
+          .from(productVariants)
+          .where(
+            and(
+              eq(productVariants.productId, product.id),
+              eq(productVariants.isActive, true)
+            )
+          ),
+        db
+          .select()
+          .from(reviews)
+          .where(
+            and(eq(reviews.productId, product.id), eq(reviews.isApproved, true))
+          )
+          .limit(10),
       ]);
 
       return { ...product, images, variants, reviews: productReviews };
     }),
 
   related: publicProcedure
-    .input(z.object({ productId: z.number(), brandId: z.number(), categoryId: z.number(), limit: z.number().default(4) }))
+    .input(
+      z.object({
+        productId: z.number(),
+        brandId: z.number(),
+        categoryId: z.number(),
+        limit: z.number().default(4),
+      })
+    )
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) return [];
@@ -184,17 +224,22 @@ export const productsRouter = router({
         )
         .limit(input.limit);
 
-      const productIds = items.map((p) => p.id);
+      const productIds = items.map(p => p.id);
       const images =
         productIds.length > 0
           ? await db
               .select()
               .from(productImages)
-              .where(and(inArray(productImages.productId, productIds), eq(productImages.isPrimary, true)))
+              .where(
+                and(
+                  inArray(productImages.productId, productIds),
+                  eq(productImages.isPrimary, true)
+                )
+              )
           : [];
-      const imageMap = new Map(images.map((img) => [img.productId, img.url]));
+      const imageMap = new Map(images.map(img => [img.productId, img.url]));
 
-      return items.map((p) => ({ ...p, imageUrl: imageMap.get(p.id) || null }));
+      return items.map(p => ({ ...p, imageUrl: imageMap.get(p.id) || null }));
     }),
 
   search: publicProcedure
@@ -225,16 +270,21 @@ export const productsRouter = router({
         )
         .limit(input.limit);
 
-      const productIds = items.map((p) => p.id);
+      const productIds = items.map(p => p.id);
       const images =
         productIds.length > 0
           ? await db
               .select()
               .from(productImages)
-              .where(and(inArray(productImages.productId, productIds), eq(productImages.isPrimary, true)))
+              .where(
+                and(
+                  inArray(productImages.productId, productIds),
+                  eq(productImages.isPrimary, true)
+                )
+              )
           : [];
-      const imageMap = new Map(images.map((img) => [img.productId, img.url]));
+      const imageMap = new Map(images.map(img => [img.productId, img.url]));
 
-      return items.map((p) => ({ ...p, imageUrl: imageMap.get(p.id) || null }));
+      return items.map(p => ({ ...p, imageUrl: imageMap.get(p.id) || null }));
     }),
 });

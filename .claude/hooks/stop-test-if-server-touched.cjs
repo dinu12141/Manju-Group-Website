@@ -16,7 +16,10 @@ try {
     shell: true,
   });
   console.log(
-    JSON.stringify({ systemMessage: "[qa-engineer] pnpm test passed (server/ was touched this session)." })
+    JSON.stringify({
+      systemMessage:
+        "[qa-engineer] pnpm test passed (server/ was touched this session).",
+    })
   );
 } catch (err) {
   const out = (err.stdout || "").toString().slice(-4000);

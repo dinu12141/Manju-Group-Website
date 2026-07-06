@@ -56,8 +56,10 @@
   --radius-2xl: 1.5rem;
 
   /* Shadows */
-  --shadow-card: 0 1px 3px 0 oklch(0% 0 0 / 0.08), 0 1px 2px -1px oklch(0% 0 0 / 0.06);
-  --shadow-card-hover: 0 10px 25px -5px oklch(0% 0 0 / 0.12), 0 4px 10px -6px oklch(0% 0 0 / 0.08);
+  --shadow-card:
+    0 1px 3px 0 oklch(0% 0 0 / 0.08), 0 1px 2px -1px oklch(0% 0 0 / 0.06);
+  --shadow-card-hover:
+    0 10px 25px -5px oklch(0% 0 0 / 0.12), 0 4px 10px -6px oklch(0% 0 0 / 0.08);
   --shadow-nav: 0 2px 12px 0 oklch(0% 0 0 / 0.08);
   --shadow-modal: 0 20px 60px -10px oklch(0% 0 0 / 0.25);
 
@@ -70,7 +72,9 @@
    BASE LAYER
    ============================================================ */
 @layer base {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     box-sizing: border-box;
   }
 
@@ -87,7 +91,12 @@
     line-height: 1.6;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-display);
     font-weight: 700;
     line-height: 1.2;
@@ -95,16 +104,32 @@
   }
 
   /* Scrollbar styling */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: oklch(80% 0.01 255); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: oklch(65% 0.02 255); }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: oklch(80% 0.01 255);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(65% 0.02 255);
+  }
 
   /* Focus ring */
   :focus-visible {
     outline: 2px solid var(--color-brand-navy);
     outline-offset: 2px;
     border-radius: 2px;
+  }
+
+  /* Navy-on-navy contexts (hero banners, footer, admin header) need a light ring, not navy-on-navy */
+  .bg-navy :focus-visible,
+  .bg-gradient-to-br :focus-visible {
+    outline-color: white;
   }
 
   /* Selection */
@@ -125,21 +150,36 @@
     margin-inline: auto;
     padding-inline: 1rem;
   }
-  @media (min-width: 640px) { .container { padding-inline: 1.5rem; } }
-  @media (min-width: 1024px) { .container { padding-inline: 2rem; } }
+  @media (min-width: 640px) {
+    .container {
+      padding-inline: 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .container {
+      padding-inline: 2rem;
+    }
+  }
 
   /* Flex reset */
-  .flex { min-width: 0; min-height: 0; }
+  .flex {
+    min-width: 0;
+    min-height: 0;
+  }
 
   /* Button active state */
-  button:active:not(:disabled) { transform: scale(0.97); }
+  button:active:not(:disabled) {
+    transform: scale(0.97);
+  }
 
   /* Product card */
   .product-card {
     background: var(--color-card);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-card);
-    transition: box-shadow 200ms var(--ease-out-expo), transform 200ms var(--ease-out-expo);
+    transition:
+      box-shadow 200ms var(--ease-out-expo),
+      transform 200ms var(--ease-out-expo);
     overflow: hidden;
   }
   .product-card:hover {
@@ -178,9 +218,48 @@
     letter-spacing: -0.02em;
   }
 
+  /* Section header trio: eyebrow label + title + subtitle, used across Home and listing pages */
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-brand-green);
+    margin-bottom: 0.5rem;
+  }
+  .section-label::before {
+    content: "";
+    width: 1.25rem;
+    height: 2px;
+    background: var(--color-brand-amber);
+    border-radius: 1px;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-weight: 700;
+    color: var(--color-brand-navy);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .section-subtitle {
+    margin-top: 0.5rem;
+    font-size: 0.9375rem;
+    color: var(--color-muted-foreground);
+    max-width: 42rem;
+    line-height: 1.6;
+  }
+
   /* Gradient text */
   .gradient-text {
-    background: linear-gradient(135deg, oklch(22% 0.09 255), oklch(69% 0.17 162));
+    background: linear-gradient(
+      135deg,
+      oklch(22% 0.09 255),
+      oklch(69% 0.17 162)
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -194,15 +273,23 @@
     padding: 0.625rem 1.5rem;
     font-weight: 600;
     font-size: 0.9rem;
-    transition: background 150ms, transform 150ms var(--ease-out-expo), box-shadow 150ms;
+    transition:
+      background 150ms,
+      transform 150ms var(--ease-out-expo),
+      box-shadow 150ms;
     cursor: pointer;
     border: none;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
   }
-  .btn-navy:hover { background: var(--color-brand-navy-light); box-shadow: 0 4px 12px oklch(22% 0.09 255 / 0.3); }
-  .btn-navy:active { transform: scale(0.97); }
+  .btn-navy:hover {
+    background: var(--color-brand-navy-light);
+    box-shadow: 0 4px 12px oklch(22% 0.09 255 / 0.3);
+  }
+  .btn-navy:active {
+    transform: scale(0.97);
+  }
 
   /* Amber button */
   .btn-amber {
@@ -212,15 +299,21 @@
     padding: 0.625rem 1.5rem;
     font-weight: 700;
     font-size: 0.9rem;
-    transition: background 150ms, transform 150ms var(--ease-out-expo);
+    transition:
+      background 150ms,
+      transform 150ms var(--ease-out-expo);
     cursor: pointer;
     border: none;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
   }
-  .btn-amber:hover { background: var(--color-brand-amber-dark); }
-  .btn-amber:active { transform: scale(0.97); }
+  .btn-amber:hover {
+    background: var(--color-brand-amber-dark);
+  }
+  .btn-amber:active {
+    transform: scale(0.97);
+  }
 
   /* Announcement bar */
   .announcement-bar {
@@ -255,12 +348,43 @@
   .brand-card {
     border-radius: var(--radius-xl);
     overflow: hidden;
-    transition: transform 250ms var(--ease-out-expo), box-shadow 250ms var(--ease-out-expo);
+    transition:
+      transform 250ms var(--ease-out-expo),
+      box-shadow 250ms var(--ease-out-expo);
     cursor: pointer;
   }
   .brand-card:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-card-hover);
+  }
+
+  /* Canonical surface for cards/panels — use instead of ad-hoc shadow-md/lg/xl utilities */
+  .card-surface {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Shared empty/placeholder state used by Cart, Products, ProductDetail, Admin tables */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 3.5rem 1.5rem;
+    color: var(--color-muted-foreground);
+  }
+  .empty-state-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 9999px;
+    background: var(--color-muted);
+    color: var(--color-brand-navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
   }
 }
 
@@ -268,64 +392,142 @@
    UTILITY LAYER
    ============================================================ */
 @layer utilities {
-  .text-balance { text-wrap: balance; }
-  .text-pretty { text-wrap: pretty; }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
 
-  .bg-navy { background-color: var(--color-brand-navy); }
-  .bg-navy-light { background-color: var(--color-brand-navy-light); }
-  .text-navy { color: var(--color-brand-navy); }
-  .bg-green { background-color: var(--color-brand-green); }
-  .text-green { color: var(--color-brand-green); }
-  .bg-amber { background-color: var(--color-brand-amber); }
-  .text-amber { color: var(--color-brand-amber); }
+  .bg-navy {
+    background-color: var(--color-brand-navy);
+  }
+  .bg-navy-light {
+    background-color: var(--color-brand-navy-light);
+  }
+  .text-navy {
+    color: var(--color-brand-navy);
+  }
+  .bg-green {
+    background-color: var(--color-brand-green);
+  }
+  .text-green {
+    color: var(--color-brand-green);
+  }
+  .bg-amber {
+    background-color: var(--color-brand-amber);
+  }
+  .text-amber {
+    color: var(--color-brand-amber);
+  }
 
   /* Line clamp */
-  .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
-  .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-  .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
 
   /* Aspect ratios */
-  .aspect-product { aspect-ratio: 4/3; }
-  .aspect-hero { aspect-ratio: 16/7; }
-  .aspect-brand { aspect-ratio: 3/2; }
+  .aspect-product {
+    aspect-ratio: 4/3;
+  }
+  .aspect-hero {
+    aspect-ratio: 16/7;
+  }
+  .aspect-brand {
+    aspect-ratio: 3/2;
+  }
 }
 
 /* ============================================================
    ANIMATIONS
    ============================================================ */
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
-.animate-slide-down { animation: slideDown 250ms var(--ease-out-expo) both; }
-.animate-slide-up { animation: slideUp 250ms var(--ease-out-expo) both; }
-.animate-fade-in { animation: fadeIn 300ms ease both; }
-.animate-scale-in { animation: scaleIn 200ms var(--ease-out-expo) both; }
+.animate-slide-down {
+  animation: slideDown 250ms var(--ease-out-expo) both;
+}
+.animate-slide-up {
+  animation: slideUp 250ms var(--ease-out-expo) both;
+}
+.animate-fade-in {
+  animation: fadeIn 300ms ease both;
+}
+.animate-scale-in {
+  animation: scaleIn 200ms var(--ease-out-expo) both;
+}
 
 /* Skeleton shimmer */
 .skeleton {
-  background: linear-gradient(90deg, oklch(94% 0.005 255) 25%, oklch(97% 0.005 255) 50%, oklch(94% 0.005 255) 75%);
+  background: linear-gradient(
+    90deg,
+    oklch(94% 0.005 255) 25%,
+    oklch(97% 0.005 255) 50%,
+    oklch(94% 0.005 255) 75%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: var(--radius-md);
@@ -333,7 +535,9 @@
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }

@@ -67,7 +67,9 @@ describe("auth", () => {
     const ctx: TrpcContext = {
       ...createAdminContext(),
       res: {
-        clearCookie: (name: string) => { clearedCookies.push(name); },
+        clearCookie: (name: string) => {
+          clearedCookies.push(name);
+        },
       } as TrpcContext["res"],
     };
     const caller = appRouter.createCaller(ctx);
@@ -116,7 +118,11 @@ describe("products router", () => {
   it("list procedure accepts valid input", async () => {
     const caller = appRouter.createCaller(createPublicContext());
     try {
-      const result = await caller.products.list({ page: 1, limit: 10, sortBy: "newest" });
+      const result = await caller.products.list({
+        page: 1,
+        limit: 10,
+        sortBy: "newest",
+      });
       expect(result).toHaveProperty("items");
       expect(result).toHaveProperty("total");
     } catch (e: any) {
@@ -189,7 +195,12 @@ describe("contact router", () => {
   it("submit requires valid email and message", async () => {
     const caller = appRouter.createCaller(createPublicContext());
     await expect(
-      caller.contact.submit({ name: "", email: "not-an-email", message: "", subject: "" })
+      caller.contact.submit({
+        name: "",
+        email: "not-an-email",
+        message: "",
+        subject: "",
+      })
     ).rejects.toThrow();
   });
 });

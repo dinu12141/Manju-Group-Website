@@ -28,17 +28,28 @@ Always recommend visiting the website or a showroom for the latest pricing and a
 
 export const aiRouter = router({
   chat: publicProcedure
-    .input(z.object({
-      message: z.string().min(1).max(500),
-      history: z.array(z.object({
-        role: z.enum(["user", "assistant"]),
-        content: z.string(),
-      })).default([]),
-    }))
+    .input(
+      z.object({
+        message: z.string().min(1).max(500),
+        history: z
+          .array(
+            z.object({
+              role: z.enum(["user", "assistant"]),
+              content: z.string(),
+            })
+          )
+          .default([]),
+      })
+    )
     .mutation(async ({ input }) => {
       try {
         const messages = [
-          ...input.history.slice(-6).map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+          ...input.history
+            .slice(-6)
+            .map(m => ({
+              role: m.role as "user" | "assistant",
+              content: m.content,
+            })),
           { role: "user" as const, content: input.message },
         ];
 
@@ -54,11 +65,29 @@ export const aiRouter = router({
         });
 
         const reply = response.choices?.[0]?.message?.content;
-        const replyText = typeof reply === "string" ? reply : Array.isArray(reply) ? reply.map(p => typeof p === "string" ? p : (p as {type:string;text?:string}).text || "").join("") : "";
-        return { reply: replyText || "I'm sorry, I couldn't process your request. Please try again." };
+        const replyText =
+          typeof reply === "string"
+            ? reply
+            : Array.isArray(reply)
+              ? reply
+                  .map(p =>
+                    typeof p === "string"
+                      ? p
+                      : (p as { type: string; text?: string }).text || ""
+                  )
+                  .join("")
+              : "";
+        return {
+          reply:
+            replyText ||
+            "I'm sorry, I couldn't process your request. Please try again.",
+        };
       } catch (error) {
         console.error("AI chat error:", error);
-        return { reply: "I'm having trouble connecting right now. Please contact us at info@manjugroup.lk or call +94 11 234 5678." };
+        return {
+          reply:
+            "I'm having trouble connecting right now. Please contact us at info@manjugroup.lk or call +94 11 234 5678.",
+        };
       }
     }),
 });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard,
@@ -15,6 +15,9 @@ import {
   Edit,
   Trash2,
   ChevronRight,
+  Inbox,
+  PackageX,
+  UserX,
 } from "lucide-react";
 import {
   BarChart,
@@ -28,6 +31,7 @@ import {
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import MainLayout from "@/components/MainLayout";
+import EmptyState from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -63,6 +67,99 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 
 type AdminTab = "dashboard" | "products" | "orders" | "customers";
+
+const ORDER_STATUSES = [
+  "pending",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+] as const;
+
+function orderStatusBadgeClass(status: string) {
+  switch (status) {
+    case "delivered":
+      return "bg-green/10 text-green";
+    case "processing":
+      return "bg-blue-100 text-blue-600";
+    case "shipped":
+      return "bg-purple-100 text-purple-600";
+    case "cancelled":
+      return "bg-red-100 text-red-500";
+    default:
+      return "bg-amber/20 text-amber-700";
+  }
+}
+
+/** Generic column definition for the shared AdminTable helper. */
+type AdminTableColumn<T> = {
+  key: string;
+  header: string;
+  className?: string;
+  headerClassName?: string;
+  render: (row: T) => ReactNode;
+};
+
+/**
+ * Shared table shell used by the Products, Orders and Customers tabs so all
+ * three read from a single, consistent implementation instead of three
+ * near-identical <table> blocks.
+ */
+function AdminTable<T extends { id: number | string }>({
+  columns,
+  rows,
+}: {
+  columns: AdminTableColumn<T>[];
+  rows: T[];
+}) {
+  return (
+    <div className="card-surface overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b border-gray-100">
+            <tr>
+              {columns.map(col => (
+                <th
+                  key={col.key}
+                  className={`text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide ${col.headerClassName ?? ""}`}
+                >
+                  {col.header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(row => (
+              <tr
+                key={row.id}
+                className="border-b border-gray-50 last:border-0 hover:bg-gray-50/80 transition-colors"
+              >
+                {columns.map(col => (
+                  <td
+                    key={col.key}
+                    className={`px-4 py-3 ${col.className ?? ""}`}
+                  >
+                    {col.render(row)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function TableSkeleton() {
+  return (
+    <div className="card-surface overflow-hidden p-4 space-y-3">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Skeleton key={i} className="h-10 w-full rounded-lg" />
+      ))}
+    </div>
+  );
+}
 
 export default function Admin() {
   const { user, isAuthenticated, loading } = useAuth();
@@ -162,22 +259,22 @@ export default function Admin() {
     {
       id: "dashboard" as AdminTab,
       label: "Dashboard",
-      icon: <LayoutDashboard size={16} />,
+      icon: <LayoutDashboard size={17} />,
     },
     {
       id: "products" as AdminTab,
       label: "Products",
-      icon: <Package size={16} />,
+      icon: <Package size={17} />,
     },
     {
       id: "orders" as AdminTab,
       label: "Orders",
-      icon: <ShoppingCart size={16} />,
+      icon: <ShoppingCart size={17} />,
     },
     {
       id: "customers" as AdminTab,
       label: "Customers",
-      icon: <Users size={16} />,
+      icon: <Users size={17} />,
     },
   ];
 
@@ -201,21 +298,33 @@ export default function Admin() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Sidebar */}
           <aside className="lg:col-span-1">
-            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+            <nav
+              aria-label="Admin sections"
+              className="card-surface overflow-hidden p-1.5 flex flex-col gap-1"
+            >
               {TABS.map(tab => (
                 <button
                   key={tab.id}
+                  type="button"
+                  aria-current={activeTab === tab.id ? "page" : undefined}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-2.5 px-4 py-3 text-sm transition-colors border-b border-gray-50 last:border-0 ${
+                  className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm transition-colors ${
                     activeTab === tab.id
-                      ? "bg-navy/5 text-navy font-semibold"
+                      ? "bg-navy text-white font-semibold shadow-sm"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
-                  {tab.icon} {tab.label}
+                  <span
+                    className={
+                      activeTab === tab.id ? "text-amber" : "text-gray-400"
+                    }
+                  >
+                    {tab.icon}
+                  </span>
+                  {tab.label}
                 </button>
               ))}
-            </div>
+            </nav>
           </aside>
 
           {/* Content */}
@@ -255,10 +364,7 @@ export default function Admin() {
                       color: "text-amber-600 bg-amber/20",
                     },
                   ].map((stat, i) => (
-                    <div
-                      key={i}
-                      className="bg-white rounded-xl border border-gray-100 p-4"
-                    >
+                    <div key={i} className="card-surface p-4">
                       <div
                         className={`w-9 h-9 rounded-lg flex items-center justify-center mb-2 ${stat.color}`}
                       >
@@ -274,7 +380,7 @@ export default function Admin() {
 
                 {/* Order Status Summary */}
                 {stats && (
-                  <div className="bg-white rounded-xl border border-gray-100 p-5">
+                  <div className="card-surface p-5">
                     <h3 className="font-semibold text-gray-800 mb-4">
                       Order Status Overview
                     </h3>
@@ -321,7 +427,7 @@ export default function Admin() {
 
                 {/* Revenue Chart */}
                 {revenueChart && revenueChart.length > 0 && (
-                  <div className="bg-white rounded-xl border border-gray-100 p-5">
+                  <div className="card-surface p-5">
                     <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
                       <BarChart3 size={16} className="text-navy" /> Revenue
                       (Last 6 Months)
@@ -364,19 +470,20 @@ export default function Admin() {
                 )}
 
                 {/* Recent Orders */}
-                {recentOrders && recentOrders.length > 0 && (
-                  <div className="bg-white rounded-xl border border-gray-100 p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-gray-800">
-                        Recent Orders
-                      </h3>
-                      <button
-                        onClick={() => setActiveTab("orders")}
-                        className="text-xs text-navy font-medium flex items-center gap-1"
-                      >
-                        View All <ChevronRight size={12} />
-                      </button>
-                    </div>
+                <div className="card-surface p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-gray-800">
+                      Recent Orders
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("orders")}
+                      className="text-xs text-navy font-medium flex items-center gap-1"
+                    >
+                      View All <ChevronRight size={12} />
+                    </button>
+                  </div>
+                  {recentOrders && recentOrders.length > 0 ? (
                     <div className="space-y-2">
                       {recentOrders.map((order: any) => (
                         <div
@@ -396,13 +503,7 @@ export default function Admin() {
                               {formatPrice(Number(order.total))}
                             </div>
                             <span
-                              className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                                order.status === "delivered"
-                                  ? "bg-green/10 text-green"
-                                  : order.status === "processing"
-                                    ? "bg-blue-100 text-blue-600"
-                                    : "bg-amber/20 text-amber-700"
-                              }`}
+                              className={`text-xs px-2 py-0.5 rounded-full font-medium ${orderStatusBadgeClass(order.status)}`}
                             >
                               {order.status}
                             </span>
@@ -410,8 +511,20 @@ export default function Admin() {
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
+                  ) : recentOrders ? (
+                    <EmptyState
+                      icon={<Inbox size={22} />}
+                      title="No orders yet"
+                      description="New orders will show up here as customers check out."
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <Skeleton key={i} className="h-10 w-full rounded-lg" />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </motion.div>
             )}
 
@@ -427,94 +540,115 @@ export default function Admin() {
                     <Plus size={15} /> Add Product
                   </Button>
                 </div>
-                {adminProducts ? (
-                  <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-50 border-b border-gray-100">
-                        <tr>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Product
-                          </th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">
-                            Brand
-                          </th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Price
-                          </th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">
-                            Stock
-                          </th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">
-                            Active
-                          </th>
-                          <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {adminProducts.items.map((product: any) => (
-                          <tr
-                            key={product.id}
-                            className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
-                          >
-                            <td className="px-4 py-3">
-                              <div className="font-medium text-gray-800 line-clamp-1">
-                                {product.name}
-                              </div>
-                              <div className="text-xs text-gray-400">
-                                {product.sku}
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 text-gray-600 hidden sm:table-cell">
-                              {product.brandName}
-                            </td>
-                            <td className="px-4 py-3 font-semibold text-navy">
-                              {formatPrice(Number(product.basePrice))}
-                            </td>
-                            <td className="px-4 py-3 hidden md:table-cell">
-                              <span
-                                className={`text-xs px-2 py-0.5 rounded-full font-medium ${product.isInStock ? "bg-green/10 text-green" : "bg-red-100 text-red-500"}`}
-                              >
-                                {product.isInStock
-                                  ? "In Stock"
-                                  : "Out of Stock"}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 hidden md:table-cell">
-                              <Switch
-                                checked={product.isActive}
-                                onCheckedChange={checked =>
-                                  toggleProductActive.mutate({
-                                    productId: product.id,
-                                    isActive: checked,
-                                  })
-                                }
-                              />
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              <div className="flex items-center justify-end gap-1">
-                                <button
-                                  className="p-1.5 text-gray-400 hover:text-navy rounded transition-colors"
-                                  onClick={() => setProductDialogId(product.id)}
-                                >
-                                  <Edit size={14} />
-                                </button>
-                                <button
-                                  className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors"
-                                  onClick={() => setDeleteProductId(product.id)}
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                {!adminProducts ? (
+                  <TableSkeleton />
+                ) : adminProducts.items.length === 0 ? (
+                  <div className="card-surface">
+                    <EmptyState
+                      icon={<PackageX size={22} />}
+                      title="No products yet"
+                      description="Add your first product to start populating the storefront."
+                      action={
+                        <Button
+                          className="bg-navy text-white"
+                          onClick={() => setProductDialogId("new")}
+                        >
+                          <Plus size={15} className="mr-1.5" /> Add Product
+                        </Button>
+                      }
+                    />
                   </div>
                 ) : (
-                  <Skeleton className="h-64 rounded-xl" />
+                  <AdminTable
+                    rows={adminProducts.items}
+                    columns={[
+                      {
+                        key: "product",
+                        header: "Product",
+                        render: (product: any) => (
+                          <>
+                            <div className="font-medium text-gray-800 line-clamp-1">
+                              {product.name}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {product.sku}
+                            </div>
+                          </>
+                        ),
+                      },
+                      {
+                        key: "brand",
+                        header: "Brand",
+                        headerClassName: "hidden sm:table-cell",
+                        className: "text-gray-600 hidden sm:table-cell",
+                        render: (product: any) => product.brandName,
+                      },
+                      {
+                        key: "price",
+                        header: "Price",
+                        className: "font-semibold text-navy",
+                        render: (product: any) =>
+                          formatPrice(Number(product.basePrice)),
+                      },
+                      {
+                        key: "stock",
+                        header: "Stock",
+                        headerClassName: "hidden md:table-cell",
+                        className: "hidden md:table-cell",
+                        render: (product: any) => (
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full font-medium ${product.isInStock ? "bg-green/10 text-green" : "bg-red-100 text-red-500"}`}
+                          >
+                            {product.isInStock ? "In Stock" : "Out of Stock"}
+                          </span>
+                        ),
+                      },
+                      {
+                        key: "active",
+                        header: "Active",
+                        headerClassName: "hidden md:table-cell",
+                        className: "hidden md:table-cell",
+                        render: (product: any) => (
+                          <Switch
+                            checked={product.isActive}
+                            aria-label={`${product.isActive ? "Deactivate" : "Activate"} ${product.name}`}
+                            onCheckedChange={checked =>
+                              toggleProductActive.mutate({
+                                productId: product.id,
+                                isActive: checked,
+                              })
+                            }
+                          />
+                        ),
+                      },
+                      {
+                        key: "actions",
+                        header: "Actions",
+                        headerClassName: "text-right",
+                        className: "text-right",
+                        render: (product: any) => (
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              type="button"
+                              aria-label={`Edit ${product.name}`}
+                              className="p-1.5 text-gray-400 hover:text-navy hover:bg-navy/5 rounded-md transition-colors"
+                              onClick={() => setProductDialogId(product.id)}
+                            >
+                              <Edit size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={`Delete ${product.name}`}
+                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                              onClick={() => setDeleteProductId(product.id)}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        ),
+                      },
+                    ]}
+                  />
                 )}
               </motion.div>
             )}
@@ -523,87 +657,99 @@ export default function Admin() {
             {activeTab === "orders" && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <h2 className="text-lg font-bold text-gray-800 mb-4">Orders</h2>
-                {adminOrders ? (
-                  <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-50 border-b border-gray-100">
-                        <tr>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Order
-                          </th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">
-                            Customer
-                          </th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Total
-                          </th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Status
-                          </th>
-                          <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {adminOrders.items.map((order: any) => (
-                          <tr
-                            key={order.id}
-                            className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
-                          >
-                            <td className="px-4 py-3">
-                              <div className="font-medium text-gray-800">
-                                #{order.orderNumber}
-                              </div>
-                              <div className="text-xs text-gray-400">
-                                {new Date(order.createdAt).toLocaleDateString()}
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 text-gray-600 hidden sm:table-cell">
-                              {order.userId ? `User #${order.userId}` : "Guest"}
-                            </td>
-                            <td className="px-4 py-3 font-semibold text-navy">
-                              {formatPrice(Number(order.total))}
-                            </td>
-                            <td className="px-4 py-3">
-                              <select
-                                value={order.status}
-                                onChange={e =>
-                                  updateOrderStatus.mutate({
-                                    orderId: order.id,
-                                    status: e.target.value as any,
-                                  })
-                                }
-                                className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:border-navy outline-none"
-                              >
-                                {[
-                                  "pending",
-                                  "processing",
-                                  "shipped",
-                                  "delivered",
-                                  "cancelled",
-                                ].map(s => (
-                                  <option key={s} value={s}>
-                                    {s}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              <button
-                                className="text-xs text-navy font-medium hover:underline"
-                                onClick={() => setOrderDetailId(order.id)}
-                              >
-                                View
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                {!adminOrders ? (
+                  <TableSkeleton />
+                ) : adminOrders.items.length === 0 ? (
+                  <div className="card-surface">
+                    <EmptyState
+                      icon={<Inbox size={22} />}
+                      title="No orders yet"
+                      description="Orders placed by customers will appear here."
+                    />
                   </div>
                 ) : (
-                  <Skeleton className="h-64 rounded-xl" />
+                  <AdminTable
+                    rows={adminOrders.items}
+                    columns={[
+                      {
+                        key: "order",
+                        header: "Order",
+                        render: (order: any) => (
+                          <>
+                            <div className="font-medium text-gray-800">
+                              #{order.orderNumber}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {new Date(order.createdAt).toLocaleDateString()}
+                            </div>
+                          </>
+                        ),
+                      },
+                      {
+                        key: "customer",
+                        header: "Customer",
+                        headerClassName: "hidden sm:table-cell",
+                        className: "text-gray-600 hidden sm:table-cell",
+                        render: (order: any) =>
+                          order.userId ? `User #${order.userId}` : "Guest",
+                      },
+                      {
+                        key: "total",
+                        header: "Total",
+                        className: "font-semibold text-navy",
+                        render: (order: any) =>
+                          formatPrice(Number(order.total)),
+                      },
+                      {
+                        key: "status",
+                        header: "Status",
+                        render: (order: any) => (
+                          <Select
+                            value={order.status}
+                            onValueChange={value =>
+                              updateOrderStatus.mutate({
+                                orderId: order.id,
+                                status: value as any,
+                              })
+                            }
+                          >
+                            <SelectTrigger
+                              aria-label={`Update status for order ${order.orderNumber}`}
+                              className="h-8 w-[130px] text-xs"
+                            >
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ORDER_STATUSES.map(s => (
+                                <SelectItem
+                                  key={s}
+                                  value={s}
+                                  className="capitalize"
+                                >
+                                  {s}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ),
+                      },
+                      {
+                        key: "actions",
+                        header: "Actions",
+                        headerClassName: "text-right",
+                        className: "text-right",
+                        render: (order: any) => (
+                          <button
+                            type="button"
+                            className="text-xs text-navy font-medium hover:underline"
+                            onClick={() => setOrderDetailId(order.id)}
+                          >
+                            View
+                          </button>
+                        ),
+                      },
+                    ]}
+                  />
                 )}
               </motion.div>
             )}
@@ -614,63 +760,62 @@ export default function Admin() {
                 <h2 className="text-lg font-bold text-gray-800 mb-4">
                   Customers
                 </h2>
-                {adminCustomers ? (
-                  <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-50 border-b border-gray-100">
-                        <tr>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Customer
-                          </th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">
-                            Email
-                          </th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                            Role
-                          </th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">
-                            Joined
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {adminCustomers.items.map((customer: any) => (
-                          <tr
-                            key={customer.id}
-                            className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
-                          >
-                            <td className="px-4 py-3">
-                              <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-full bg-navy/10 text-navy flex items-center justify-center text-xs font-bold">
-                                  {customer.name?.charAt(0) || "?"}
-                                </div>
-                                <span className="font-medium text-gray-800">
-                                  {customer.name || "Anonymous"}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">
-                              {customer.email || "—"}
-                            </td>
-                            <td className="px-4 py-3">
-                              <span
-                                className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${customer.role === "admin" ? "bg-navy/10 text-navy" : "bg-gray-100 text-gray-600"}`}
-                              >
-                                {customer.role}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-gray-400 text-xs hidden md:table-cell">
-                              {new Date(
-                                customer.createdAt
-                              ).toLocaleDateString()}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                {!adminCustomers ? (
+                  <TableSkeleton />
+                ) : adminCustomers.items.length === 0 ? (
+                  <div className="card-surface">
+                    <EmptyState
+                      icon={<UserX size={22} />}
+                      title="No customers yet"
+                      description="Registered customers will show up here."
+                    />
                   </div>
                 ) : (
-                  <Skeleton className="h-64 rounded-xl" />
+                  <AdminTable
+                    rows={adminCustomers.items}
+                    columns={[
+                      {
+                        key: "customer",
+                        header: "Customer",
+                        render: (customer: any) => (
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full bg-navy/10 text-navy flex items-center justify-center text-xs font-bold">
+                              {customer.name?.charAt(0) || "?"}
+                            </div>
+                            <span className="font-medium text-gray-800">
+                              {customer.name || "Anonymous"}
+                            </span>
+                          </div>
+                        ),
+                      },
+                      {
+                        key: "email",
+                        header: "Email",
+                        headerClassName: "hidden sm:table-cell",
+                        className: "text-gray-500 hidden sm:table-cell",
+                        render: (customer: any) => customer.email || "—",
+                      },
+                      {
+                        key: "role",
+                        header: "Role",
+                        render: (customer: any) => (
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${customer.role === "admin" ? "bg-navy/10 text-navy" : "bg-gray-100 text-gray-600"}`}
+                          >
+                            {customer.role}
+                          </span>
+                        ),
+                      },
+                      {
+                        key: "joined",
+                        header: "Joined",
+                        headerClassName: "hidden md:table-cell",
+                        className: "text-gray-400 text-xs hidden md:table-cell",
+                        render: (customer: any) =>
+                          new Date(customer.createdAt).toLocaleDateString(),
+                      },
+                    ]}
+                  />
                 )}
               </motion.div>
             )}
@@ -835,138 +980,185 @@ function ProductFormDialog({
         <DialogHeader>
           <DialogTitle>{isNew ? "Add Product" : "Edit Product"}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label htmlFor="p-name">Name</Label>
-            <Input
-              id="p-name"
-              value={form.name}
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-            />
-          </div>
-          <div>
-            <Label htmlFor="p-sku">SKU</Label>
-            <Input
-              id="p-sku"
-              value={form.sku}
-              onChange={e => setForm(f => ({ ...f, sku: e.target.value }))}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-5">
+          {/* Basic info */}
+          <div className="space-y-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+              Basic Information
+            </div>
             <div>
-              <Label>Brand</Label>
-              <Select
-                value={form.brandId}
-                onValueChange={v => setForm(f => ({ ...f, brandId: v }))}
+              <Label htmlFor="p-name">Name</Label>
+              <Input
+                id="p-name"
+                value={form.name}
+                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="p-sku">SKU</Label>
+              <Input
+                id="p-sku"
+                value={form.sku}
+                onChange={e => setForm(f => ({ ...f, sku: e.target.value }))}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="p-brand">Brand</Label>
+                <Select
+                  value={form.brandId}
+                  onValueChange={v => setForm(f => ({ ...f, brandId: v }))}
+                >
+                  <SelectTrigger id="p-brand">
+                    <SelectValue placeholder="Select brand" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(brandOptions ?? []).map(b => (
+                      <SelectItem key={b.id} value={String(b.id)}>
+                        {b.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="p-category">Category</Label>
+                <Select
+                  value={form.categoryId}
+                  onValueChange={v => setForm(f => ({ ...f, categoryId: v }))}
+                >
+                  <SelectTrigger id="p-category">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(categoryOptions ?? []).map(c => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100" />
+
+          {/* Pricing & stock */}
+          <div className="space-y-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+              Pricing &amp; Stock
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label htmlFor="p-price">Base Price</Label>
+                <Input
+                  id="p-price"
+                  type="number"
+                  value={form.basePrice}
+                  onChange={e =>
+                    setForm(f => ({ ...f, basePrice: e.target.value }))
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="p-sale">Sale Price</Label>
+                <Input
+                  id="p-sale"
+                  type="number"
+                  value={form.salePrice}
+                  onChange={e =>
+                    setForm(f => ({ ...f, salePrice: e.target.value }))
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="p-stock">Stock Qty</Label>
+                <Input
+                  id="p-stock"
+                  type="number"
+                  value={form.stockQuantity}
+                  onChange={e =>
+                    setForm(f => ({ ...f, stockQuantity: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100" />
+
+          {/* Description */}
+          <div className="space-y-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+              Description
+            </div>
+            <div>
+              <Label htmlFor="p-short">Short Description</Label>
+              <Input
+                id="p-short"
+                value={form.shortDescription}
+                onChange={e =>
+                  setForm(f => ({ ...f, shortDescription: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <Label htmlFor="p-desc">Description</Label>
+              <Textarea
+                id="p-desc"
+                value={form.description}
+                onChange={e =>
+                  setForm(f => ({ ...f, description: e.target.value }))
+                }
+              />
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100" />
+
+          {/* Flags */}
+          <div className="space-y-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+              Visibility
+            </div>
+            <div className="flex flex-wrap items-center gap-5">
+              <label
+                htmlFor="p-featured"
+                className="flex items-center gap-2 text-sm text-gray-600"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select brand" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(brandOptions ?? []).map(b => (
-                    <SelectItem key={b.id} value={String(b.id)}>
-                      {b.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Category</Label>
-              <Select
-                value={form.categoryId}
-                onValueChange={v => setForm(f => ({ ...f, categoryId: v }))}
+                <Switch
+                  id="p-featured"
+                  checked={form.isFeatured}
+                  onCheckedChange={v => setForm(f => ({ ...f, isFeatured: v }))}
+                />
+                Featured
+              </label>
+              <label
+                htmlFor="p-bestseller"
+                className="flex items-center gap-2 text-sm text-gray-600"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(categoryOptions ?? []).map(c => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Switch
+                  id="p-bestseller"
+                  checked={form.isBestSeller}
+                  onCheckedChange={v =>
+                    setForm(f => ({ ...f, isBestSeller: v }))
+                  }
+                />
+                Best Seller
+              </label>
+              <label
+                htmlFor="p-active"
+                className="flex items-center gap-2 text-sm text-gray-600"
+              >
+                <Switch
+                  id="p-active"
+                  checked={form.isActive}
+                  onCheckedChange={v => setForm(f => ({ ...f, isActive: v }))}
+                />
+                Active
+              </label>
             </div>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <Label htmlFor="p-price">Base Price</Label>
-              <Input
-                id="p-price"
-                type="number"
-                value={form.basePrice}
-                onChange={e =>
-                  setForm(f => ({ ...f, basePrice: e.target.value }))
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor="p-sale">Sale Price</Label>
-              <Input
-                id="p-sale"
-                type="number"
-                value={form.salePrice}
-                onChange={e =>
-                  setForm(f => ({ ...f, salePrice: e.target.value }))
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor="p-stock">Stock Qty</Label>
-              <Input
-                id="p-stock"
-                type="number"
-                value={form.stockQuantity}
-                onChange={e =>
-                  setForm(f => ({ ...f, stockQuantity: e.target.value }))
-                }
-              />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="p-short">Short Description</Label>
-            <Input
-              id="p-short"
-              value={form.shortDescription}
-              onChange={e =>
-                setForm(f => ({ ...f, shortDescription: e.target.value }))
-              }
-            />
-          </div>
-          <div>
-            <Label htmlFor="p-desc">Description</Label>
-            <Textarea
-              id="p-desc"
-              value={form.description}
-              onChange={e =>
-                setForm(f => ({ ...f, description: e.target.value }))
-              }
-            />
-          </div>
-          <div className="flex items-center gap-5 pt-1">
-            <label className="flex items-center gap-2 text-sm text-gray-600">
-              <Switch
-                checked={form.isFeatured}
-                onCheckedChange={v => setForm(f => ({ ...f, isFeatured: v }))}
-              />{" "}
-              Featured
-            </label>
-            <label className="flex items-center gap-2 text-sm text-gray-600">
-              <Switch
-                checked={form.isBestSeller}
-                onCheckedChange={v => setForm(f => ({ ...f, isBestSeller: v }))}
-              />{" "}
-              Best Seller
-            </label>
-            <label className="flex items-center gap-2 text-sm text-gray-600">
-              <Switch
-                checked={form.isActive}
-                onCheckedChange={v => setForm(f => ({ ...f, isActive: v }))}
-              />{" "}
-              Active
-            </label>
           </div>
         </div>
         <DialogFooter>
@@ -1003,7 +1195,13 @@ function OrderDetailDialog({
             {order ? `Order #${order.orderNumber}` : "Order Detail"}
           </DialogTitle>
         </DialogHeader>
-        {isLoading && <Skeleton className="h-48 rounded-xl" />}
+        {isLoading && (
+          <div className="space-y-3">
+            <Skeleton className="h-16 w-full rounded-lg" />
+            <Skeleton className="h-24 w-full rounded-lg" />
+            <Skeleton className="h-20 w-full rounded-lg" />
+          </div>
+        )}
         {!isLoading && !order && (
           <p className="text-sm text-gray-500">Order not found.</p>
         )}
@@ -1022,15 +1220,19 @@ function OrderDetailDialog({
               <div>
                 <div className="text-xs text-gray-400 uppercase">Status</div>
                 <div className="font-medium text-gray-800 capitalize">
-                  {order.status}
+                  <span
+                    className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${orderStatusBadgeClass(order.status)}`}
+                  >
+                    {order.status}
+                  </span>
                 </div>
-                <div className="text-gray-500">
+                <div className="text-gray-500 mt-1">
                   Payment: {order.paymentStatus}
                 </div>
               </div>
             </div>
 
-            <div>
+            <div className="border-t border-gray-100 pt-4">
               <div className="text-xs text-gray-400 uppercase mb-2">Items</div>
               <div className="space-y-2">
                 {order.items.map(item => (
@@ -1070,7 +1272,7 @@ function OrderDetailDialog({
                   <span>-{formatPrice(Number(order.discount))}</span>
                 </div>
               )}
-              <div className="flex justify-between font-bold text-navy text-base">
+              <div className="flex justify-between font-bold text-navy text-base border-t border-gray-100 pt-2 mt-1">
                 <span>Total</span>
                 <span>{formatPrice(Number(order.total))}</span>
               </div>
