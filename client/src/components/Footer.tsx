@@ -7,8 +7,31 @@ import {
   Instagram,
   Youtube,
   Twitter,
+  CreditCard,
+  Zap,
+  Tv,
+  Snowflake,
+  Droplets,
+  BookOpen,
+  type LucideIcon,
 } from "lucide-react";
 import { MEGA_MENU_BRANDS } from "@/lib/data";
+
+const BRAND_ICONS: Record<string, LucideIcon> = {
+  "dew-motors": Zap,
+  "dew-plus": Tv,
+  "dew-plus-ac": Snowflake,
+  "manju-dew-super": Droplets,
+  "manju-exercise-books": BookOpen,
+};
+
+const PAYMENT_METHODS = [
+  "Visa",
+  "Mastercard",
+  "American Express",
+  "Cash on Delivery",
+  "Bank Transfer",
+];
 
 export default function Footer() {
   return (
@@ -97,16 +120,19 @@ export default function Footer() {
               Our Brands
             </h3>
             <ul className="space-y-2.5">
-              {MEGA_MENU_BRANDS.map(brand => (
-                <li key={brand.slug}>
-                  <Link
-                    href={`/brands/${brand.slug}`}
-                    className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors"
-                  >
-                    <span>{brand.icon}</span> {brand.name}
-                  </Link>
-                </li>
-              ))}
+              {MEGA_MENU_BRANDS.map(brand => {
+                const BrandIcon = BRAND_ICONS[brand.slug];
+                return (
+                  <li key={brand.slug}>
+                    <Link
+                      href={`/brands/${brand.slug}`}
+                      className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors"
+                    >
+                      {BrandIcon && <BrandIcon size={14} />} {brand.name}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
@@ -182,6 +208,26 @@ export default function Footer() {
                 <div>Sunday: Closed</div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Payment Methods */}
+      <div className="border-t border-white/10">
+        <div className="container py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs font-semibold text-white/40 uppercase tracking-wider">
+            We Accept
+          </div>
+          <div className="flex items-center gap-2 flex-wrap justify-center">
+            {PAYMENT_METHODS.map(method => (
+              <span
+                key={method}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white/5 border border-white/10 text-xs font-medium text-white/60"
+              >
+                <CreditCard size={13} className="text-white/30" />
+                {method}
+              </span>
+            ))}
           </div>
         </div>
       </div>

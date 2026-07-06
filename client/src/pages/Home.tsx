@@ -14,6 +14,11 @@ import {
   Snowflake,
   Droplets,
   BookOpen,
+  MonitorPlay,
+  Cast,
+  Maximize,
+  ShieldCheck,
+  Star,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import MainLayout from "@/components/MainLayout";
@@ -42,7 +47,9 @@ const HERO_SLIDES = [
       '4K Android Smart TVs with built-in streaming apps. Available in 32" to 65" sizes.',
     cta: "Explore Smart TVs",
     href: "/brands/dew-plus",
-    bg: "from-[#1a1a2e] to-[#16213e]",
+    bg: "from-[#1a1a2e]/90 to-[#16213e]/70",
+    bgImage:
+      "https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=1600&q=80",
     accent: "#06B6D4",
     Icon: Tv,
     badge: "ANDROID TV",
@@ -149,11 +156,78 @@ const CATEGORIES = [
   },
 ];
 
+const FEATURE_SHOWCASE = [
+  {
+    Icon: MonitorPlay,
+    title: "4K Android Smart TV",
+    desc: "Crisp 4K resolution paired with a full Android TV experience for smarter entertainment.",
+    color: "bg-indigo-50",
+    iconColor: "text-indigo-600",
+  },
+  {
+    Icon: Cast,
+    title: "Built-in Streaming Apps",
+    desc: "Cast and stream your favorite platforms instantly, no extra devices required.",
+    color: "bg-cyan-50",
+    iconColor: "text-cyan-600",
+  },
+  {
+    Icon: Maximize,
+    title: "Available in Multiple Sizes",
+    desc: "From compact bedroom sets to large living-room displays, sized to fit any space.",
+    color: "bg-amber-50",
+    iconColor: "text-amber-600",
+  },
+  {
+    Icon: ShieldCheck,
+    title: "Nationwide Warranty & Support",
+    desc: "Island-wide service centers and warranty coverage for lasting peace of mind.",
+    color: "bg-emerald-50",
+    iconColor: "text-emerald-600",
+  },
+];
+
 const STATS = [
   { value: "15+", label: "Years of Excellence", Icon: Award },
   { value: "50,000+", label: "Happy Customers", Icon: Headphones },
   { value: "8+", label: "Showrooms Nationwide", Icon: Truck },
   { value: "5", label: "Premium Brands", Icon: Shield },
+];
+
+const TESTIMONIALS = [
+  {
+    name: "Nadeesha Perera",
+    location: "Colombo",
+    photo:
+      "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80",
+    quote:
+      "My Dew Motors bike has cut my commute cost to almost nothing, and the after-sales service team in Colombo has been quick to respond every time I've needed them.",
+  },
+  {
+    name: "Ruwan Jayasinghe",
+    location: "Business Owner, Galle",
+    photo:
+      "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80",
+    quote:
+      "We fitted our entire guesthouse with DEW+ inverter air conditioners last season. Guests keep commenting on how quiet the units are, even during peak season heat.",
+  },
+  {
+    name: "Chamari Wickramasinghe",
+    location: "Kandy",
+    photo:
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
+    quote:
+      "The Manju Dew Super filter finally solved the hard water problem in our kitchen. Two years in, it's still going strong and the cartridge changes are simple.",
+  },
+];
+
+const PARTNER_WORDMARKS = [
+  "Panasonic",
+  "LG",
+  "Samsung",
+  "Bosch",
+  "Hitachi",
+  "Philips",
 ];
 
 export default function Home() {
@@ -212,11 +286,35 @@ export default function Home() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6 }}
-            className={`absolute inset-0 bg-gradient-to-br ${slide.bg} flex items-center`}
+            className={`absolute inset-0 flex items-center overflow-hidden ${
+              slide.bgImage ? "" : `bg-gradient-to-br ${slide.bg}`
+            }`}
             role="group"
             aria-roledescription="slide"
             aria-label={`Slide ${currentSlide + 1} of ${HERO_SLIDES.length}: ${slide.title}`}
           >
+            {/* Lifestyle photo layer (slide 2 only) with Ken Burns pan/zoom */}
+            {slide.bgImage && (
+              <>
+                <motion.div
+                  initial={{ scale: 1 }}
+                  animate={{ scale: 1.08 }}
+                  transition={{ duration: 5, ease: "linear" }}
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: `url(${slide.bgImage})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                  aria-hidden="true"
+                />
+                <div
+                  className={`absolute inset-0 bg-gradient-to-r ${slide.bg}`}
+                  aria-hidden="true"
+                />
+              </>
+            )}
+
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-5">
               <div
@@ -341,6 +439,42 @@ export default function Home() {
               className={`rounded-full transition-all ${i === currentSlide ? "w-6 h-2.5 bg-white" : "w-2.5 h-2.5 bg-white/50 hover:bg-white/70"}`}
             />
           ))}
+        </div>
+      </section>
+
+      {/* Key Product Feature Showcase */}
+      <section className="py-14 sm:py-16">
+        <div className="container">
+          <div className="text-center mb-10">
+            <div className="section-label justify-center">
+              Why It&apos;s Different
+            </div>
+            <h2 className="section-title">Built For Modern Living</h2>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            {FEATURE_SHOWCASE.map((feature, i) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className="card-surface p-5 h-full"
+              >
+                <div
+                  className={`w-12 h-12 mb-3 rounded-xl ${feature.color} flex items-center justify-center ${feature.iconColor}`}
+                >
+                  <feature.Icon size={24} />
+                </div>
+                <div className="font-bold text-sm text-gray-800">
+                  {feature.title}
+                </div>
+                <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                  {feature.desc}
+                </p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -550,6 +684,81 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* Customer Testimonials */}
+      <section className="py-14 sm:py-16 bg-gray-50">
+        <div className="container">
+          <div className="text-center mb-10">
+            <div className="section-label justify-center">
+              Customer Stories
+            </div>
+            <h2 className="section-title">
+              Loved By Thousands Across Sri Lanka
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+            {TESTIMONIALS.map((t, i) => (
+              <motion.div
+                key={t.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="card-surface p-6 flex flex-col gap-4"
+              >
+                <div className="flex items-center gap-3">
+                  <img
+                    src={t.photo}
+                    alt={t.name}
+                    className="w-14 h-14 rounded-full object-cover flex-shrink-0"
+                    loading="lazy"
+                  />
+                  <div>
+                    <div className="font-bold text-sm text-gray-800">
+                      {t.name}
+                    </div>
+                    <div className="text-xs text-gray-500">{t.location}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: 5 }).map((_, si) => (
+                    <Star
+                      key={si}
+                      size={15}
+                      className="text-amber fill-amber"
+                    />
+                  ))}
+                </div>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Brands We Trust */}
+      <section className="py-14 sm:py-16">
+        <div className="container">
+          <div className="text-center mb-10">
+            <div className="section-label justify-center">Our Partners</div>
+            <h2 className="section-title">
+              Trusted By Leading Global Brands
+            </h2>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 sm:gap-x-14">
+            {PARTNER_WORDMARKS.map(name => (
+              <span
+                key={name}
+                className="text-2xl sm:text-3xl font-black tracking-tight text-gray-400 grayscale hover:text-navy hover:grayscale-0 transition-all duration-300 select-none cursor-default"
+              >
+                {name}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Why Choose Us */}
       <section className="py-16 sm:py-20 bg-navy text-white">

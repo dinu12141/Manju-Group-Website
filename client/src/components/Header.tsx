@@ -15,11 +15,25 @@ import {
   LogOut,
   Settings,
   Package,
+  Zap,
+  Tv,
+  Snowflake,
+  Droplets,
+  BookOpen,
+  type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useCart } from "@/contexts/CartContext";
 import { trpc } from "@/lib/trpc";
 import { NAV_LINKS, MEGA_MENU_BRANDS, formatPrice } from "@/lib/data";
+
+const BRAND_ICONS: Record<string, LucideIcon> = {
+  "dew-motors": Zap,
+  "dew-plus": Tv,
+  "dew-plus-ac": Snowflake,
+  "manju-dew-super": Droplets,
+  "manju-exercise-books": BookOpen,
+};
 import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -135,14 +149,18 @@ export default function Header() {
                             <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2 mb-2">
                               Our Brands
                             </div>
-                            {MEGA_MENU_BRANDS.map(brand => (
+                            {MEGA_MENU_BRANDS.map(brand => {
+                              const BrandIcon = BRAND_ICONS[brand.slug];
+                              return (
                               <Link
                                 key={brand.slug}
                                 href={`/brands/${brand.slug}`}
                                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors group"
                                 onClick={() => setMegaMenuOpen(false)}
                               >
-                                <span className="text-2xl">{brand.icon}</span>
+                                <span className="w-9 h-9 rounded-lg bg-navy/5 text-navy flex items-center justify-center flex-shrink-0 group-hover:bg-navy group-hover:text-white transition-colors">
+                                  {BrandIcon && <BrandIcon size={18} />}
+                                </span>
                                 <div>
                                   <div className="text-sm font-semibold text-gray-800 group-hover:text-navy">
                                     {brand.name}
@@ -152,7 +170,8 @@ export default function Header() {
                                   </div>
                                 </div>
                               </Link>
-                            ))}
+                              );
+                            })}
                             <div className="border-t border-gray-100 mt-2 pt-2">
                               <Link
                                 href="/brands"
@@ -187,49 +206,70 @@ export default function Header() {
             {/* Right Actions */}
             <div className="flex items-center gap-2 ml-auto">
               {/* Search */}
-              <button
+              <motion.button
                 onClick={() => setSearchOpen(!searchOpen)}
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.9 }}
                 className="p-2 rounded-lg text-gray-600 hover:text-navy hover:bg-gray-50 transition-colors"
                 aria-label="Search"
               >
                 <Search size={20} />
-              </button>
+              </motion.button>
 
               {/* Wishlist (authenticated only) */}
               {isAuthenticated && (
-                <Link
-                  href="/account"
-                  className="p-2 rounded-lg text-gray-600 hover:text-navy hover:bg-gray-50 transition-colors hidden sm:flex"
-                >
-                  <Heart size={20} />
+                <Link href="/account" className="hidden sm:flex">
+                  <motion.span
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="p-2 rounded-lg text-gray-600 hover:text-navy hover:bg-gray-50 transition-colors flex"
+                  >
+                    <Heart size={20} />
+                  </motion.span>
                 </Link>
               )}
 
               {/* Cart */}
-              <Link
-                href="/cart"
-                className="relative p-2 rounded-lg text-gray-600 hover:text-navy hover:bg-gray-50 transition-colors"
-              >
-                <ShoppingCart size={20} />
-                {itemCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-amber text-[10px] font-bold text-gray-900 rounded-full flex items-center justify-center min-w-[18px] min-h-[18px] px-1">
-                    {itemCount > 99 ? "99+" : itemCount}
-                  </span>
-                )}
+              <Link href="/cart" className="relative">
+                <motion.span
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="relative p-2 rounded-lg text-gray-600 hover:text-navy hover:bg-gray-50 transition-colors flex"
+                >
+                  <ShoppingCart size={20} />
+                  <AnimatePresence>
+                    {itemCount > 0 && (
+                      <motion.span
+                        key={itemCount}
+                        initial={{ scale: 1.6, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                        className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-amber text-[10px] font-bold text-gray-900 rounded-full flex items-center justify-center min-w-[18px] min-h-[18px] px-1"
+                      >
+                        {itemCount > 99 ? "99+" : itemCount}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </motion.span>
               </Link>
 
               {/* Account */}
               {isAuthenticated ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:text-navy hover:bg-gray-50 transition-colors hidden sm:flex">
+                    <motion.button
+                      whileHover={{ scale: 1.08 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:text-navy hover:bg-gray-50 transition-colors hidden sm:flex"
+                    >
                       <div className="w-7 h-7 rounded-full bg-navy text-white flex items-center justify-center text-xs font-bold">
                         {user?.name?.[0]?.toUpperCase() ?? "U"}
                       </div>
                       <span className="hidden md:block max-w-[100px] truncate">
                         {user?.name?.split(" ")[0]}
                       </span>
-                    </button>
+                    </motion.button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-52">
                     <div className="px-3 py-2 text-sm">
@@ -336,14 +376,18 @@ export default function Header() {
                         <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 py-2">
                           Brands
                         </div>
-                        {MEGA_MENU_BRANDS.map(brand => (
+                        {MEGA_MENU_BRANDS.map(brand => {
+                          const BrandIcon = BRAND_ICONS[brand.slug];
+                          return (
                           <Link
                             key={brand.slug}
                             href={`/brands/${brand.slug}`}
                             className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
                             onClick={() => setMobileOpen(false)}
                           >
-                            <span className="text-xl">{brand.icon}</span>
+                            <span className="w-8 h-8 rounded-lg bg-navy/5 text-navy flex items-center justify-center flex-shrink-0">
+                              {BrandIcon && <BrandIcon size={16} />}
+                            </span>
                             <div>
                               <div className="text-sm font-medium text-gray-800">
                                 {brand.name}
@@ -353,7 +397,8 @@ export default function Header() {
                               </div>
                             </div>
                           </Link>
-                        ))}
+                          );
+                        })}
                       </div>
                     </nav>
 
