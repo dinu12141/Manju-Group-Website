@@ -1,0 +1,340 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   MANJU GROUP DESIGN SYSTEM
+   Primary: Navy Blue (#0F2D5E)
+   Accent: Emerald Green (#10B981)
+   Offer: Amber (#F59E0B)
+   Surface: White / Light Gray
+   ============================================================ */
+
+@theme inline {
+  /* Brand Colors */
+  --color-brand-navy: oklch(22% 0.09 255);
+  --color-brand-navy-light: oklch(32% 0.09 255);
+  --color-brand-navy-dark: oklch(14% 0.08 255);
+  --color-brand-green: oklch(69% 0.17 162);
+  --color-brand-green-light: oklch(79% 0.15 162);
+  --color-brand-amber: oklch(77% 0.17 75);
+  --color-brand-amber-dark: oklch(65% 0.17 75);
+  --color-brand-red: oklch(55% 0.22 25);
+
+  /* Semantic Tokens */
+  --color-background: oklch(98.5% 0.002 255);
+  --color-foreground: oklch(15% 0.02 255);
+  --color-card: oklch(100% 0 0);
+  --color-card-foreground: oklch(15% 0.02 255);
+  --color-popover: oklch(100% 0 0);
+  --color-popover-foreground: oklch(15% 0.02 255);
+  --color-primary: oklch(22% 0.09 255);
+  --color-primary-foreground: oklch(98% 0.005 255);
+  --color-secondary: oklch(96% 0.01 255);
+  --color-secondary-foreground: oklch(22% 0.09 255);
+  --color-muted: oklch(96% 0.01 255);
+  --color-muted-foreground: oklch(55% 0.03 255);
+  --color-accent: oklch(96% 0.01 255);
+  --color-accent-foreground: oklch(22% 0.09 255);
+  --color-destructive: oklch(55% 0.22 25);
+  --color-destructive-foreground: oklch(98% 0.005 255);
+  --color-border: oklch(91% 0.01 255);
+  --color-input: oklch(91% 0.01 255);
+  --color-ring: oklch(22% 0.09 255);
+
+  /* Typography */
+  --font-sans: "Inter", "Poppins", system-ui, sans-serif;
+  --font-display: "Poppins", "Inter", system-ui, sans-serif;
+
+  /* Radius */
+  --radius: 0.5rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px 0 oklch(0% 0 0 / 0.08), 0 1px 2px -1px oklch(0% 0 0 / 0.06);
+  --shadow-card-hover: 0 10px 25px -5px oklch(0% 0 0 / 0.12), 0 4px 10px -6px oklch(0% 0 0 / 0.08);
+  --shadow-nav: 0 2px 12px 0 oklch(0% 0 0 / 0.08);
+  --shadow-modal: 0 20px 60px -10px oklch(0% 0 0 / 0.25);
+
+  /* Animation easings */
+  --ease-out-expo: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-expo: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* ============================================================
+   BASE LAYER
+   ============================================================ */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: oklch(80% 0.01 255); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: oklch(65% 0.02 255); }
+
+  /* Focus ring */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-navy);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Selection */
+  ::selection {
+    background: oklch(22% 0.09 255 / 0.15);
+    color: var(--color-foreground);
+  }
+}
+
+/* ============================================================
+   COMPONENT LAYER
+   ============================================================ */
+@layer components {
+  /* Container */
+  .container {
+    width: 100%;
+    max-width: 1280px;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) { .container { padding-inline: 1.5rem; } }
+  @media (min-width: 1024px) { .container { padding-inline: 2rem; } }
+
+  /* Flex reset */
+  .flex { min-width: 0; min-height: 0; }
+
+  /* Button active state */
+  button:active:not(:disabled) { transform: scale(0.97); }
+
+  /* Product card */
+  .product-card {
+    background: var(--color-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 200ms var(--ease-out-expo), transform 200ms var(--ease-out-expo);
+    overflow: hidden;
+  }
+  .product-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+  }
+
+  /* Badge */
+  .badge-offer {
+    background: var(--color-brand-amber);
+    color: oklch(15% 0.02 255);
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .badge-new {
+    background: var(--color-brand-green);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  /* Section heading */
+  .section-heading {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-weight: 700;
+    color: var(--color-brand-navy);
+    letter-spacing: -0.02em;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, oklch(22% 0.09 255), oklch(69% 0.17 162));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Navy button */
+  .btn-navy {
+    background: var(--color-brand-navy);
+    color: white;
+    border-radius: var(--radius-md);
+    padding: 0.625rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: background 150ms, transform 150ms var(--ease-out-expo), box-shadow 150ms;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .btn-navy:hover { background: var(--color-brand-navy-light); box-shadow: 0 4px 12px oklch(22% 0.09 255 / 0.3); }
+  .btn-navy:active { transform: scale(0.97); }
+
+  /* Amber button */
+  .btn-amber {
+    background: var(--color-brand-amber);
+    color: oklch(15% 0.02 255);
+    border-radius: var(--radius-md);
+    padding: 0.625rem 1.5rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: background 150ms, transform 150ms var(--ease-out-expo);
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .btn-amber:hover { background: var(--color-brand-amber-dark); }
+  .btn-amber:active { transform: scale(0.97); }
+
+  /* Announcement bar */
+  .announcement-bar {
+    background: var(--color-brand-navy);
+    color: white;
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 0.5rem 1rem;
+  }
+
+  /* Mega menu */
+  .mega-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    box-shadow: var(--shadow-modal);
+    border-top: 2px solid var(--color-brand-navy);
+    z-index: 50;
+    animation: slideDown 200ms var(--ease-out-expo) both;
+  }
+
+  /* Hero slide */
+  .hero-slide {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-xl);
+  }
+
+  /* Brand card */
+  .brand-card {
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    transition: transform 250ms var(--ease-out-expo), box-shadow 250ms var(--ease-out-expo);
+    cursor: pointer;
+  }
+  .brand-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card-hover);
+  }
+}
+
+/* ============================================================
+   UTILITY LAYER
+   ============================================================ */
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
+
+  .bg-navy { background-color: var(--color-brand-navy); }
+  .bg-navy-light { background-color: var(--color-brand-navy-light); }
+  .text-navy { color: var(--color-brand-navy); }
+  .bg-green { background-color: var(--color-brand-green); }
+  .text-green { color: var(--color-brand-green); }
+  .bg-amber { background-color: var(--color-brand-amber); }
+  .text-amber { color: var(--color-brand-amber); }
+
+  /* Line clamp */
+  .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+  .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+
+  /* Aspect ratios */
+  .aspect-product { aspect-ratio: 4/3; }
+  .aspect-hero { aspect-ratio: 16/7; }
+  .aspect-brand { aspect-ratio: 3/2; }
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-slide-down { animation: slideDown 250ms var(--ease-out-expo) both; }
+.animate-slide-up { animation: slideUp 250ms var(--ease-out-expo) both; }
+.animate-fade-in { animation: fadeIn 300ms ease both; }
+.animate-scale-in { animation: scaleIn 200ms var(--ease-out-expo) both; }
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg, oklch(94% 0.005 255) 25%, oklch(97% 0.005 255) 50%, oklch(94% 0.005 255) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

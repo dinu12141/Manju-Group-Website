@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/post-edit-dispatch.cjs",
+            "timeout": 60,
+            "statusMessage": "Running project team checks (format/typecheck)..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/stop-test-if-server-touched.cjs",
+            "timeout": 60,
+            "statusMessage": "Running pnpm test (server/ touched this session)..."
+          }
+        ]
+      }
+    ]
+  }
+}
