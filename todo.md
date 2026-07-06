@@ -73,8 +73,8 @@
 
 ## Admin Dashboard (admin-role gated)
 - [x] Dashboard overview (stats: orders, revenue, products, customers)
-- [x] Product management (list + toggle active; add/edit/delete are UI placeholders)
-- [x] Order management (list + update status; order detail view is placeholder)
+- [x] Product management (list, toggle active, add/edit dialog, delete with confirm)
+- [x] Order management (list + update status + order detail dialog with line items)
 - [x] Customer management (read-only list)
 - [x] Analytics charts (revenue bar chart using recharts, last 6 months)
 
@@ -94,3 +94,4 @@
 - [x] Fixed [object Object] opening hours display → parsed JSON rendering
 - [x] Fixed ProductDetail quantity not passed to cart
 - [x] Fixed CartContext addItem signature to accept optional quantity parameter
+- [x] Admin: implemented createProduct/updateProduct/deleteProduct/orderById tRPC procedures (server/routers/admin.ts) and wired Add/Edit/Delete Product dialogs + toggle-active switch + Order Detail dialog in client/src/pages/Admin.tsx (previously toast-only stubs)
