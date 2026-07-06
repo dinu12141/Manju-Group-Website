@@ -34,9 +34,10 @@ const HERO_SLIDES = [
       "Experience eco-friendly commuting with our powerful electric bikes. Up to 120km range per charge.",
     cta: "Shop Electric Bikes",
     href: "/brands/dew-motors",
-    bg: "from-[#0F2D5E] to-[#1a4a8a]",
+    bg: "from-[#0F2D5E]/85 to-[#1a4a8a]/75",
+    bgImage:
+      "https://images.unsplash.com/photo-1571068316344-75bc76f77890?auto=format&fit=crop&w=1600&q=80",
     accent: "#F59E0B",
-    Icon: Zap,
     badge: "NEW 2025 MODELS",
   },
   {
@@ -47,11 +48,10 @@ const HERO_SLIDES = [
       '4K Android Smart TVs with built-in streaming apps. Available in 32" to 65" sizes.',
     cta: "Explore Smart TVs",
     href: "/brands/dew-plus",
-    bg: "from-[#1a1a2e]/90 to-[#16213e]/70",
+    bg: "from-[#1a1a2e]/90 to-[#16213e]/75",
     bgImage:
       "https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=1600&q=80",
     accent: "#06B6D4",
-    Icon: Tv,
     badge: "ANDROID TV",
   },
   {
@@ -62,9 +62,10 @@ const HERO_SLIDES = [
       "Inverter split ACs with R32 eco-friendly gas. Free installation island-wide.",
     cta: "View AC Range",
     href: "/brands/dew-plus-ac",
-    bg: "from-[#0F2D5E] to-[#0891b2]",
+    bg: "from-[#0F2D5E]/90 to-[#0891b2]/75",
+    bgImage:
+      "https://images.unsplash.com/photo-1614624532983-4ce03382d63d?auto=format&fit=crop&w=1600&q=80",
     accent: "#34D399",
-    Icon: Snowflake,
     badge: "FREE INSTALLATION",
   },
   {
@@ -75,9 +76,10 @@ const HERO_SLIDES = [
       "Advanced RO purification technology. Remove 99.9% of contaminants for safe drinking water.",
     cta: "Shop Water Filters",
     href: "/brands/manju-dew-super",
-    bg: "from-[#065F46] to-[#047857]",
+    bg: "from-[#065F46]/90 to-[#047857]/75",
+    bgImage:
+      "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?auto=format&fit=crop&w=1600&q=80",
     accent: "#6EE7B7",
-    Icon: Droplets,
     badge: "RO TECHNOLOGY",
   },
 ];
@@ -269,7 +271,6 @@ export default function Home() {
   const nextSlide = () => goToSlide((currentSlide + 1) % HERO_SLIDES.length);
 
   const slide = HERO_SLIDES[currentSlide];
-  const SlideIcon = slide.Icon;
 
   return (
     <MainLayout>
@@ -286,46 +287,29 @@ export default function Home() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6 }}
-            className={`absolute inset-0 flex items-center overflow-hidden ${
-              slide.bgImage ? "" : `bg-gradient-to-br ${slide.bg}`
-            }`}
+            className="absolute inset-0 flex items-center overflow-hidden"
             role="group"
             aria-roledescription="slide"
             aria-label={`Slide ${currentSlide + 1} of ${HERO_SLIDES.length}: ${slide.title}`}
           >
-            {/* Lifestyle photo layer (slide 2 only) with Ken Burns pan/zoom */}
-            {slide.bgImage && (
-              <>
-                <motion.div
-                  initial={{ scale: 1 }}
-                  animate={{ scale: 1.08 }}
-                  transition={{ duration: 5, ease: "linear" }}
-                  className="absolute inset-0"
-                  style={{
-                    backgroundImage: `url(${slide.bgImage})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }}
-                  aria-hidden="true"
-                />
-                <div
-                  className={`absolute inset-0 bg-gradient-to-r ${slide.bg}`}
-                  aria-hidden="true"
-                />
-              </>
-            )}
-
-            {/* Background pattern */}
-            <div className="absolute inset-0 opacity-5">
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundImage:
-                    "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)",
-                  backgroundSize: "60px 60px",
-                }}
-              />
-            </div>
+            {/* Lifestyle photo layer with slow Ken Burns pan/zoom */}
+            <motion.div
+              initial={{ scale: 1 }}
+              animate={{ scale: 1.08 }}
+              transition={{ duration: 6, ease: "linear" }}
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `url(${slide.bgImage})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+              aria-hidden="true"
+            />
+            {/* Per-slide color-tint overlay on top of the photo, keeps text legible */}
+            <div
+              className={`absolute inset-0 bg-gradient-to-r ${slide.bg}`}
+              aria-hidden="true"
+            />
 
             <div className="container relative z-10">
               <div className="max-w-2xl">
@@ -389,20 +373,6 @@ export default function Home() {
                   </Link>
                 </motion.div>
               </div>
-
-              {/* Icon decoration */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 0.15, scale: 1 }}
-                transition={{ delay: 0.3 }}
-                className="absolute right-8 top-1/2 -translate-y-1/2 select-none hidden md:block"
-                aria-hidden="true"
-              >
-                <SlideIcon
-                  className="w-[140px] h-[140px] lg:w-[220px] lg:h-[220px] text-white"
-                  strokeWidth={1}
-                />
-              </motion.div>
             </div>
           </motion.div>
         </AnimatePresence>

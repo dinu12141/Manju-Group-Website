@@ -42,11 +42,11 @@ export const BRAND_META: Record<
 
 export const NAV_LINKS = [
   { label: "Home", href: "/" },
-  { label: "About", href: "/about" },
-  { label: "Brands", href: "/brands" },
   { label: "Products", href: "/products" },
-  { label: "News", href: "/news" },
+  { label: "Brands", href: "/brands" },
   { label: "Locations", href: "/locations" },
+  { label: "About", href: "/about" },
+  { label: "News", href: "/news" },
   { label: "Contact", href: "/contact" },
 ];
 
