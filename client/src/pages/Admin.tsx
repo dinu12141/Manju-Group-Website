@@ -121,7 +121,7 @@ function AdminTable<T extends { id: number | string }>({
               {columns.map(col => (
                 <th
                   key={col.key}
-                  className={`text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide ${col.headerClassName ?? ""}`}
+                  className={`text-left px-4 py-3 text-xs font-semibold text-gray-700 font-medium uppercase tracking-wide ${col.headerClassName ?? ""}`}
                 >
                   {col.header}
                 </th>
@@ -244,7 +244,7 @@ export default function Admin() {
           <h2 className="text-2xl font-bold text-gray-700 mb-2">
             Access Denied
           </h2>
-          <p className="text-gray-500 text-sm mb-6">
+          <p className="text-gray-700 font-medium text-sm mb-6">
             You don't have permission to access the admin dashboard.
           </p>
           <Link href="/">
@@ -280,17 +280,19 @@ export default function Admin() {
 
   return (
     <MainLayout>
-      <div className="bg-gradient-to-br from-navy to-[#1a4a8a] py-8 text-white">
+      <div className="bg-white border-b border-gray-100 py-8">
         <div className="container flex items-center justify-between">
           <div>
-            <div className="text-amber text-xs font-bold uppercase tracking-wider mb-1">
+            <div className="text-gold text-xs font-bold uppercase tracking-widest mb-1">
               Admin Panel
             </div>
-            <h1 className="text-2xl font-bold font-display">
+            <h1 className="text-2xl font-bold font-display text-gray-900">
               Manju Group Dashboard
             </h1>
           </div>
-          <div className="text-sm text-white/70">Welcome, {user?.name}</div>
+          <div className="text-sm text-gray-500 font-medium">
+            Welcome, {user?.name}
+          </div>
         </div>
       </div>
 
@@ -316,7 +318,7 @@ export default function Admin() {
                 >
                   <span
                     className={
-                      activeTab === tab.id ? "text-amber" : "text-gray-400"
+                      activeTab === tab.id ? "text-amber" : "text-gray-600 font-medium"
                     }
                   >
                     {tab.icon}
@@ -373,7 +375,7 @@ export default function Admin() {
                       <div className="text-xl font-bold text-gray-800">
                         {stat.value}
                       </div>
-                      <div className="text-xs text-gray-500">{stat.label}</div>
+                      <div className="text-xs text-gray-700 font-medium">{stat.label}</div>
                     </div>
                   ))}
                 </div>
@@ -494,7 +496,7 @@ export default function Admin() {
                             <div className="text-sm font-medium text-gray-800">
                               #{order.orderNumber}
                             </div>
-                            <div className="text-xs text-gray-400">
+                            <div className="text-xs text-gray-600 font-medium">
                               {new Date(order.createdAt).toLocaleDateString()}
                             </div>
                           </div>
@@ -570,7 +572,7 @@ export default function Admin() {
                             <div className="font-medium text-gray-800 line-clamp-1">
                               {product.name}
                             </div>
-                            <div className="text-xs text-gray-400">
+                            <div className="text-xs text-gray-600 font-medium">
                               {product.sku}
                             </div>
                           </>
@@ -631,7 +633,7 @@ export default function Admin() {
                             <button
                               type="button"
                               aria-label={`Edit ${product.name}`}
-                              className="p-1.5 text-gray-400 hover:text-navy hover:bg-navy/5 rounded-md transition-colors"
+                              className="p-1.5 text-gray-600 font-medium hover:text-navy hover:bg-navy/5 rounded-md transition-colors"
                               onClick={() => setProductDialogId(product.id)}
                             >
                               <Edit size={14} />
@@ -639,7 +641,7 @@ export default function Admin() {
                             <button
                               type="button"
                               aria-label={`Delete ${product.name}`}
-                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                              className="p-1.5 text-gray-600 font-medium hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
                               onClick={() => setDeleteProductId(product.id)}
                             >
                               <Trash2 size={14} />
@@ -679,7 +681,7 @@ export default function Admin() {
                             <div className="font-medium text-gray-800">
                               #{order.orderNumber}
                             </div>
-                            <div className="text-xs text-gray-400">
+                            <div className="text-xs text-gray-600 font-medium">
                               {new Date(order.createdAt).toLocaleDateString()}
                             </div>
                           </>
@@ -792,7 +794,7 @@ export default function Admin() {
                         key: "email",
                         header: "Email",
                         headerClassName: "hidden sm:table-cell",
-                        className: "text-gray-500 hidden sm:table-cell",
+                        className: "text-gray-700 font-medium hidden sm:table-cell",
                         render: (customer: any) => customer.email || "—",
                       },
                       {
@@ -810,7 +812,7 @@ export default function Admin() {
                         key: "joined",
                         header: "Joined",
                         headerClassName: "hidden md:table-cell",
-                        className: "text-gray-400 text-xs hidden md:table-cell",
+                        className: "text-gray-600 font-medium text-xs hidden md:table-cell",
                         render: (customer: any) =>
                           new Date(customer.createdAt).toLocaleDateString(),
                       },
@@ -983,7 +985,7 @@ function ProductFormDialog({
         <div className="space-y-5">
           {/* Basic info */}
           <div className="space-y-3">
-            <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            <div className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-medium">
               Basic Information
             </div>
             <div>
@@ -1046,7 +1048,7 @@ function ProductFormDialog({
 
           {/* Pricing & stock */}
           <div className="space-y-3">
-            <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            <div className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-medium">
               Pricing &amp; Stock
             </div>
             <div className="grid grid-cols-3 gap-3">
@@ -1090,7 +1092,7 @@ function ProductFormDialog({
 
           {/* Description */}
           <div className="space-y-3">
-            <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            <div className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-medium">
               Description
             </div>
             <div>
@@ -1119,7 +1121,7 @@ function ProductFormDialog({
 
           {/* Flags */}
           <div className="space-y-3">
-            <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            <div className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-medium">
               Visibility
             </div>
             <div className="flex flex-wrap items-center gap-5">
@@ -1203,22 +1205,22 @@ function OrderDetailDialog({
           </div>
         )}
         {!isLoading && !order && (
-          <p className="text-sm text-gray-500">Order not found.</p>
+          <p className="text-sm text-gray-700 font-medium">Order not found.</p>
         )}
         {order && (
           <div className="space-y-4 text-sm">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <div className="text-xs text-gray-400 uppercase">Customer</div>
+                <div className="text-xs text-gray-600 font-medium uppercase">Customer</div>
                 <div className="font-medium text-gray-800">
                   {order.customer?.name || "Guest"}
                 </div>
-                <div className="text-gray-500">
+                <div className="text-gray-700 font-medium">
                   {order.customer?.email || "—"}
                 </div>
               </div>
               <div>
-                <div className="text-xs text-gray-400 uppercase">Status</div>
+                <div className="text-xs text-gray-600 font-medium uppercase">Status</div>
                 <div className="font-medium text-gray-800 capitalize">
                   <span
                     className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${orderStatusBadgeClass(order.status)}`}
@@ -1226,14 +1228,14 @@ function OrderDetailDialog({
                     {order.status}
                   </span>
                 </div>
-                <div className="text-gray-500 mt-1">
+                <div className="text-gray-700 font-medium mt-1">
                   Payment: {order.paymentStatus}
                 </div>
               </div>
             </div>
 
             <div className="border-t border-gray-100 pt-4">
-              <div className="text-xs text-gray-400 uppercase mb-2">Items</div>
+              <div className="text-xs text-gray-600 font-medium uppercase mb-2">Items</div>
               <div className="space-y-2">
                 {order.items.map(item => (
                   <div
@@ -1244,7 +1246,7 @@ function OrderDetailDialog({
                       <div className="font-medium text-gray-800">
                         {item.productName}
                       </div>
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-gray-600 font-medium">
                         {item.variantName ? `${item.variantName} · ` : ""}Qty{" "}
                         {item.quantity}
                       </div>
@@ -1258,16 +1260,16 @@ function OrderDetailDialog({
             </div>
 
             <div className="border-t border-gray-100 pt-3 space-y-1">
-              <div className="flex justify-between text-gray-500">
+              <div className="flex justify-between text-gray-700 font-medium">
                 <span>Subtotal</span>
                 <span>{formatPrice(Number(order.subtotal))}</span>
               </div>
-              <div className="flex justify-between text-gray-500">
+              <div className="flex justify-between text-gray-700 font-medium">
                 <span>Shipping</span>
                 <span>{formatPrice(Number(order.shippingFee))}</span>
               </div>
               {Number(order.discount) > 0 && (
-                <div className="flex justify-between text-gray-500">
+                <div className="flex justify-between text-gray-700 font-medium">
                   <span>Discount</span>
                   <span>-{formatPrice(Number(order.discount))}</span>
                 </div>

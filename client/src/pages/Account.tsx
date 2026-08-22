@@ -9,11 +9,12 @@ import {
   ShoppingBag,
   Settings,
   ChevronRight,
+  CheckCircle,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import MainLayout from "@/components/MainLayout";
+import AuthForm from "@/components/AuthForm";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPrice } from "@/lib/data";
@@ -53,19 +54,78 @@ export default function Account() {
   if (!isAuthenticated) {
     return (
       <MainLayout>
-        <div className="container py-20 max-w-md mx-auto">
-          <EmptyState
-            icon={<User size={28} />}
-            title="Sign In to Your Account"
-            description="Access your order history, wishlist, and manage your profile."
-            action={
-              <a href={getLoginUrl()} className="w-full">
-                <Button className="w-full bg-navy text-white h-12 font-semibold text-sm">
-                  Sign In with Manus
-                </Button>
-              </a>
-            }
-          />
+        <div className="min-h-[80vh] grid grid-cols-1 lg:grid-cols-2">
+          {/* Left — navy branding panel */}
+          <div
+            className="hidden lg:flex flex-col justify-between p-14 text-white"
+            style={{ backgroundColor: "#0F2D5E" }}
+          >
+            <div>
+              <div
+                className="text-xs font-bold uppercase tracking-widest mb-2"
+                style={{ color: "#C9A84C" }}
+              >
+                Manju Group
+              </div>
+              <div className="text-white/40 text-xs mb-10">
+                Quality You Can Always Trust
+              </div>
+              <h2 className="text-3xl font-bold font-display leading-snug mb-6">
+                Sri Lanka's Most Trusted Multi-Brand Group
+              </h2>
+              <p className="text-white/50 leading-relaxed text-sm mb-8">
+                Access exclusive member benefits, track your orders, and manage
+                your wishlist — all in one place.
+              </p>
+              <div className="space-y-3">
+                {[
+                  "Island-wide delivery across all 25 districts",
+                  "Genuine manufacturer-backed warranty",
+                  "Dedicated 7-day customer support",
+                ].map((point, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <CheckCircle size={15} style={{ color: "#C9A84C" }} />
+                    <span className="text-white/70 text-sm">{point}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {[
+                  { value: "15+", label: "Years of Trust" },
+                  { value: "5", label: "Premium Brands" },
+                  { value: "50K+", label: "Happy Customers" },
+                  { value: "8+", label: "Showrooms" },
+                ].map((s, i) => (
+                  <div
+                    key={i}
+                    className="border border-white/10 rounded-xl p-4 bg-white/5"
+                  >
+                    <div
+                      className="text-2xl font-bold font-display"
+                      style={{ color: "#C9A84C" }}
+                    >
+                      {s.value}
+                    </div>
+                    <div className="text-white/40 text-xs mt-0.5">
+                      {s.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-white/30 text-xs italic">
+                "The Dew Plus TV quality is incredible — Manju Group delivers on
+                every promise."
+              </p>
+            </div>
+          </div>
+
+          {/* Right — sign-in form */}
+          <div className="flex items-center justify-center p-8 lg:p-14 bg-white">
+            <AuthForm />
+          </div>
         </div>
       </MainLayout>
     );
@@ -90,19 +150,27 @@ export default function Account() {
 
   return (
     <MainLayout>
-      {/* Profile Header */}
-      <div className="bg-gradient-to-br from-navy to-[#1a4a8a] py-10 text-white">
-        <div className="container flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-2xl font-bold">
-            {user?.name?.charAt(0).toUpperCase() || "U"}
-          </div>
-          <div>
-            <h1 className="text-xl font-bold font-display">
-              {user?.name || "Customer"}
-            </h1>
-            <p className="text-white/70 text-sm">{user?.email}</p>
-            <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 bg-white/20 rounded-full text-xs font-medium capitalize">
-              {user?.role || "customer"}
+      {/* Profile Header — navy card */}
+      <div className="bg-white border-b border-gray-100 py-6">
+        <div className="container">
+          <div
+            className="rounded-2xl px-8 py-10 flex items-center gap-6"
+            style={{ backgroundColor: "#0F2D5E" }}
+          >
+            <div
+              className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black text-[#0F2D5E] font-display flex-shrink-0"
+              style={{ backgroundColor: "#C9A84C" }}
+            >
+              {user?.name?.charAt(0).toUpperCase() || "U"}
+            </div>
+            <div>
+              <h1 className="text-xl font-bold font-display text-white">
+                {user?.name || "Customer"}
+              </h1>
+              <p className="text-white/60 text-sm mt-0.5">{user?.email}</p>
+              <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 bg-white/10 rounded-full text-xs font-semibold text-white/80 capitalize">
+                {user?.role || "customer"} member
+              </div>
             </div>
           </div>
         </div>
@@ -112,27 +180,35 @@ export default function Account() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <aside className="lg:col-span-1">
-            <div className="card-surface rounded-xl overflow-hidden">
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
               {TABS.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors border-b border-gray-50 last:border-0 ${
                     activeTab === tab.id
-                      ? "bg-navy/5 text-navy font-semibold"
+                      ? "text-[#0F2D5E] font-semibold"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
+                  style={
+                    activeTab === tab.id
+                      ? { backgroundColor: "rgba(15,45,94,0.05)" }
+                      : {}
+                  }
                 >
                   <div className="flex items-center gap-2.5">
                     {tab.icon} {tab.label}
                   </div>
                   <div className="flex items-center gap-2">
                     {tab.count !== undefined && tab.count > 0 && (
-                      <span className="text-xs bg-navy text-white rounded-full px-1.5 py-0.5">
+                      <span
+                        className="text-xs text-white rounded-full px-1.5 py-0.5"
+                        style={{ backgroundColor: "#0F2D5E" }}
+                      >
                         {tab.count}
                       </span>
                     )}
-                    <ChevronRight size={14} className="text-gray-300" />
+                    <ChevronRight size={14} className="text-gray-500 font-medium" />
                   </div>
                 </button>
               ))}
@@ -162,32 +238,39 @@ export default function Account() {
                       label: "Total Orders",
                       value: orders?.length || 0,
                       icon: <ShoppingBag size={20} />,
-                      color: "bg-navy/10 text-navy",
+                      bgColor: "rgba(15,45,94,0.08)",
+                      iconColor: "#0F2D5E",
                     },
                     {
                       label: "Wishlist Items",
                       value: wishlist?.length || 0,
                       icon: <Heart size={20} />,
-                      color: "bg-red-50 text-red-500",
+                      bgColor: "#fef2f2",
+                      iconColor: "#ef4444",
                     },
                     {
                       label: "Account Status",
                       value: "Active",
                       icon: <User size={20} />,
-                      color: "bg-green/10 text-green",
+                      bgColor: "#f0fdf4",
+                      iconColor: "#16a34a",
                     },
                   ].map((stat, i) => (
                     <div
                       key={i}
-                      className="card-surface rounded-xl p-4 flex items-center gap-3"
+                      className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-3 shadow-sm"
                     >
                       <div
-                        className={`w-10 h-10 rounded-lg flex items-center justify-center ${stat.color}`}
+                        className="w-10 h-10 rounded-lg flex items-center justify-center"
+                        style={{
+                          backgroundColor: stat.bgColor,
+                          color: stat.iconColor,
+                        }}
                       >
                         {stat.icon}
                       </div>
                       <div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-gray-700 font-medium">
                           {stat.label}
                         </div>
                         <div className="font-bold text-gray-800">
@@ -199,7 +282,7 @@ export default function Account() {
                 </div>
 
                 {orders && orders.length > 0 && (
-                  <div className="card-surface rounded-xl p-4">
+                  <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
                     <h3 className="font-semibold text-gray-800 mb-3">
                       Recent Orders
                     </h3>
@@ -213,21 +296,24 @@ export default function Account() {
                             <div className="text-sm font-medium text-gray-800">
                               #{order.orderNumber}
                             </div>
-                            <div className="text-xs text-gray-400">
+                            <div className="text-xs text-gray-600 font-medium">
                               {new Date(order.createdAt).toLocaleDateString()}
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-sm font-bold text-navy">
+                            <div
+                              className="text-sm font-bold"
+                              style={{ color: "#0F2D5E" }}
+                            >
                               {formatPrice(Number(order.totalAmount))}
                             </div>
                             <span
                               className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                                 order.status === "delivered"
-                                  ? "bg-green/10 text-green"
+                                  ? "bg-green-50 text-green-700"
                                   : order.status === "processing"
                                     ? "bg-blue-100 text-blue-600"
-                                    : "bg-amber/20 text-amber-700"
+                                    : "bg-amber-50 text-amber-700"
                               }`}
                             >
                               {order.status}
@@ -243,47 +329,93 @@ export default function Account() {
 
             {activeTab === "orders" && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <h2 className="text-lg font-bold text-gray-800 mb-4">
-                  My Orders
-                </h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-slate-900">
+                    My Orders ({orders?.length || 0})
+                  </h2>
+                  <Link href="/products">
+                    <Button variant="outline" size="sm" className="text-xs font-bold text-[#0F2D5E] border-slate-300">
+                      + Shop More
+                    </Button>
+                  </Link>
+                </div>
                 {orders && orders.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {orders.map((order: any) => (
                       <div
                         key={order.id}
-                        className="card-surface rounded-xl p-4"
+                        className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4"
                       >
-                        <div className="flex items-center justify-between mb-2">
+                        {/* Header */}
+                        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
                           <div>
-                            <span className="font-semibold text-gray-800 text-sm">
-                              Order #{order.orderNumber}
+                            <div className="flex items-center gap-2">
+                              <span className="font-extrabold text-slate-900 text-sm">
+                                #{order.orderNumber}
+                              </span>
+                              <span
+                                className={`text-xs px-2.5 py-0.5 rounded-full font-bold capitalize ${
+                                  order.status === "delivered"
+                                    ? "bg-emerald-100 text-emerald-800"
+                                    : order.status === "shipped"
+                                      ? "bg-purple-100 text-purple-800"
+                                      : order.status === "processing"
+                                        ? "bg-blue-100 text-blue-800"
+                                        : "bg-amber-100 text-amber-900"
+                                }`}
+                              >
+                                {order.status}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-600 font-semibold mt-0.5">
+                              Placed on {new Date(order.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                            </p>
+                          </div>
+
+                          <div className="text-right">
+                            <div className="text-base font-black text-[#F85606]">
+                              {formatPrice(Number(order.totalAmount || order.total))}
+                            </div>
+                            <span className="text-[11px] text-slate-500 font-semibold uppercase">
+                              {order.paymentMethod === "bank" ? "Bank Transfer" : "Cash on Delivery"}
                             </span>
-                            <span className="text-xs text-gray-400 ml-3">
-                              {new Date(order.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <span
-                            className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                              order.status === "delivered"
-                                ? "bg-green/10 text-green"
-                                : order.status === "processing"
-                                  ? "bg-blue-100 text-blue-600"
-                                  : order.status === "shipped"
-                                    ? "bg-purple-100 text-purple-600"
-                                    : "bg-amber/20 text-amber-700"
-                            }`}
-                          >
-                            {order.status}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="text-xs text-gray-500">
-                            {order.items?.length || 0} item(s)
-                          </div>
-                          <div className="font-bold text-navy">
-                            {formatPrice(Number(order.totalAmount))}
                           </div>
                         </div>
+
+                        {/* Items list */}
+                        {order.items && order.items.length > 0 && (
+                          <div className="space-y-2.5 pt-1">
+                            {order.items.map((item: any) => (
+                              <div key={item.id} className="flex items-center gap-3 py-1.5">
+                                <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-200 flex-shrink-0 bg-slate-50">
+                                  <img
+                                    src={
+                                      item.imageUrl ||
+                                      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=80&q=75"
+                                    }
+                                    alt={item.productName || ""}
+                                    className="w-full h-full object-cover"
+                                    onError={e => {
+                                      (e.target as HTMLImageElement).src =
+                                        "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=80&q=75";
+                                    }}
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-bold text-slate-900 line-clamp-1">
+                                    {item.productName}
+                                  </p>
+                                  <p className="text-xs text-slate-600 font-medium">
+                                    Qty: {item.quantity} × {formatPrice(Number(item.unitPrice))}
+                                  </p>
+                                </div>
+                                <div className="text-xs font-black text-slate-900 flex-shrink-0">
+                                  {formatPrice(Number(item.unitPrice) * item.quantity)}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -294,12 +426,15 @@ export default function Account() {
                     description="Start shopping to see your orders here."
                     action={
                       <Link href="/products">
-                        <Button className="bg-navy text-white">
+                        <Button
+                          className="text-white"
+                          style={{ backgroundColor: "#0F2D5E" }}
+                        >
                           Browse Products
                         </Button>
                       </Link>
                     }
-                    className="card-surface"
+                    className="bg-white border border-gray-100"
                   />
                 )}
               </motion.div>
@@ -317,7 +452,7 @@ export default function Account() {
                         key={item.id}
                         href={`/products/${item.productSlug}`}
                       >
-                        <div className="card-surface rounded-xl overflow-hidden hover:shadow-card-hover transition-shadow cursor-pointer">
+                        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
                           <div className="h-32 bg-gray-50">
                             {item.imageUrl ? (
                               <img
@@ -326,19 +461,22 @@ export default function Account() {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-300">
+                              <div className="w-full h-full flex items-center justify-center text-gray-500 font-medium">
                                 <Package size={28} />
                               </div>
                             )}
                           </div>
                           <div className="p-3">
-                            <div className="text-xs text-gray-400 mb-0.5">
+                            <div className="text-xs text-gray-600 font-medium mb-0.5">
                               {item.brandName}
                             </div>
                             <div className="text-sm font-semibold text-gray-800 line-clamp-1">
                               {item.productName}
                             </div>
-                            <div className="text-sm font-bold text-navy">
+                            <div
+                              className="text-sm font-bold"
+                              style={{ color: "#0F2D5E" }}
+                            >
                               {formatPrice(Number(item.basePrice))}
                             </div>
                           </div>
@@ -353,12 +491,15 @@ export default function Account() {
                     description="Save products you love for later."
                     action={
                       <Link href="/products">
-                        <Button className="bg-navy text-white">
+                        <Button
+                          className="text-white"
+                          style={{ backgroundColor: "#0F2D5E" }}
+                        >
                           Discover Products
                         </Button>
                       </Link>
                     }
-                    className="card-surface"
+                    className="bg-white border border-gray-100"
                   />
                 )}
               </motion.div>
@@ -369,41 +510,27 @@ export default function Account() {
                 <h2 className="text-lg font-bold text-gray-800 mb-4">
                   Account Settings
                 </h2>
-                <div className="card-surface rounded-xl p-5 space-y-4">
-                  <div>
-                    <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
-                      Name
-                    </div>
-                    <div className="text-sm text-gray-800">
-                      {user?.name || "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
-                      Email
-                    </div>
-                    <div className="text-sm text-gray-800">
-                      {user?.email || "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
-                      Account Type
-                    </div>
-                    <div className="text-sm text-gray-800 capitalize">
-                      {user?.role || "customer"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
-                      Member Since
-                    </div>
-                    <div className="text-sm text-gray-800">
-                      {user?.createdAt
+                <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-4 shadow-sm">
+                  {[
+                    { label: "Name", value: user?.name },
+                    { label: "Email", value: user?.email },
+                    { label: "Account Type", value: user?.role },
+                    {
+                      label: "Member Since",
+                      value: user?.createdAt
                         ? new Date(user.createdAt).toLocaleDateString()
-                        : "—"}
+                        : undefined,
+                    },
+                  ].map(({ label, value }) => (
+                    <div key={label}>
+                      <div className="text-xs font-semibold text-gray-700 font-medium uppercase mb-1">
+                        {label}
+                      </div>
+                      <div className="text-sm text-gray-800 capitalize">
+                        {value || "—"}
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
               </motion.div>
             )}

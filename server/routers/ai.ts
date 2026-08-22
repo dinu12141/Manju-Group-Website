@@ -44,12 +44,10 @@ export const aiRouter = router({
     .mutation(async ({ input }) => {
       try {
         const messages = [
-          ...input.history
-            .slice(-6)
-            .map(m => ({
-              role: m.role as "user" | "assistant",
-              content: m.content,
-            })),
+          ...input.history.slice(-6).map(m => ({
+            role: m.role as "user" | "assistant",
+            content: m.content,
+          })),
           { role: "user" as const, content: input.message },
         ];
 

@@ -1,6 +1,14 @@
 import { motion } from "framer-motion";
-import { Shield, Award, Users, Globe, CheckCircle } from "lucide-react";
+import {
+  Shield,
+  Award,
+  Users,
+  Globe,
+  CheckCircle2,
+  ArrowRight,
+} from "lucide-react";
 import MainLayout from "@/components/MainLayout";
+import StatsChapter from "@/components/home/StatsChapter";
 import { MEGA_MENU_BRANDS } from "@/lib/data";
 import { Link } from "wouter";
 
@@ -41,39 +49,169 @@ export default function About() {
   return (
     <MainLayout>
       {/* Hero */}
-      <div className="bg-gradient-to-br from-navy to-[#1a4a8a] py-16 text-white">
+      <div className="bg-white border-b border-gray-100 py-24 overflow-hidden">
         <div className="container">
-          <div className="text-amber text-xs font-bold uppercase tracking-wider mb-2">
-            Our Story
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            {/* Left 7/12 */}
+            <motion.div
+              className="lg:col-span-7"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="inline-flex items-center gap-2 mb-5">
+                <span className="w-6 h-px bg-gold" />
+                <span className="text-gold text-xs font-bold uppercase tracking-widest">
+                  Our Story
+                </span>
+              </div>
+              <h1
+                className="text-5xl font-black font-display mb-5 leading-tight"
+                style={{ color: "#0F2D5E" }}
+              >
+                About Manju Group
+              </h1>
+              <p className="text-gray-700 font-medium max-w-lg text-base leading-relaxed mb-8">
+                For over 15 years, Manju Group has been a trusted name in Sri
+                Lankan homes, delivering quality products across five distinct
+                categories — from electric mobility to home comfort, smart
+                entertainment to clean water.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/products">
+                  <button className="px-7 py-3 bg-[#0F2D5E] text-white rounded-xl font-semibold hover:bg-[#1a4a8a] transition-colors inline-flex items-center gap-2">
+                    Our Products <ArrowRight size={16} />
+                  </button>
+                </Link>
+                <Link href="/contact">
+                  <button className="px-7 py-3 border border-gray-200 text-gray-700 rounded-xl font-semibold hover:border-[#0F2D5E] hover:text-[#0F2D5E] transition-colors">
+                    Get in Touch
+                  </button>
+                </Link>
+              </div>
+            </motion.div>
+
+            {/* Right 5/12 */}
+            <motion.div
+              className="lg:col-span-5 hidden lg:block"
+              initial={{ opacity: 0, x: 32 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+            >
+              <div className="rounded-2xl overflow-hidden shadow-xl h-[360px]">
+                <img
+                  src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80"
+                  alt="Manju Group office"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </motion.div>
           </div>
-          <h1 className="text-4xl font-bold font-display mb-4">
-            About Manju Group
-          </h1>
-          <p className="text-white/70 max-w-2xl text-base leading-relaxed">
-            For over 15 years, Manju Group has been a trusted name in Sri Lankan
-            homes, delivering quality products across five distinct categories —
-            from electric mobility to home comfort.
-          </p>
         </div>
       </div>
 
+      {/* Story + Timeline */}
+      <section className="py-16 bg-white">
+        <div className="container">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-start">
+            <motion.div
+              initial={{ opacity: 0, x: -24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <div className="inline-flex items-center gap-2 mb-4">
+                <span className="w-6 h-px bg-gold" />
+                <span className="text-gold text-xs font-bold uppercase tracking-widest">
+                  Our Journey
+                </span>
+              </div>
+              <h2 className="text-3xl font-bold font-display text-gray-900 mb-5 leading-snug">
+                Sri Lanka's Most Trusted Multi-Brand Group
+              </h2>
+              <p className="text-gray-700 font-medium leading-relaxed mb-4">
+                Manju Group is one of Sri Lanka's leading multi-brand companies,
+                operating across electric mobility, consumer electronics, home
+                comfort, water purification, and education stationery.
+              </p>
+              <p className="text-gray-700 font-medium leading-relaxed mb-6">
+                We are committed to delivering quality products at affordable
+                prices, backed by genuine warranties and island-wide service —
+                making premium living accessible to every Sri Lankan family.
+              </p>
+              <div className="flex flex-col gap-3">
+                {[
+                  "Island-wide delivery across all 25 districts",
+                  "5 premium brands under one trusted group",
+                  "50,000+ happy customers nationwide",
+                ].map((point, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <CheckCircle2
+                      size={16}
+                      className="text-[#0F2D5E] flex-shrink-0"
+                    />
+                    <span className="text-sm text-gray-700 font-medium">
+                      {point}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Vertical Timeline */}
+            <motion.div
+              initial={{ opacity: 0, x: 24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <div className="relative pl-8">
+                <div className="absolute left-3 top-2 bottom-2 w-0.5 bg-gray-100" />
+                {MILESTONES.map((m, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 12 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.07 }}
+                    className="relative mb-7 last:mb-0"
+                  >
+                    <div className="absolute -left-8 top-1 w-6 h-6 rounded-full bg-[#0F2D5E] border-2 border-white shadow-sm" />
+                    <span
+                      className="text-xs font-bold uppercase tracking-wider"
+                      style={{ color: "#C9A84C" }}
+                    >
+                      {m.year}
+                    </span>
+                    <div className="text-sm font-semibold text-gray-800 mt-0.5">
+                      {m.event}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Mission & Vision */}
-      <section className="py-14">
+      <section className="py-16 bg-gray-50">
         <div className="container">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="bg-navy rounded-2xl p-8 text-white"
+              className="bg-gray-900 rounded-2xl p-8 text-white"
             >
-              <div className="text-amber text-xs font-bold uppercase tracking-wider mb-2">
+              <div
+                className="text-xs font-bold uppercase tracking-widest mb-3"
+                style={{ color: "#C9A84C" }}
+              >
                 Our Mission
               </div>
-              <h2 className="text-2xl font-bold font-display mb-3">
+              <h2 className="text-2xl font-bold font-display mb-4">
                 Empowering Sri Lankan Homes
               </h2>
-              <p className="text-white/70 leading-relaxed">
+              <p className="text-white/60 leading-relaxed">
                 To provide Sri Lankan families with access to premium,
                 innovative, and affordable products that enhance their quality
                 of life — while delivering exceptional customer service at every
@@ -84,15 +222,18 @@ export default function About() {
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="bg-gray-50 rounded-2xl p-8"
+              className="bg-white border border-gray-100 rounded-2xl p-8 shadow-sm"
             >
-              <div className="text-navy text-xs font-bold uppercase tracking-wider mb-2">
+              <div className="text-gold text-xs font-bold uppercase tracking-widest mb-3">
                 Our Vision
               </div>
-              <h2 className="text-2xl font-bold font-display text-gray-800 mb-3">
+              <h2
+                className="text-2xl font-bold font-display mb-4"
+                style={{ color: "#0F2D5E" }}
+              >
                 Sri Lanka's #1 Multi-Brand Company
               </h2>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-gray-700 font-medium leading-relaxed">
                 To become the most trusted and innovative multi-brand consumer
                 goods company in Sri Lanka, setting the benchmark for product
                 quality, customer satisfaction, and sustainable business
@@ -104,11 +245,19 @@ export default function About() {
       </section>
 
       {/* Values */}
-      <section className="py-14 bg-gray-50">
+      <section className="py-16 bg-white">
         <div className="container">
           <div className="text-center mb-10">
-            <div className="section-label">What Drives Us</div>
-            <h2 className="section-title">Our Core Values</h2>
+            <div className="inline-flex items-center gap-2 mb-3">
+              <span className="w-6 h-px bg-gold" />
+              <span className="text-gold text-xs font-bold uppercase tracking-widest">
+                What Drives Us
+              </span>
+              <span className="w-6 h-px bg-gold" />
+            </div>
+            <h2 className="text-3xl font-bold font-display text-gray-900">
+              Our Core Values
+            </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {VALUES.map((value, i) => (
@@ -118,13 +267,13 @@ export default function About() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="card-surface rounded-xl p-6 text-center"
+                className="bg-white border border-gray-100 rounded-2xl p-6 text-center shadow-sm hover:shadow-md transition-shadow"
               >
-                <div className="w-12 h-12 rounded-xl bg-navy/10 text-navy flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 rounded-xl bg-[#0F2D5E]/10 text-[#0F2D5E] flex items-center justify-center mx-auto mb-4">
                   {value.icon}
                 </div>
-                <h3 className="font-bold text-gray-800 mb-2">{value.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">
+                <h3 className="font-bold text-gray-900 mb-2">{value.title}</h3>
+                <p className="text-sm text-gray-700 font-medium leading-relaxed">
                   {value.desc}
                 </p>
               </motion.div>
@@ -134,11 +283,19 @@ export default function About() {
       </section>
 
       {/* Our Brands */}
-      <section className="py-14">
+      <section className="py-16 bg-gray-50">
         <div className="container">
           <div className="text-center mb-10">
-            <div className="section-label">Our Portfolio</div>
-            <h2 className="section-title">Five Brands, One Promise</h2>
+            <div className="inline-flex items-center gap-2 mb-3">
+              <span className="w-6 h-px bg-gold" />
+              <span className="text-gold text-xs font-bold uppercase tracking-widest">
+                Our Portfolio
+              </span>
+              <span className="w-6 h-px bg-gold" />
+            </div>
+            <h2 className="text-3xl font-bold font-display text-gray-900">
+              Five Brands, One Promise
+            </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {MEGA_MENU_BRANDS.map((brand, i) => (
@@ -148,17 +305,19 @@ export default function About() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.08 }}
-                  className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-navy hover:text-white transition-all group cursor-pointer"
+                  className="flex items-center gap-4 p-4 bg-white border border-gray-100 rounded-xl hover:border-[#0F2D5E] hover:shadow-md transition-all group cursor-pointer"
                 >
                   <span className="text-3xl">{brand.icon}</span>
                   <div>
-                    <div className="font-bold text-gray-800 group-hover:text-white">
+                    <div className="font-bold text-gray-800 group-hover:text-[#0F2D5E] transition-colors">
                       {brand.name}
                     </div>
-                    <div className="text-sm text-gray-500 group-hover:text-white/70">
-                      {brand.tagline}
-                    </div>
+                    <div className="text-sm text-gray-700 font-medium">{brand.tagline}</div>
                   </div>
+                  <ArrowRight
+                    size={14}
+                    className="ml-auto text-gray-500 font-medium group-hover:text-[#0F2D5E] transition-colors"
+                  />
                 </motion.div>
               </Link>
             ))}
@@ -166,69 +325,38 @@ export default function About() {
         </div>
       </section>
 
-      {/* Timeline */}
-      <section className="py-14 bg-gray-50">
-        <div className="container">
-          <div className="text-center mb-10">
-            <div className="section-label">Our Journey</div>
-            <h2 className="section-title">Milestones & Achievements</h2>
-          </div>
-          <div className="max-w-2xl mx-auto">
-            {MILESTONES.map((m, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: i % 2 === 0 ? -20 : 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="flex gap-4 mb-6"
-              >
-                <div className="flex flex-col items-center">
-                  <div className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center flex-shrink-0">
-                    <CheckCircle size={18} />
-                  </div>
-                  {i < MILESTONES.length - 1 && (
-                    <div className="w-0.5 h-full bg-gray-200 mt-2" />
-                  )}
-                </div>
-                <div className="pb-6">
-                  <div className="text-xs font-bold text-amber uppercase tracking-wider">
-                    {m.year}
-                  </div>
-                  <div className="text-sm font-semibold text-gray-800 mt-0.5">
-                    {m.event}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Stats Band */}
+      <StatsChapter />
 
-      {/* Stats */}
-      <section className="py-14 bg-navy text-white">
-        <div className="container">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-            {[
-              { value: "15+", label: "Years of Excellence" },
-              { value: "50,000+", label: "Happy Customers" },
-              { value: "8+", label: "Showrooms Nationwide" },
-              { value: "5", label: "Premium Brands" },
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <div className="text-4xl font-bold text-amber font-display mb-1">
-                  {stat.value}
-                </div>
-                <div className="text-white/70 text-sm">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
+      {/* CTA */}
+      <section className="py-20 bg-white">
+        <div className="container text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl font-bold font-display text-gray-900 mb-5">
+              Ready to Experience the Difference?
+            </h2>
+            <p className="text-gray-700 font-medium max-w-lg mx-auto mb-8 leading-relaxed">
+              From smart TVs to electric bikes, explore our full range of
+              premium products — all backed by genuine warranty and island-wide
+              delivery.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/products">
+                <button className="px-8 py-3.5 bg-[#0F2D5E] text-white rounded-xl font-semibold hover:bg-[#1a4a8a] transition-colors inline-flex items-center gap-2">
+                  Explore Products <ArrowRight size={16} />
+                </button>
+              </Link>
+              <Link href="/contact">
+                <button className="px-8 py-3.5 border border-gray-200 text-gray-700 rounded-xl font-semibold hover:border-[#0F2D5E] hover:text-[#0F2D5E] transition-colors">
+                  Get in Touch
+                </button>
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </section>
     </MainLayout>

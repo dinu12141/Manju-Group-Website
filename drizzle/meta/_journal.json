@@ -15,6 +15,20 @@
       "when": 1783189314595,
       "tag": "0001_amused_tinkerer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1783966071778,
+      "tag": "0002_lazy_giant_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1786304220537,
+      "tag": "0003_salty_cardiac",
+      "breakpoints": true
     }
   ]
 }

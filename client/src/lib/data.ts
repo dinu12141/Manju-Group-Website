@@ -42,11 +42,11 @@ export const BRAND_META: Record<
 
 export const NAV_LINKS = [
   { label: "Home", href: "/" },
+  { label: "About", href: "/about" },
   { label: "Products", href: "/products" },
   { label: "Brands", href: "/brands" },
-  { label: "Locations", href: "/locations" },
-  { label: "About", href: "/about" },
   { label: "News", href: "/news" },
+  { label: "Locations", href: "/locations" },
   { label: "Contact", href: "/contact" },
 ];
 
@@ -79,7 +79,8 @@ export const MEGA_MENU_BRANDS = [
 ];
 
 export function formatPrice(price: number | string, currency = "LKR"): string {
-  const num = typeof price === "string" ? parseFloat(price) : price;
+  const num = Number(price);
+  if (isNaN(num)) return `${currency} 0.00`;
   return `${currency} ${num.toLocaleString("en-LK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
@@ -102,3 +103,21 @@ export function getSessionId(): string {
   }
   return id;
 }
+
+export function cleanText(str: string | null | undefined): string {
+  if (!str) return "";
+  return str
+    .replace(/&#8211;/g, "–")
+    .replace(/&#8212;/g, "—")
+    .replace(/&#8217;/g, "'")
+    .replace(/&#8216;/g, "'")
+    .replace(/&#8220;/g, '"')
+    .replace(/&#8221;/g, '"')
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/<[^>]*>/g, "")
+    .trim();
+}
+

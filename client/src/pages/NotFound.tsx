@@ -1,52 +1,63 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, Home } from "lucide-react";
+import { Home, ShoppingBag } from "lucide-react";
 import { useLocation } from "wouter";
+import MainLayout from "@/components/MainLayout";
 
 export default function NotFound() {
   const [, setLocation] = useLocation();
 
-  const handleGoHome = () => {
-    setLocation("/");
-  };
-
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-      <Card className="w-full max-w-lg mx-4 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-        <CardContent className="pt-8 pb-8 text-center">
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="absolute inset-0 bg-red-100 rounded-full animate-pulse" />
-              <AlertCircle className="relative h-16 w-16 text-red-500" />
-            </div>
+    <MainLayout>
+      <div className="min-h-[70vh] w-full flex items-center justify-center bg-white py-20">
+        <div className="w-full max-w-md mx-4 text-center">
+          <div
+            className="text-[140px] font-black leading-none select-none mb-2 font-display"
+            style={{ color: "#0F2D5E" }}
+          >
+            404
           </div>
 
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">404</h1>
+          <div className="inline-flex items-center gap-2 mb-4">
+            <span className="w-5 h-px" style={{ background: "#C9A84C" }} />
+            <span
+              className="text-xs font-bold uppercase tracking-widest"
+              style={{ color: "#C9A84C" }}
+            >
+              Page Not Found
+            </span>
+            <span className="w-5 h-px" style={{ background: "#C9A84C" }} />
+          </div>
 
-          <h2 className="text-xl font-semibold text-slate-700 mb-4">
-            Page Not Found
-          </h2>
+          <h1
+            className="text-3xl font-bold font-display mb-3"
+            style={{ color: "#0F2D5E" }}
+          >
+            Oops! Lost in the Store
+          </h1>
 
-          <p className="text-slate-600 mb-8 leading-relaxed">
-            Sorry, the page you are looking for doesn't exist.
-            <br />
-            It may have been moved or deleted.
+          <p className="text-gray-700 font-medium mb-8 leading-relaxed text-sm max-w-sm mx-auto">
+            The page you're looking for doesn't exist or has been moved. Let's
+            get you back on track.
           </p>
 
-          <div
-            id="not-found-button-group"
-            className="flex flex-col sm:flex-row gap-3 justify-center"
-          >
-            <Button
-              onClick={handleGoHome}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => setLocation("/")}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white transition-all hover:shadow-lg hover:-translate-y-0.5"
+              style={{ backgroundColor: "#0F2D5E" }}
             >
-              <Home className="w-4 h-4 mr-2" />
+              <Home className="w-4 h-4" />
               Go Home
-            </Button>
+            </button>
+            <button
+              onClick={() => setLocation("/products")}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold border-2 border-gray-200 text-gray-700 hover:border-[#0F2D5E] hover:text-[#0F2D5E] transition-colors"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              Browse Products
+            </button>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </MainLayout>
   );
 }

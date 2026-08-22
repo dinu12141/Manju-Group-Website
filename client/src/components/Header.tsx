@@ -1,533 +1,313 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { useCart } from "@/contexts/CartContext";
 import {
   Search,
   ShoppingCart,
   User,
-  Menu,
-  X,
   ChevronDown,
   MapPin,
-  Phone,
-  Mail,
-  Heart,
-  LogOut,
-  Settings,
+  Home,
   Package,
-  Zap,
-  Tv,
-  Snowflake,
-  Droplets,
-  BookOpen,
-  type LucideIcon,
+  Share2,
+  Info,
+  Phone,
+  Facebook,
+  Instagram,
+  Twitter,
+  Youtube,
+  PhoneCall,
 } from "lucide-react";
-import { useAuth } from "@/_core/hooks/useAuth";
-import { useCart } from "@/contexts/CartContext";
-import { trpc } from "@/lib/trpc";
-import { NAV_LINKS, MEGA_MENU_BRANDS, formatPrice } from "@/lib/data";
-
-const BRAND_ICONS: Record<string, LucideIcon> = {
-  "dew-motors": Zap,
-  "dew-plus": Tv,
-  "dew-plus-ac": Snowflake,
-  "manju-dew-super": Droplets,
-  "manju-exercise-books": BookOpen,
-};
-import { getLoginUrl } from "@/const";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export default function Header() {
   const [location, navigate] = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
-  const { itemCount } = useCart();
-  const [searchOpen, setSearchOpen] = useState(false);
+  const { itemCount, openDrawer } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
-  const [megaMenuOpen, setMegaMenuOpen] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const megaMenuRef = useRef<HTMLDivElement>(null);
 
-  const { data: searchResults } = trpc.products.search.useQuery(
-    { query: searchQuery, limit: 6 },
-    { enabled: searchQuery.length > 1 }
-  );
-
-  useEffect(() => {
-    if (searchOpen) searchInputRef.current?.focus();
-  }, [searchOpen]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = () => {
     if (searchQuery.trim()) {
       navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchOpen(false);
-      setSearchQuery("");
     }
+  };
+
+  const navLinks = [
+    { href: "/", label: "Home", icon: Home, exact: true },
+    { href: "/products", label: "Products", icon: Package },
+    { href: "/brands", label: "Brands", icon: Share2 },
+    { href: "/about", label: "About Us", icon: Info },
+    { href: "/contact", label: "Contact", icon: Phone },
+  ];
+
+  const isLinkActive = (href: string, exact = false) => {
+    if (exact) return location === href;
+    return location === href || location.startsWith(`${href}/`);
   };
 
   return (
     <>
-      {/* Announcement Bar */}
-      <div className="announcement-bar text-xs font-medium">
-        <div className="container flex items-center justify-center gap-6 flex-wrap">
-          <span className="flex items-center gap-1.5">
-            <MapPin size={12} /> Island-wide Delivery Across Sri Lanka
-          </span>
-          <span className="hidden sm:flex items-center gap-1.5">
-            <Phone size={12} /> +94 11 234 5678
-          </span>
-          <span className="hidden md:flex items-center gap-1.5">
-            <Mail size={12} /> info@manjugroup.lk
-          </span>
-        </div>
-      </div>
+      <header className="w-full flex flex-col z-50 fixed top-0 left-0 right-0 shadow-lg font-sans">
+        {/* ── Top Bar — Brand Royal Blue ──────────────────────────── */}
+        <div className="bg-gradient-to-r from-[#003875] via-[#0052B4] to-[#003B7B] text-white w-full px-4 md:px-8 h-[66px] flex items-center justify-between gap-4 md:gap-8 border-b border-[#004899]/60">
+          
+          {/* Official Brand Logo */}
+          <Link
+            href="/"
+            className="flex-shrink-0 flex items-center gap-3 group transition-transform duration-200 active:scale-95 cursor-pointer"
+          >
+            <div className="relative">
+              <img
+                src="/manju-logo.png"
+                alt="Manju Group Official Logo"
+                className="h-11 w-11 md:h-12 md:w-12 rounded-full object-contain bg-[#0052B4] ring-2 ring-white/90 shadow-md group-hover:ring-white transition-all duration-300"
+              />
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="text-white text-[20px] md:text-[23px] font-black tracking-tight leading-none uppercase drop-shadow-sm"
+                  style={{ fontFamily: "'Montserrat', 'Inter', sans-serif" }}
+                >
+                  MANJU <span className="text-[#60A5FA] font-extrabold">GROUP</span>
+                </span>
+              </div>
+              <span className="text-[10px] md:text-[11px] text-blue-100/90 font-medium tracking-[0.16em] uppercase mt-0.5 flex items-center gap-1">
+                <span>Excellence &amp; Trust</span>
+              </span>
+            </div>
+          </Link>
 
-      {/* Main Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-nav">
-        <div className="container">
-          <div className="flex items-center h-16 gap-4">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-10 h-10 rounded-xl bg-navy flex items-center justify-center text-white font-bold text-lg font-display">
-                M
-              </div>
-              <div className="hidden sm:block">
-                <div className="text-navy font-bold text-lg leading-tight font-display">
-                  Manju Group
-                </div>
-                <div className="text-xs text-gray-500 leading-tight">
-                  Quality You Can Trust
-                </div>
-              </div>
+          {/* Search Bar */}
+          <div className="flex-1 max-w-[720px] flex items-center h-[42px] rounded-lg overflow-hidden bg-white shadow-inner border border-blue-200/40 focus-within:ring-2 focus-within:ring-blue-300 transition-all">
+            <input
+              type="text"
+              placeholder="Search genuine appliances, electronics, solar, e-bikes..."
+              className="flex-1 h-full px-4 text-[13px] md:text-[14px] outline-none placeholder:text-gray-400 font-medium"
+              style={{ color: "#0f172a", backgroundColor: "#ffffff" }}
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  handleSearch();
+                }
+              }}
+            />
+            <button
+              onClick={handleSearch}
+              aria-label="Search"
+              className="h-full px-4 md:px-5 bg-gradient-to-r from-[#0052B4] to-[#003f8a] text-white flex items-center justify-center hover:from-[#00489e] hover:to-[#00336d] transition-all shrink-0 font-medium text-xs gap-1.5 shadow-sm cursor-pointer"
+            >
+              <Search size={18} strokeWidth={2.5} />
+              <span className="hidden sm:inline font-semibold text-xs tracking-wider text-white">SEARCH</span>
+            </button>
+          </div>
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-4 md:gap-6 text-white shrink-0">
+            {/* Language Selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="hidden sm:flex items-center gap-1 text-[13px] font-semibold text-blue-100 hover:text-white transition-colors px-2 py-1 rounded hover:bg-white/10 cursor-pointer">
+                  <span className="text-white">English</span>
+                  <ChevronDown size={14} className="opacity-80 text-white" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="bg-white text-gray-900 rounded-lg shadow-xl border border-gray-100 mt-2 min-w-[120px] p-1 font-medium text-sm"
+              >
+                <DropdownMenuItem className="cursor-pointer text-sm font-semibold text-[#0052B4] bg-blue-50/60 rounded px-3 py-2">
+                  English
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-sm hover:bg-gray-100 rounded px-3 py-2 text-gray-800">
+                  Sinhala (සිංහල)
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-sm hover:bg-gray-100 rounded px-3 py-2 text-gray-800">
+                  Tamil (தமிழ்)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Cart Button */}
+            <button
+              type="button"
+              onClick={openDrawer}
+              className="relative p-2 rounded-full hover:bg-white/10 transition-colors flex items-center justify-center text-white cursor-pointer focus-visible:outline-none"
+              title="Shopping Cart"
+            >
+              <ShoppingCart size={22} strokeWidth={2.2} className="text-white" />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 text-[11px] font-black px-1.5 min-w-[20px] h-[20px] flex items-center justify-center rounded-full shadow-md animate-in zoom-in-75">
+                  {itemCount}
+                </span>
+              )}
+            </button>
+
+            {/* Store Locations Link */}
+            <Link
+              href="/locations"
+              className="hidden sm:flex items-center justify-center p-2 rounded-full hover:bg-white/10 transition-colors text-white cursor-pointer"
+              title="Branches & Showrooms"
+            >
+              <MapPin size={21} strokeWidth={2.2} className="text-white" />
             </Link>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-1 ml-4 flex-1">
-              {NAV_LINKS.map(link => {
-                if (link.label === "Brands") {
-                  return (
-                    <div
-                      key="brands"
-                      className="relative"
-                      onMouseEnter={() => setMegaMenuOpen(true)}
-                      onMouseLeave={() => setMegaMenuOpen(false)}
-                    >
-                      <button
-                        className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          location.startsWith("/brands")
-                            ? "text-navy bg-blue-50"
-                            : "text-gray-700 hover:text-navy hover:bg-gray-50"
-                        }`}
-                      >
-                        Brands{" "}
-                        <ChevronDown
-                          size={14}
-                          className={`transition-transform ${megaMenuOpen ? "rotate-180" : ""}`}
-                        />
-                      </button>
-
-                      <AnimatePresence>
-                        {megaMenuOpen && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            transition={{ duration: 0.15 }}
-                            className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-72 bg-white rounded-xl shadow-modal border border-gray-100 p-3 z-50"
-                          >
-                            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2 mb-2">
-                              Our Brands
-                            </div>
-                            {MEGA_MENU_BRANDS.map(brand => {
-                              const BrandIcon = BRAND_ICONS[brand.slug];
-                              return (
-                              <Link
-                                key={brand.slug}
-                                href={`/brands/${brand.slug}`}
-                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors group"
-                                onClick={() => setMegaMenuOpen(false)}
-                              >
-                                <span className="w-9 h-9 rounded-lg bg-navy/5 text-navy flex items-center justify-center flex-shrink-0 group-hover:bg-navy group-hover:text-white transition-colors">
-                                  {BrandIcon && <BrandIcon size={18} />}
-                                </span>
-                                <div>
-                                  <div className="text-sm font-semibold text-gray-800 group-hover:text-navy">
-                                    {brand.name}
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    {brand.tagline}
-                                  </div>
-                                </div>
-                              </Link>
-                              );
-                            })}
-                            <div className="border-t border-gray-100 mt-2 pt-2">
-                              <Link
-                                href="/brands"
-                                className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-navy hover:bg-blue-50 rounded-lg transition-colors"
-                                onClick={() => setMegaMenuOpen(false)}
-                              >
-                                View All Brands →
-                              </Link>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+            {/* User Profile */}
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 p-1.5 rounded-full hover:bg-white/10 transition-colors cursor-pointer">
+                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-xs border border-white/40">
+                      {user?.name?.charAt(0).toUpperCase() || "U"}
                     </div>
-                  );
-                }
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      location === link.href
-                        ? "text-navy bg-blue-50"
-                        : "text-gray-700 hover:text-navy hover:bg-gray-50"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* Right Actions */}
-            <div className="flex items-center gap-2 ml-auto">
-              {/* Search */}
-              <motion.button
-                onClick={() => setSearchOpen(!searchOpen)}
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.9 }}
-                className="p-2 rounded-lg text-gray-600 hover:text-navy hover:bg-gray-50 transition-colors"
-                aria-label="Search"
-              >
-                <Search size={20} />
-              </motion.button>
-
-              {/* Wishlist (authenticated only) */}
-              {isAuthenticated && (
-                <Link href="/account" className="hidden sm:flex">
-                  <motion.span
-                    whileHover={{ scale: 1.08 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="p-2 rounded-lg text-gray-600 hover:text-navy hover:bg-gray-50 transition-colors flex"
-                  >
-                    <Heart size={20} />
-                  </motion.span>
-                </Link>
-              )}
-
-              {/* Cart */}
-              <Link href="/cart" className="relative">
-                <motion.span
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="relative p-2 rounded-lg text-gray-600 hover:text-navy hover:bg-gray-50 transition-colors flex"
-                >
-                  <ShoppingCart size={20} />
-                  <AnimatePresence>
-                    {itemCount > 0 && (
-                      <motion.span
-                        key={itemCount}
-                        initial={{ scale: 1.6, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0, opacity: 0 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                        className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-amber text-[10px] font-bold text-gray-900 rounded-full flex items-center justify-center min-w-[18px] min-h-[18px] px-1"
-                      >
-                        {itemCount > 99 ? "99+" : itemCount}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </motion.span>
-              </Link>
-
-              {/* Account */}
-              {isAuthenticated ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <motion.button
-                      whileHover={{ scale: 1.08 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:text-navy hover:bg-gray-50 transition-colors hidden sm:flex"
-                    >
-                      <div className="w-7 h-7 rounded-full bg-navy text-white flex items-center justify-center text-xs font-bold">
-                        {user?.name?.[0]?.toUpperCase() ?? "U"}
-                      </div>
-                      <span className="hidden md:block max-w-[100px] truncate">
-                        {user?.name?.split(" ")[0]}
-                      </span>
-                    </motion.button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-52">
-                    <div className="px-3 py-2 text-sm">
-                      <div className="font-semibold text-gray-800">
-                        {user?.name}
-                      </div>
-                      <div className="text-xs text-gray-500 truncate">
-                        {user?.email}
-                      </div>
-                    </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href="/account"
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <User size={15} /> My Account
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href="/account"
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <Package size={15} /> My Orders
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href="/account"
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <Heart size={15} /> Wishlist
-                      </Link>
-                    </DropdownMenuItem>
-                    {user?.role === "admin" && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                          <Link
-                            href="/admin"
-                            className="flex items-center gap-2 cursor-pointer text-navy font-medium"
-                          >
-                            <Settings size={15} /> Admin Dashboard
-                          </Link>
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={logout}
-                      className="text-red-600 cursor-pointer flex items-center gap-2"
-                    >
-                      <LogOut size={15} /> Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <a
-                  href={getLoginUrl()}
-                  className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-navy text-white hover:bg-navy-light transition-colors"
-                >
-                  <User size={15} /> Sign In
-                </a>
-              )}
-
-              {/* Mobile Menu */}
-              <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-                <SheetTrigger asChild>
-                  <button className="lg:hidden p-2 rounded-lg text-gray-600 hover:text-navy hover:bg-gray-50 transition-colors">
-                    <Menu size={22} />
                   </button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-80 p-0">
-                  <div className="flex flex-col h-full">
-                    <div className="flex items-center justify-between p-4 border-b">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center text-white font-bold text-sm">
-                          M
-                        </div>
-                        <span className="font-bold text-navy font-display">
-                          Manju Group
-                        </span>
-                      </div>
-                    </div>
-
-                    <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-                      {NAV_LINKS.map(link => (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          className={`flex items-center px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
-                            location === link.href
-                              ? "text-navy bg-blue-50"
-                              : "text-gray-700 hover:text-navy hover:bg-gray-50"
-                          }`}
-                          onClick={() => setMobileOpen(false)}
-                        >
-                          {link.label}
-                        </Link>
-                      ))}
-
-                      <div className="pt-2 border-t border-gray-100">
-                        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 py-2">
-                          Brands
-                        </div>
-                        {MEGA_MENU_BRANDS.map(brand => {
-                          const BrandIcon = BRAND_ICONS[brand.slug];
-                          return (
-                          <Link
-                            key={brand.slug}
-                            href={`/brands/${brand.slug}`}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
-                            onClick={() => setMobileOpen(false)}
-                          >
-                            <span className="w-8 h-8 rounded-lg bg-navy/5 text-navy flex items-center justify-center flex-shrink-0">
-                              {BrandIcon && <BrandIcon size={16} />}
-                            </span>
-                            <div>
-                              <div className="text-sm font-medium text-gray-800">
-                                {brand.name}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {brand.tagline}
-                              </div>
-                            </div>
-                          </Link>
-                          );
-                        })}
-                      </div>
-                    </nav>
-
-                    <div className="p-4 border-t space-y-2">
-                      {isAuthenticated ? (
-                        <>
-                          <Link
-                            href="/account"
-                            className="flex items-center gap-2 w-full px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold"
-                            onClick={() => setMobileOpen(false)}
-                          >
-                            <User size={15} /> My Account
-                          </Link>
-                          <button
-                            onClick={() => {
-                              logout();
-                              setMobileOpen(false);
-                            }}
-                            className="flex items-center gap-2 w-full px-4 py-2.5 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium"
-                          >
-                            <LogOut size={15} /> Sign Out
-                          </button>
-                        </>
-                      ) : (
-                        <a
-                          href={getLoginUrl()}
-                          className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold"
-                        >
-                          <User size={15} /> Sign In / Register
-                        </a>
-                      )}
-                    </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-52 bg-white text-gray-900 rounded-lg shadow-xl border border-gray-100 mt-2 p-1"
+                >
+                  <div className="px-3 py-2 border-b border-gray-100">
+                    <p className="font-semibold text-sm text-gray-900 truncate">
+                      {user?.name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                   </div>
-                </SheetContent>
-              </Sheet>
-            </div>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/account"
+                      className="cursor-pointer text-sm px-3 py-2 hover:bg-gray-100 rounded block text-gray-800"
+                    >
+                      My Account
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={logout}
+                    className="text-red-600 text-sm cursor-pointer hover:bg-red-50 rounded px-3 py-2 font-medium"
+                  >
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link
+                href="/account"
+                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors border border-white/20 cursor-pointer"
+              >
+                <User size={16} className="text-white" />
+                <span className="hidden sm:inline text-white">Sign In</span>
+              </Link>
+            )}
           </div>
         </div>
 
-        {/* Search Bar */}
-        <AnimatePresence>
-          {searchOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="border-t border-gray-100 overflow-hidden"
+        {/* ── Sub Navigation Bar ──────────────────────────────────── */}
+        <div
+          className="bg-white w-full px-4 md:px-8 h-[48px] flex items-center justify-between border-b border-gray-200 shadow-sm"
+          style={{ color: "#1e293b", backgroundColor: "#ffffff" }}
+        >
+          {/* Social Media Links */}
+          <div className="hidden sm:flex items-center gap-3 pr-4 mr-2 border-r border-gray-200 h-5" style={{ color: "#0052B4" }}>
+            <a
+              href="https://facebook.com"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Facebook"
+              className="hover:opacity-75 transition-opacity p-1 cursor-pointer"
+              style={{ color: "#0052B4" }}
             >
-              <div className="container py-3">
-                <form onSubmit={handleSearch} className="relative">
-                  <Search
-                    size={18}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  />
-                  <Input
-                    ref={searchInputRef}
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    placeholder="Search products, brands..."
-                    className="pl-10 pr-10 h-11 border-gray-200 focus:border-navy"
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery("")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      <X size={16} />
-                    </button>
-                  )}
-                </form>
+              <Facebook size={16} />
+            </a>
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Instagram"
+              className="hover:opacity-75 transition-opacity p-1 cursor-pointer"
+              style={{ color: "#0052B4" }}
+            >
+              <Instagram size={16} />
+            </a>
+            <a
+              href="https://twitter.com"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Twitter"
+              className="hover:opacity-75 transition-opacity p-1 cursor-pointer"
+              style={{ color: "#0052B4" }}
+            >
+              <Twitter size={16} />
+            </a>
+            <a
+              href="https://youtube.com"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="YouTube"
+              className="hover:opacity-75 transition-opacity p-1 cursor-pointer"
+              style={{ color: "#0052B4" }}
+            >
+              <Youtube size={16} />
+            </a>
+          </div>
 
-                {/* Search Results Dropdown */}
-                {searchQuery.length > 1 &&
-                  searchResults &&
-                  searchResults.length > 0 && (
-                    <div className="mt-2 bg-white border border-gray-100 rounded-xl shadow-card-hover overflow-hidden">
-                      {searchResults.map(result => (
-                        <Link
-                          key={result.id}
-                          href={`/products/${result.slug}`}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
-                          onClick={() => {
-                            setSearchOpen(false);
-                            setSearchQuery("");
-                          }}
-                        >
-                          {result.imageUrl ? (
-                            <img
-                              src={result.imageUrl}
-                              alt={result.name}
-                              className="w-10 h-10 object-cover rounded-lg"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-xs">
-                              IMG
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-gray-800 truncate">
-                              {result.name}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {result.brandName}
-                            </div>
-                          </div>
-                          <div className="text-sm font-semibold text-navy">
-                            {formatPrice(result.salePrice ?? result.basePrice)}
-                          </div>
-                        </Link>
-                      ))}
-                      <Link
-                        href={`/products?search=${encodeURIComponent(searchQuery)}`}
-                        className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-navy hover:bg-blue-50 transition-colors"
-                        onClick={() => {
-                          setSearchOpen(false);
-                          setSearchQuery("");
-                        }}
-                      >
-                        View all results for "{searchQuery}" →
-                      </Link>
-                    </div>
-                  )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {/* Navigation Links */}
+          <nav className="flex items-center justify-around sm:justify-start gap-1 sm:gap-2 md:gap-3 flex-1 h-full overflow-x-auto scrollbar-none">
+            {navLinks.map(({ href, label, icon: Icon, exact }) => {
+              const active = isLinkActive(href, exact);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[14px] transition-all duration-200 whitespace-nowrap cursor-pointer ${
+                    active
+                      ? "bg-blue-50 border border-blue-200/80 shadow-xs"
+                      : "hover:bg-gray-100"
+                  }`}
+                  style={{
+                    color: active ? "#0052B4" : "#1e293b",
+                  }}
+                >
+                  <Icon
+                    size={17}
+                    strokeWidth={active ? 2.5 : 2}
+                    style={{ color: active ? "#0052B4" : "#475569" }}
+                  />
+                  <span
+                    style={{
+                      color: active ? "#0052B4" : "#1e293b",
+                      fontWeight: active ? 800 : 700,
+                    }}
+                  >
+                    {label}
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Hotline / Customer Helpline */}
+          <div className="hidden lg:flex items-center gap-2 pl-4 text-xs font-bold">
+            <span
+              className="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200 shadow-xs"
+              style={{ color: "#0052B4" }}
+            >
+              <PhoneCall size={14} style={{ color: "#0052B4" }} />
+              <span style={{ color: "#0052B4", fontWeight: 700 }}>
+                Hotline: +94 11 234 5678
+              </span>
+            </span>
+          </div>
+        </div>
       </header>
+
+      {/* Spacer to prevent content from going under fixed header */}
+      <div className="h-[114px] w-full shrink-0"></div>
     </>
   );
 }

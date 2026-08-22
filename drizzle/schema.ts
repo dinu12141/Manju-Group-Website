@@ -18,6 +18,7 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   phone: varchar("phone", { length: 32 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
+  passwordHash: varchar("passwordHash", { length: 255 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   avatarUrl: text("avatarUrl"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -140,8 +141,8 @@ export type Cart = typeof carts.$inferSelect;
 export const cartItems = mysqlTable("cart_items", {
   id: int("id").autoincrement().primaryKey(),
   cartId: int("cartId").notNull(),
-  productId: int("productId").notNull(),
-  variantId: int("variantId"),
+  productId: varchar("productId", { length: 256 }).notNull(),
+  variantId: varchar("variantId", { length: 256 }),
   quantity: int("quantity").default(1).notNull(),
   unitPrice: decimal("unitPrice", { precision: 12, scale: 2 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -154,7 +155,7 @@ export type CartItem = typeof cartItems.$inferSelect;
 export const wishlists = mysqlTable("wishlists", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
-  productId: int("productId").notNull(),
+  productId: varchar("productId", { length: 256 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -206,8 +207,8 @@ export type Order = typeof orders.$inferSelect;
 export const orderItems = mysqlTable("order_items", {
   id: int("id").autoincrement().primaryKey(),
   orderId: int("orderId").notNull(),
-  productId: int("productId").notNull(),
-  variantId: int("variantId"),
+  productId: varchar("productId", { length: 256 }).notNull(),
+  variantId: varchar("variantId", { length: 256 }),
   productName: varchar("productName", { length: 256 }).notNull(),
   variantName: varchar("variantName", { length: 128 }),
   sku: varchar("sku", { length: 64 }),
@@ -222,7 +223,7 @@ export type OrderItem = typeof orderItems.$inferSelect;
 // ─── Reviews ──────────────────────────────────────────────────────────────────
 export const reviews = mysqlTable("reviews", {
   id: int("id").autoincrement().primaryKey(),
-  productId: int("productId").notNull(),
+  productId: varchar("productId", { length: 256 }).notNull(),
   userId: int("userId").notNull(),
   rating: int("rating").notNull(),
   title: varchar("title", { length: 256 }),

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
@@ -9,9 +9,11 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
-    } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
+      const maybeDb = drizzle(process.env.DATABASE_URL);
+      await maybeDb.execute(sql`SELECT 1`);
+      _db = maybeDb;
+    } catch (error: any) {
+      console.warn("[Database] Failed to connect:", error.message || error);
       _db = null;
     }
   }
@@ -35,7 +37,14 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     };
     const updateSet: Record<string, unknown> = {};
 
-    const textFields = ["name", "email", "loginMethod"] as const;
+    const textFields = [
+      "name",
+      "email",
+      "phone",
+      "loginMethod",
+      "passwordHash",
+      "avatarUrl",
+    ] as const;
     type TextField = (typeof textFields)[number];
 
     const assignNullable = (field: TextField) => {
@@ -88,6 +97,22 @@ export async function getUserByOpenId(openId: string) {
     .select()
     .from(users)
     .where(eq(users.openId, openId))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get user: database not available");
+    return undefined;
+  }
+
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
     .limit(1);
 
   return result.length > 0 ? result[0] : undefined;

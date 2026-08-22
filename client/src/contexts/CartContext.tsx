@@ -2,18 +2,18 @@ import React, {
   createContext,
   useContext,
   useState,
-  useEffect,
   useCallback,
 } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getSessionId } from "@/lib/data";
 import { toast } from "sonner";
+import CartSidebar from "@/components/CartSidebar";
 
-interface CartItem {
+export interface CartItem {
   id: number;
   cartId: number;
-  productId: number;
+  productId: number | string;
   variantId?: number | null;
   quantity: number;
   unitPrice: string | number;
@@ -29,12 +29,16 @@ interface CartContextValue {
   total: number;
   itemCount: number;
   isLoading: boolean;
+  isDrawerOpen: boolean;
+  openDrawer: () => void;
+  closeDrawer: () => void;
   addItem: (
-    productId: number,
+    productId: number | string,
     unitPrice: number,
     productName: string,
     variantId?: number,
-    quantity?: number
+    quantity?: number,
+    openDrawerOnAdd?: boolean
   ) => Promise<void>;
   updateItem: (itemId: number, quantity: number) => Promise<void>;
   removeItem: (itemId: number) => Promise<void>;
@@ -46,6 +50,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [sessionId] = useState(() => {
     try {
       return getSessionId();
@@ -72,13 +77,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     onSuccess: () => refetch(),
   });
 
+  const openDrawer = useCallback(() => setIsDrawerOpen(true), []);
+  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
+
   const addItem = useCallback(
     async (
-      productId: number,
+      productId: number | string,
       unitPrice: number,
       productName: string,
       variantId?: number,
-      quantity: number = 1
+      quantity: number = 1,
+      openDrawerOnAdd: boolean = true
     ) => {
       try {
         await addItemMutation.mutateAsync({
@@ -88,37 +97,58 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           unitPrice,
           sessionId: user ? undefined : sessionId,
         });
+        await refetch();
         toast.success(`${productName} added to cart`);
-      } catch {
+        if (openDrawerOnAdd) {
+          setIsDrawerOpen(true);
+        }
+      } catch (err) {
+        console.error("Failed to add item to cart:", err);
         toast.error("Failed to add item to cart");
       }
     },
-    [addItemMutation, user, sessionId]
+    [addItemMutation, user, sessionId, refetch]
   );
 
   const updateItem = useCallback(
     async (itemId: number, quantity: number) => {
-      await updateItemMutation.mutateAsync({
-        itemId,
-        quantity,
-        sessionId: user ? undefined : sessionId,
-      });
+      try {
+        await updateItemMutation.mutateAsync({
+          itemId,
+          quantity,
+          sessionId: user ? undefined : sessionId,
+        });
+        await refetch();
+      } catch (err) {
+        console.error("Failed to update cart item:", err);
+      }
     },
-    [updateItemMutation, user, sessionId]
+    [updateItemMutation, user, sessionId, refetch]
   );
 
   const removeItem = useCallback(
     async (itemId: number) => {
-      await removeItemMutation.mutateAsync({ itemId });
+      try {
+        await removeItemMutation.mutateAsync({ itemId });
+        await refetch();
+        toast.info("Item removed from cart");
+      } catch (err) {
+        console.error("Failed to remove item:", err);
+      }
     },
-    [removeItemMutation]
+    [removeItemMutation, refetch]
   );
 
   const clearCart = useCallback(async () => {
-    await clearMutation.mutateAsync({
-      sessionId: user ? undefined : sessionId,
-    });
-  }, [clearMutation, user, sessionId]);
+    try {
+      await clearMutation.mutateAsync({
+        sessionId: user ? undefined : sessionId,
+      });
+      await refetch();
+    } catch (err) {
+      console.error("Failed to clear cart:", err);
+    }
+  }, [clearMutation, user, sessionId, refetch]);
 
   return (
     <CartContext.Provider
@@ -127,6 +157,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         total: data?.total ?? 0,
         itemCount: data?.itemCount ?? 0,
         isLoading,
+        isDrawerOpen,
+        openDrawer,
+        closeDrawer,
         addItem,
         updateItem,
         removeItem,
@@ -135,6 +168,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
+      <CartSidebar open={isDrawerOpen} onClose={closeDrawer} />
     </CartContext.Provider>
   );
 }

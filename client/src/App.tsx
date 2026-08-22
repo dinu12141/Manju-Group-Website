@@ -19,34 +19,47 @@ import News from "./pages/News";
 import NewsDetail from "./pages/NewsDetail";
 import Account from "./pages/Account";
 import Admin from "./pages/Admin";
+import Checkout from "./pages/Checkout";
+
+import ScrollToTop from "./components/ScrollToTop";
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Home} />
+    <>
+      <ScrollToTop />
+      <Switch>
+        <Route path="/" component={Home} />
       <Route path="/products" component={Products} />
-      <Route path="/products/:slug" component={ProductDetail} />
+      <Route path="/products/:slug">
+        {params => <ProductDetail params={params as { slug: string }} />}
+      </Route>
       <Route path="/brands" component={Brands} />
-      <Route path="/brands/:slug" component={BrandPage} />
+      <Route path="/brands/:slug">
+        {params => <BrandPage params={params as { slug: string }} />}
+      </Route>
       <Route path="/cart" component={Cart} />
+      <Route path="/checkout" component={Checkout} />
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
       <Route path="/locations" component={Locations} />
       <Route path="/faq" component={FAQ} />
       <Route path="/news" component={News} />
-      <Route path="/news/:slug" component={NewsDetail} />
+      <Route path="/news/:slug">
+        {params => <NewsDetail params={params as { slug: string }} />}
+      </Route>
       <Route path="/account" component={Account} />
       <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
+    </>
   );
 }
 
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light">
+      <ThemeProvider defaultTheme="dark">
         <CartProvider>
           <TooltipProvider>
             <Toaster />

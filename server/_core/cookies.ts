@@ -39,10 +39,16 @@ export function getSessionCookieOptions(
   //       ? hostname
   //       : undefined;
 
+  const secure = isSecureRequest(req);
+
   return {
     httpOnly: true,
     path: "/",
-    sameSite: "none",
-    secure: isSecureRequest(req),
+    // "None" cookies are rejected by browsers unless also marked Secure, which
+    // isn't possible over plain HTTP (e.g. local dev on http://localhost).
+    // Fall back to "Lax" in that case — it still survives the top-level
+    // redirect navigations used by the OAuth callback flows.
+    sameSite: secure ? "none" : "lax",
+    secure,
   };
 }
