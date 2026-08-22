@@ -244,64 +244,207 @@ export default function Brands() {
   return (
     <MainLayout>
       <div className="bg-white text-[#111827]">
-        {/* HERO */}
-        <section className="relative overflow-hidden bg-[#0B2545] pt-16 pb-14 md:pt-20 md:pb-16">
-          <div
-            className="pointer-events-none absolute inset-0 opacity-40"
-            style={{
-              background:
-                "radial-gradient(ellipse 60% 60% at 15% 0%, rgba(56,189,248,0.18), transparent 60%), radial-gradient(ellipse 50% 50% at 100% 100%, rgba(201,168,76,0.14), transparent 60%)",
-            }}
-          />
-          <div className="container relative max-w-6xl">
+        {/* ── LUXURY ANIMATED HERO SECTION ─────────────────────────────── */}
+        <section className="relative overflow-hidden bg-gradient-to-b from-[#00122e] via-[#001f4d] to-[#0b2854] pt-16 pb-16 md:pt-24 md:pb-20 text-white border-b border-blue-900/40">
+          {/* Animated Ambient Glow Orbs */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <motion.div
-              initial={prefersReducedMotion ? undefined : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="max-w-2xl"
-            >
-              <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#C9A84C] mb-4">
-                Our Brand Portfolio
-              </span>
-              <h1 className="font-display text-4xl sm:text-5xl font-black leading-tight text-white mb-4">
-                Four Brands. One Standard of Living Better.
-              </h1>
-              <p className="text-white/70 text-base leading-relaxed max-w-xl mb-8">
-                From the way Sri Lanka moves to the way it lives, connects, and
-                stays comfortable, Manju Group brings trusted solutions for
-                modern everyday life.
-              </p>
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => scrollToCategory("mobility")}
-                  className="bg-[#F85606] text-white px-6 py-3 rounded-full text-sm font-bold hover:bg-[#e04d00] transition-colors shadow-lg"
-                >
-                  Explore Our Brands
-                </button>
-                <Link href="/about">
-                  <button className="border border-white/25 text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-white/10 transition-colors">
-                    Discover Manju Group
-                  </button>
-                </Link>
-              </div>
-            </motion.div>
+              animate={{
+                x: [0, 60, 0],
+                y: [0, -40, 0],
+                scale: [1, 1.2, 1],
+                opacity: [0.25, 0.45, 0.25],
+              }}
+              transition={{
+                duration: 12,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="absolute -top-20 -left-20 w-96 h-96 rounded-full bg-gradient-to-br from-blue-500/30 via-indigo-500/20 to-transparent blur-3xl"
+            />
+            <motion.div
+              animate={{
+                x: [0, -50, 0],
+                y: [0, 50, 0],
+                scale: [1, 1.25, 1],
+                opacity: [0.2, 0.4, 0.2],
+              }}
+              transition={{
+                duration: 15,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 2,
+              }}
+              className="absolute top-1/3 -right-20 w-[450px] h-[450px] rounded-full bg-gradient-to-br from-[#0052B4]/30 via-cyan-500/20 to-transparent blur-3xl"
+            />
+            <motion.div
+              animate={{
+                scale: [1, 1.15, 1],
+                opacity: [0.15, 0.3, 0.15],
+              }}
+              transition={{
+                duration: 10,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1,
+              }}
+              className="absolute -bottom-20 left-1/3 w-80 h-80 rounded-full bg-gradient-to-br from-amber-500/15 via-blue-400/10 to-transparent blur-3xl"
+            />
 
-            {/* Metrics row */}
+            {/* Subtle Tech Grid Pattern */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0d_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0d_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-40" />
+          </div>
+
+          <div className="container relative z-10 max-w-7xl mx-auto px-4 md:px-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+              {/* Left Column: Heading & Narrative (7 cols) */}
+              <motion.div
+                initial={prefersReducedMotion ? undefined : { opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="lg:col-span-7"
+              >
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold uppercase tracking-widest text-[#C9A84C] mb-6 shadow-sm">
+                  <Sparkles size={13} className="text-[#C9A84C]" />
+                  <span>Our Brand Portfolio</span>
+                </div>
+
+                <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-black leading-[1.1] text-white mb-5 tracking-tight">
+                  Four Brands. <br className="hidden sm:block" />
+                  <span className="bg-gradient-to-r from-white via-blue-100 to-blue-300 bg-clip-text text-transparent">
+                    One Standard
+                  </span>{" "}
+                  of Living Better.
+                </h1>
+
+                <p className="text-blue-100/85 text-base sm:text-lg leading-relaxed max-w-xl mb-8 font-medium">
+                  From clean electric mobility to 4K home entertainment, smart inverter climate control, and pure drinking water—Manju Group brings trusted solutions for modern Sri Lankan everyday life.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-4">
+                  <button
+                    onClick={() => scrollToCategory("mobility")}
+                    className="px-7 py-3.5 rounded-full text-sm font-extrabold text-white bg-gradient-to-r from-[#F85606] to-[#d44700] hover:from-[#ff641a] hover:to-[#e04d00] shadow-lg hover:shadow-orange-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+                  >
+                    <span>Explore Brands</span>
+                    <ArrowRight size={16} />
+                  </button>
+
+                  <Link href="/about">
+                    <button className="px-7 py-3.5 rounded-full text-sm font-bold text-white bg-white/10 hover:bg-white/20 border border-white/25 backdrop-blur-md transition-all cursor-pointer hover:scale-105 active:scale-95">
+                      Discover Our Story
+                    </button>
+                  </Link>
+                </div>
+              </motion.div>
+
+              {/* Right Column: 2x2 Floating Interactive Brand Cards (5 cols) */}
+              <motion.div
+                initial={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.7, delay: 0.15 }}
+                className="lg:col-span-5"
+              >
+                <div className="grid grid-cols-2 gap-3.5 sm:gap-4">
+                  {/* Brand Card 1: Dew Motors */}
+                  <motion.div
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    onClick={() => scrollToCategory("mobility")}
+                    className="p-4 rounded-2xl bg-white/10 hover:bg-white/15 backdrop-blur-xl border border-white/20 hover:border-emerald-400/50 shadow-xl transition-all cursor-pointer group"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-2.5 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                      <Bike size={18} />
+                    </div>
+                    <span className="text-[11px] font-extrabold uppercase text-emerald-400 tracking-wider block">
+                      Mobility
+                    </span>
+                    <strong className="text-sm font-black text-white block mt-0.5 group-hover:text-emerald-300 transition-colors">
+                      Dew Motors
+                    </strong>
+                    <span className="text-[11px] text-blue-100/70 font-medium block mt-1">
+                      Electric Motorcycles & Scooters
+                    </span>
+                  </motion.div>
+
+                  {/* Brand Card 2: Dew Plus */}
+                  <motion.div
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    onClick={() => scrollToCategory("entertainment")}
+                    className="p-4 rounded-2xl bg-white/10 hover:bg-white/15 backdrop-blur-xl border border-white/20 hover:border-blue-400/50 shadow-xl transition-all cursor-pointer group"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-2.5 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                      <Tv size={18} />
+                    </div>
+                    <span className="text-[11px] font-extrabold uppercase text-blue-400 tracking-wider block">
+                      Entertainment
+                    </span>
+                    <strong className="text-sm font-black text-white block mt-0.5 group-hover:text-blue-300 transition-colors">
+                      Dew Plus
+                    </strong>
+                    <span className="text-[11px] text-blue-100/70 font-medium block mt-1">
+                      4K UHD Smart Google TVs
+                    </span>
+                  </motion.div>
+
+                  {/* Brand Card 3: DEW+ AC */}
+                  <motion.div
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    onClick={() => scrollToCategory("climate")}
+                    className="p-4 rounded-2xl bg-white/10 hover:bg-white/15 backdrop-blur-xl border border-white/20 hover:border-sky-400/50 shadow-xl transition-all cursor-pointer group"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center mb-2.5 group-hover:bg-sky-500 group-hover:text-white transition-colors">
+                      <Snowflake size={18} />
+                    </div>
+                    <span className="text-[11px] font-extrabold uppercase text-sky-400 tracking-wider block">
+                      Climate Control
+                    </span>
+                    <strong className="text-sm font-black text-white block mt-0.5 group-hover:text-sky-300 transition-colors">
+                      DEW+ AC
+                    </strong>
+                    <span className="text-[11px] text-blue-100/70 font-medium block mt-1">
+                      Inverter Air Conditioners (R32)
+                    </span>
+                  </motion.div>
+
+                  {/* Brand Card 4: Manju Dew Super */}
+                  <motion.div
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    onClick={() => scrollToCategory("water")}
+                    className="p-4 rounded-2xl bg-white/10 hover:bg-white/15 backdrop-blur-xl border border-white/20 hover:border-teal-400/50 shadow-xl transition-all cursor-pointer group"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center mb-2.5 group-hover:bg-teal-500 group-hover:text-white transition-colors">
+                      <Droplets size={18} />
+                    </div>
+                    <span className="text-[11px] font-extrabold uppercase text-teal-400 tracking-wider block">
+                      Pure Water
+                    </span>
+                    <strong className="text-sm font-black text-white block mt-0.5 group-hover:text-teal-300 transition-colors">
+                      Manju Dew Super
+                    </strong>
+                    <span className="text-[11px] text-blue-100/70 font-medium block mt-1">
+                      7-Stage RO + UV Purifiers
+                    </span>
+                  </motion.div>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Glassmorphic Metrics Row */}
             <motion.div
               initial={prefersReducedMotion ? undefined : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.15 }}
-              className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-6 border-t border-white/10 pt-8"
+              transition={{ duration: 0.5, delay: 0.25 }}
+              className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-white/15 pt-8"
             >
               {[
-                { v: "4", l: "Specialist brands" },
-                { v: "LK", l: "Sri Lankan market focus" },
-                { v: "24/7", l: "Reliable customer support" },
-                { v: "365", l: "Everyday solutions" },
+                { v: "4 Flagships", l: "Specialist Brands" },
+                { v: "100% Island-Wide", l: "Sri Lankan Coverage" },
+                { v: "24/7 Support", l: "Dedicated Helpline" },
+                { v: "365 Days", l: "Engineered Reliability" },
               ].map(m => (
-                <div key={m.l}>
-                  <div className="text-2xl font-black text-white">{m.v}</div>
-                  <div className="text-white/55 text-xs leading-snug mt-0.5">
+                <div key={m.l} className="p-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                  <div className="text-xl sm:text-2xl font-black text-white">{m.v}</div>
+                  <div className="text-blue-200/80 text-xs font-semibold mt-0.5">
                     {m.l}
                   </div>
                 </div>
