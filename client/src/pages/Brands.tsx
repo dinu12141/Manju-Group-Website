@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Link } from "wouter";
 import { motion, useReducedMotion } from "framer-motion";
 import {
@@ -196,6 +196,36 @@ export default function Brands() {
       block: "start",
     });
   };
+
+  useEffect(() => {
+    const handleHashOrParam = () => {
+      const hash = window.location.hash.replace("#", "").toLowerCase();
+      const params = new URLSearchParams(window.location.search);
+      const catParam = (params.get("category") || hash).toLowerCase();
+
+      const categoryMap: Record<string, CategoryKey> = {
+        mobility: "mobility",
+        "dew-motors": "mobility",
+        water: "water",
+        "manju-dew-super": "water",
+        entertainment: "entertainment",
+        "dew-plus": "entertainment",
+        climate: "climate",
+        "dew-plus-ac": "climate",
+      };
+
+      const targetCategory = categoryMap[catParam];
+      if (targetCategory && sectionRefs.current[targetCategory]) {
+        setTimeout(() => {
+          scrollToCategory(targetCategory);
+        }, 250);
+      }
+    };
+
+    handleHashOrParam();
+    window.addEventListener("hashchange", handleHashOrParam);
+    return () => window.removeEventListener("hashchange", handleHashOrParam);
+  }, [orderedBrands]);
 
   const reveal = (delay = 0) =>
     prefersReducedMotion
@@ -397,10 +427,11 @@ export default function Brands() {
           return (
             <section
               key={brand!.id}
+              id={c.category}
               ref={(el: HTMLDivElement | null) => {
                 sectionRefs.current[c.category] = el;
               }}
-              className={`${c.sectionBg} py-16 md:py-20 scroll-mt-32`}
+              className={`${c.sectionBg} py-16 md:py-20 scroll-mt-28`}
             >
               <div className="container max-w-6xl">
                 <div

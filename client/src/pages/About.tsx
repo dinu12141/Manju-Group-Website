@@ -304,7 +304,7 @@ export default function About() {
               {PORTFOLIO_SNAPSHOT.map((item, i) => {
                 const Icon = item.icon;
                 return (
-                  <Link key={item.key} href={`/brands/${item.slug}`}>
+                  <Link key={item.key} href={`/brands#${item.key}`}>
                     <motion.div
                       {...reveal(i * 0.08)}
                       className="group bg-white border border-gray-100 rounded-[20px] p-6 h-full hover:shadow-lg transition-shadow cursor-pointer"
