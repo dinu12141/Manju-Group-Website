@@ -19,16 +19,17 @@ const NAV_COLUMNS = [
       { label: "Home", href: "/" },
       { label: "About Us", href: "/about" },
       { label: "Our Brands", href: "/brands" },
-      { label: "News & Media", href: "/news" },
+      { label: "Island-Wide Showrooms", href: "/locations" },
     ],
   },
   {
     heading: "Products",
     links: [
       { label: "All Products", href: "/products" },
-      { label: "Smart TVs", href: "/products" },
-      { label: "Electric Bikes", href: "/products" },
-      { label: "Air Conditioners", href: "/products" },
+      { label: "Electric Bikes", href: "/products?categoryId=1" },
+      { label: "Smart TVs", href: "/products?categoryId=2" },
+      { label: "Air Conditioners", href: "/products?categoryId=3" },
+      { label: "Water Purifiers", href: "/products?categoryId=4" },
     ],
   },
   {
@@ -36,8 +37,7 @@ const NAV_COLUMNS = [
     links: [
       { label: "Contact Us", href: "/contact" },
       { label: "Frequently Asked Questions", href: "/faq" },
-      { label: "Showrooms & Branches", href: "/locations" },
-      { label: "Customer Account", href: "/account" },
+      { label: "Store Locator & Maps", href: "/locations" },
     ],
   },
 ];
