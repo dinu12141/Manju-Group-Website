@@ -117,22 +117,25 @@ export default function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="hidden sm:flex items-center gap-1 text-[13px] font-semibold text-blue-100 hover:text-white transition-colors px-2 py-1 rounded hover:bg-white/10 cursor-pointer">
-                  <span className="text-white">English</span>
+                  <span className="text-white font-bold">English</span>
                   <ChevronDown size={14} className="opacity-80 text-white" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="bg-white text-gray-900 rounded-lg shadow-xl border border-gray-100 mt-2 min-w-[120px] p-1 font-medium text-sm"
+                className="bg-white text-gray-900 rounded-xl shadow-xl border border-gray-100 mt-2 min-w-[150px] p-1 font-medium text-sm z-50"
               >
-                <DropdownMenuItem className="cursor-pointer text-sm font-semibold text-[#0052B4] bg-blue-50/60 rounded px-3 py-2">
-                  English
+                <DropdownMenuItem className="cursor-default text-sm font-bold text-[#0052B4] bg-blue-50/80 rounded-lg px-3 py-2 flex items-center justify-between">
+                  <span>English</span>
+                  <span className="text-[10px] bg-[#0052B4] text-white px-1.5 py-0.5 rounded font-extrabold">Default</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-sm hover:bg-gray-100 rounded px-3 py-2 text-gray-800">
-                  Sinhala (සිංහල)
+                <DropdownMenuItem disabled className="text-sm opacity-50 cursor-not-allowed rounded-lg px-3 py-2 text-gray-400 flex items-center justify-between">
+                  <span>Sinhala (සිංහල)</span>
+                  <span className="text-[9px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded font-semibold">Soon</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-sm hover:bg-gray-100 rounded px-3 py-2 text-gray-800">
-                  Tamil (தமிழ்)
+                <DropdownMenuItem disabled className="text-sm opacity-50 cursor-not-allowed rounded-lg px-3 py-2 text-gray-400 flex items-center justify-between">
+                  <span>Tamil (தமிழ்)</span>
+                  <span className="text-[9px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded font-semibold">Soon</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -285,12 +288,16 @@ export default function Header() {
             })}
           </nav>
 
-          {/* Right: Hotline / Customer Helpline */}
+          {/* Right: Hotline / Customer Helpline - Direct Click to Call */}
           <div className="hidden lg:flex items-center gap-2 pl-5 border-l border-gray-200 h-6 shrink-0">
-            <span className="flex items-center gap-2 bg-blue-50/90 px-3.5 py-1.5 rounded-full border border-blue-200/80 shadow-xs text-xs font-extrabold text-[#0052B4]">
-              <PhoneCall size={14} className="text-[#0052B4]" />
+            <a
+              href="tel:+94112345678"
+              className="flex items-center gap-2 bg-blue-50/90 hover:bg-[#0052B4] text-[#0052B4] hover:text-white px-3.5 py-1.5 rounded-full border border-blue-200/80 hover:border-[#0052B4] shadow-xs text-xs font-extrabold transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer group"
+              title="Click to call Manju Group Hotline (+94 11 234 5678)"
+            >
+              <PhoneCall size={14} className="text-[#0052B4] group-hover:text-white transition-colors" />
               <span>Hotline: +94 11 234 5678</span>
-            </span>
+            </a>
           </div>
         </div>
       </header>
