@@ -206,9 +206,9 @@ describe("contact router", () => {
 });
 
 describe("wishlist router", () => {
-  it("list requires authentication", async () => {
+  it("list returns empty array for guest with no session", async () => {
     const caller = appRouter.createCaller(createPublicContext());
-    await expect(caller.wishlist.list()).rejects.toThrow();
+    await expect(caller.wishlist.list()).resolves.toEqual([]);
   });
 
   it("list is accessible for authenticated user", async () => {
@@ -223,9 +223,9 @@ describe("wishlist router", () => {
 });
 
 describe("orders router", () => {
-  it("list requires authentication", async () => {
+  it("list returns empty array for guest with no session", async () => {
     const caller = appRouter.createCaller(createPublicContext());
-    await expect(caller.orders.list()).rejects.toThrow();
+    await expect(caller.orders.list()).resolves.toEqual([]);
   });
 
   it("list is accessible for authenticated user", async () => {

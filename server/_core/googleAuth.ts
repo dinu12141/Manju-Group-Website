@@ -12,8 +12,12 @@ function getCallbackUrl(req: Request): string {
   if (process.env.GOOGLE_CALLBACK_URL) {
     return process.env.GOOGLE_CALLBACK_URL;
   }
-  const protocol = (req.headers["x-forwarded-proto"] as string) || req.protocol || "http";
-  const host = (req.headers["x-forwarded-host"] as string) || req.get("host") || "localhost:3000";
+  const protocol =
+    (req.headers["x-forwarded-proto"] as string) || req.protocol || "http";
+  const host =
+    (req.headers["x-forwarded-host"] as string) ||
+    req.get("host") ||
+    "localhost:3000";
   return `${protocol}://${host}/api/oauth/google/callback`;
 }
 
@@ -86,13 +90,22 @@ export function registerGoogleOAuthRoutes(app: Express) {
     const redirectPath = decodeState(state);
 
     if (errorParam) {
-      console.warn("[GoogleOAuth] Callback returned error from Google:", errorParam);
-      res.redirect(302, `/account?error=google_auth_failed&reason=${encodeURIComponent(errorParam)}`);
+      console.warn(
+        "[GoogleOAuth] Callback returned error from Google:",
+        errorParam
+      );
+      res.redirect(
+        302,
+        `/account?error=google_auth_failed&reason=${encodeURIComponent(errorParam)}`
+      );
       return;
     }
 
     if (!code) {
-      res.redirect(302, "/account?error=google_auth_failed&reason=Missing+authorization+code");
+      res.redirect(
+        302,
+        "/account?error=google_auth_failed&reason=Missing+authorization+code"
+      );
       return;
     }
 

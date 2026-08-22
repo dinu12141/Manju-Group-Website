@@ -1,7 +1,13 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { carts, cartItems, products, brands, productImages } from "../../drizzle/schema";
+import {
+  carts,
+  cartItems,
+  products,
+  brands,
+  productImages,
+} from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 
 // In-memory fallback if MySQL is offline
@@ -131,7 +137,10 @@ export const cartRouter = router({
             }
           }
 
-          const fallbackPrice = Number(item.unitPrice) || (p?.salePrice ? Number(p.salePrice) : Number(p?.basePrice)) || 0;
+          const fallbackPrice =
+            Number(item.unitPrice) ||
+            (p?.salePrice ? Number(p.salePrice) : Number(p?.basePrice)) ||
+            0;
 
           return {
             id: item.id,
@@ -205,10 +214,7 @@ export const cartRouter = router({
         .select()
         .from(cartItems)
         .where(
-          and(
-            eq(cartItems.cartId, cart.id),
-            eq(cartItems.productId, prodIdStr)
-          )
+          and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, prodIdStr))
         )
         .limit(1);
 

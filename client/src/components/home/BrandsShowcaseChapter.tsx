@@ -101,7 +101,8 @@ export default function BrandsShowcaseChapter() {
               </span>
             </h2>
             <p className="text-gray-500 mt-3 text-base max-w-lg">
-              Engineering sustainable mobility, smart entertainment, climate comfort, and clean water across Sri Lanka.
+              Engineering sustainable mobility, smart entertainment, climate
+              comfort, and clean water across Sri Lanka.
             </p>
           </div>
           <Link href="/brands">

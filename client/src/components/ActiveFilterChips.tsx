@@ -51,21 +51,24 @@ export default function ActiveFilterChips({
     chips.push({
       key: "priceRange",
       label,
-      colorClass: "bg-orange-100 text-[#F85606] font-bold border border-orange-200",
+      colorClass:
+        "bg-orange-100 text-[#F85606] font-bold border border-orange-200",
     });
   }
   if (filters.inStockOnly) {
     chips.push({
       key: "inStockOnly",
       label: "In Stock",
-      colorClass: "bg-emerald-100 text-emerald-900 font-bold border border-emerald-200",
+      colorClass:
+        "bg-emerald-100 text-emerald-900 font-bold border border-emerald-200",
     });
   }
   if (filters.bestSellersOnly) {
     chips.push({
       key: "bestSellersOnly",
       label: "Best Sellers",
-      colorClass: "bg-amber-100 text-amber-950 font-bold border border-amber-200",
+      colorClass:
+        "bg-amber-100 text-amber-950 font-bold border border-amber-200",
     });
   }
   if (filters.newArrivalsOnly) {

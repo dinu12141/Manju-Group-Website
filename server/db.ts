@@ -10,7 +10,6 @@ export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
       const maybeDb = drizzle(process.env.DATABASE_URL);
-      await maybeDb.execute(sql`SELECT 1`);
       _db = maybeDb;
     } catch (error: any) {
       console.warn("[Database] Failed to connect:", error.message || error);

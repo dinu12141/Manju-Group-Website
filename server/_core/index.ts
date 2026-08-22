@@ -40,7 +40,9 @@ async function startServer() {
   registerOAuthRoutes(app);
   registerGoogleOAuthRoutes(app);
   // Serve static assets from client/public directly
-  app.use(express.static(path.resolve(import.meta.dirname, "../../client/public")));
+  app.use(
+    express.static(path.resolve(import.meta.dirname, "../../client/public"))
+  );
 
   // tRPC API
   app.use(

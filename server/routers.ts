@@ -163,7 +163,8 @@ export const appRouter = router({
             openId,
             name: payload.name || existingUserByOpenId.name || null,
             email: payload.email ?? existingUserByOpenId.email ?? null,
-            avatarUrl: payload.picture || existingUserByOpenId.avatarUrl || null,
+            avatarUrl:
+              payload.picture || existingUserByOpenId.avatarUrl || null,
             loginMethod: "google",
             lastSignedIn: new Date(),
           });
@@ -174,7 +175,8 @@ export const appRouter = router({
             await db.upsertUser({
               openId,
               name: payload.name || existingUserByEmail.name || null,
-              avatarUrl: payload.picture || existingUserByEmail.avatarUrl || null,
+              avatarUrl:
+                payload.picture || existingUserByEmail.avatarUrl || null,
               lastSignedIn: new Date(),
             });
           } else {

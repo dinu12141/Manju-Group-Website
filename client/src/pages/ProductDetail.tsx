@@ -23,8 +23,6 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import MainLayout from "@/components/MainLayout";
 import ProductCard from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { STATIC_PRODUCTS } from "@/lib/staticData";
-
 interface ProductDetailProps {
   params: { slug: string };
 }
@@ -98,8 +96,9 @@ export default function ProductDetail({ params }: ProductDetailProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("description");
   const [descExpanded, setDescExpanded] = useState(false);
 
-  const { data: dbProduct, isLoading } = trpc.products.bySlug.useQuery({ slug });
-  const staticProduct = STATIC_PRODUCTS.find(p => p.slug === slug);
+  const { data: dbProduct, isLoading } = trpc.products.bySlug.useQuery({
+    slug,
+  });
 
   const { data: relatedDb } = trpc.products.related.useQuery(
     {
@@ -145,38 +144,27 @@ export default function ProductDetail({ params }: ProductDetailProps) {
         salePrice: dbProduct.salePrice,
         currency: dbProduct.currency,
         isInStock: dbProduct.isInStock ?? true,
-        specifications: dbProduct.specifications as string | object | null | undefined,
+        specifications: dbProduct.specifications as
+          | string
+          | object
+          | null
+          | undefined,
         warrantyMonths: dbProduct.warrantyMonths,
-        images: (dbProduct.images ?? []).map((img: { url: string }) => ({ url: img.url })),
+        images: (dbProduct.images ?? []).map((img: { url: string }) => ({
+          url: img.url,
+        })),
         sku: dbProduct.sku,
       }
-    : staticProduct
-      ? {
-          id: staticProduct.id,
-          slug: staticProduct.slug,
-          name: staticProduct.name,
-          shortDescription: staticProduct.shortDescription,
-          description: staticProduct.description as string | null,
-          brandName: staticProduct.brandName,
-          brandId: staticProduct.brandId,
-          categoryId: staticProduct.categoryId,
-          basePrice: staticProduct.basePrice,
-          salePrice: staticProduct.salePrice,
-          currency: staticProduct.currency,
-          isInStock: staticProduct.isInStock,
-          specifications: staticProduct.specifications as string | null,
-          warrantyMonths: null,
-          images: staticProduct.imageUrl ? [{ url: staticProduct.imageUrl }] : [],
-          sku: null,
-        }
-      : null;
+    : null;
 
   if (!item) {
     return (
       <MainLayout>
         <div className="container py-24 text-center">
           <PackageX size={56} className="mx-auto text-white/30 mb-4" />
-          <h2 className="text-2xl font-black text-white mb-2">Product Not Found</h2>
+          <h2 className="text-2xl font-black text-white mb-2">
+            Product Not Found
+          </h2>
           <p className="text-white/50 mb-8">
             This product may have been removed or the link is incorrect.
           </p>
@@ -223,19 +211,30 @@ export default function ProductDetail({ params }: ProductDetailProps) {
       : (item.specifications as Record<string, unknown>)
     : null;
 
-  const relatedProducts =
-    relatedDb && relatedDb.length > 0
-      ? relatedDb
-      : STATIC_PRODUCTS.filter(p => p.brandId === item.brandId && p.id !== item.id).slice(0, 4);
+  const relatedProducts = relatedDb ?? [];
 
   const handleAddToCart = async () => {
-    await addItem(item.id, Number(displayPrice), item.name, undefined, quantity, true);
+    await addItem(
+      item.id,
+      Number(displayPrice),
+      item.name,
+      undefined,
+      quantity,
+      true
+    );
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
   };
 
   const handleBuyNow = async () => {
-    await addItem(item.id, Number(displayPrice), item.name, undefined, quantity, false);
+    await addItem(
+      item.id,
+      Number(displayPrice),
+      item.name,
+      undefined,
+      quantity,
+      false
+    );
     setLocation("/checkout");
   };
 
@@ -250,9 +249,16 @@ export default function ProductDetail({ params }: ProductDetailProps) {
       {/* Breadcrumb */}
       <div className="border-b border-white/8 py-3">
         <div className="container text-xs text-white/40 flex items-center gap-1.5 flex-wrap">
-          <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+          <Link href="/" className="hover:text-white/70 transition-colors">
+            Home
+          </Link>
           <span>/</span>
-          <Link href="/products" className="hover:text-white/70 transition-colors">Products</Link>
+          <Link
+            href="/products"
+            className="hover:text-white/70 transition-colors"
+          >
+            Products
+          </Link>
           {item.brandName && (
             <>
               <span>/</span>
@@ -260,7 +266,9 @@ export default function ProductDetail({ params }: ProductDetailProps) {
             </>
           )}
           <span>/</span>
-          <span className="text-white/70 truncate max-w-[200px]">{item.name}</span>
+          <span className="text-white/70 truncate max-w-[200px]">
+            {item.name}
+          </span>
         </div>
       </div>
 
@@ -272,7 +280,6 @@ export default function ProductDetail({ params }: ProductDetailProps) {
         <div className="container py-8 md:py-14">
           {/* Main product section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-16">
-
             {/* LEFT: Image gallery */}
             <div>
               {/* Main image */}
@@ -294,14 +301,19 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
                     className="absolute inset-0 w-full h-full object-cover"
-                    onError={e => { (e.target as HTMLImageElement).src = fallbackImage; }}
+                    onError={e => {
+                      (e.target as HTMLImageElement).src = fallbackImage;
+                    }}
                   />
                 </AnimatePresence>
 
                 {/* Image counter */}
                 <div
                   className="absolute top-3 right-3 z-10 px-2 py-1 rounded-full text-xs text-white/80"
-                  style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
+                  style={{
+                    background: "rgba(0,0,0,0.6)",
+                    backdropFilter: "blur(8px)",
+                  }}
                 >
                   {selectedImage + 1} / {images.length}
                 </div>
@@ -337,17 +349,31 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                 {images.length > 1 && (
                   <>
                     <button
-                      onClick={() => setSelectedImage(prev => (prev - 1 + images.length) % images.length)}
+                      onClick={() =>
+                        setSelectedImage(
+                          prev => (prev - 1 + images.length) % images.length
+                        )
+                      }
                       className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full flex items-center justify-center text-white transition-colors hover:bg-white/20"
-                      style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.1)" }}
+                      style={{
+                        background: "rgba(0,0,0,0.5)",
+                        backdropFilter: "blur(8px)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                      }}
                       aria-label="Previous image"
                     >
                       <ChevronLeft size={18} />
                     </button>
                     <button
-                      onClick={() => setSelectedImage(prev => (prev + 1) % images.length)}
+                      onClick={() =>
+                        setSelectedImage(prev => (prev + 1) % images.length)
+                      }
                       className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full flex items-center justify-center text-white transition-colors hover:bg-white/20"
-                      style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.1)" }}
+                      style={{
+                        background: "rgba(0,0,0,0.5)",
+                        backdropFilter: "blur(8px)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                      }}
                       aria-label="Next image"
                     >
                       <ChevronRight size={18} />
@@ -364,9 +390,10 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                     onClick={() => setSelectedImage(i % images.length)}
                     className="w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden transition-all"
                     style={{
-                      border: selectedImage === i % images.length
-                        ? "2px solid #4ade80"
-                        : "2px solid rgba(255,255,255,0.08)",
+                      border:
+                        selectedImage === i % images.length
+                          ? "2px solid #4ade80"
+                          : "2px solid rgba(255,255,255,0.08)",
                       opacity: selectedImage === i % images.length ? 1 : 0.45,
                     }}
                   >
@@ -374,7 +401,9 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                       src={src}
                       alt=""
                       className="w-full h-full object-cover"
-                      onError={e => { (e.target as HTMLImageElement).src = fallbackImage; }}
+                      onError={e => {
+                        (e.target as HTMLImageElement).src = fallbackImage;
+                      }}
                     />
                   </button>
                 ))}
@@ -394,7 +423,9 @@ export default function ProductDetail({ params }: ProductDetailProps) {
               </h1>
 
               <StarRating rating={rating} count={reviewCount} />
-              <div className="text-xs text-white/40 mt-1 mb-6">{soldCount} sold</div>
+              <div className="text-xs text-white/40 mt-1 mb-6">
+                {soldCount} sold
+              </div>
 
               {/* Price */}
               <div
@@ -437,7 +468,12 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                     className="text-white/60 text-sm leading-relaxed"
                     style={
                       !descExpanded
-                        ? { display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }
+                        ? {
+                            display: "-webkit-box",
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }
                         : undefined
                     }
                   >
@@ -456,10 +492,15 @@ export default function ProductDetail({ params }: ProductDetailProps) {
 
               {/* Quantity selector */}
               <div className="flex items-center gap-4 mb-6">
-                <span className="text-sm font-semibold text-white/70">Quantity</span>
+                <span className="text-sm font-semibold text-white/70">
+                  Quantity
+                </span>
                 <div
                   className="flex items-center rounded-xl overflow-hidden"
-                  style={{ border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)" }}
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    background: "rgba(255,255,255,0.04)",
+                  }}
                 >
                   <button
                     onClick={() => setQuantity(q => Math.max(1, q - 1))}
@@ -468,7 +509,9 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                   >
                     <Minus size={14} />
                   </button>
-                  <span className="w-12 text-center text-sm font-bold text-white">{quantity}</span>
+                  <span className="w-12 text-center text-sm font-bold text-white">
+                    {quantity}
+                  </span>
                   <button
                     onClick={() => setQuantity(q => Math.min(10, q + 1))}
                     className="w-10 h-10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
@@ -487,30 +530,52 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                   className="flex-1 h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   style={
                     addedToCart
-                      ? { background: "rgba(74,222,128,0.2)", border: "1px solid #4ade80", color: "#4ade80" }
-                      : { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(74,222,128,0.4)", color: "#4ade80" }
+                      ? {
+                          background: "rgba(74,222,128,0.2)",
+                          border: "1px solid #4ade80",
+                          color: "#4ade80",
+                        }
+                      : {
+                          background: "rgba(255,255,255,0.06)",
+                          border: "1px solid rgba(74,222,128,0.4)",
+                          color: "#4ade80",
+                        }
                   }
                 >
-                  {addedToCart ? <Check size={16} /> : <ShoppingCart size={16} />}
+                  {addedToCart ? (
+                    <Check size={16} />
+                  ) : (
+                    <ShoppingCart size={16} />
+                  )}
                   {addedToCart ? "Added to Cart!" : "Add to Cart"}
                 </button>
                 <button
                   onClick={handleBuyNow}
                   disabled={!item.isInStock}
                   className="flex-1 h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2 text-black transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                  style={{ background: "linear-gradient(135deg, #4ade80, #22c55e)" }}
+                  style={{
+                    background: "linear-gradient(135deg, #4ade80, #22c55e)",
+                  }}
                 >
                   <Zap size={16} /> Buy Now
                 </button>
                 <button
                   type="button"
                   onClick={() => toggleWishlist(item.id, item.name)}
-                  aria-label={isWishlisted(item.id) ? "Remove from Wishlist" : "Add to Wishlist"}
+                  aria-label={
+                    isWishlisted(item.id)
+                      ? "Remove from Wishlist"
+                      : "Add to Wishlist"
+                  }
                   className="w-12 h-12 rounded-xl flex items-center justify-center transition-all border border-white/15 hover:border-red-500/50 bg-white/5 hover:bg-red-500/10 cursor-pointer flex-shrink-0"
                 >
                   <Heart
                     size={20}
-                    className={isWishlisted(item.id) ? "fill-red-500 text-red-500" : "text-white/70"}
+                    className={
+                      isWishlisted(item.id)
+                        ? "fill-red-500 text-red-500"
+                        : "text-white/70"
+                    }
                   />
                 </button>
               </div>
@@ -532,7 +597,9 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                     }}
                   >
                     <Icon size={16} className="mb-1 text-[#4ade80]" />
-                    <div className="text-[10px] font-semibold text-white/50 leading-tight">{label}</div>
+                    <div className="text-[10px] font-semibold text-white/50 leading-tight">
+                      {label}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -544,7 +611,10 @@ export default function ProductDetail({ params }: ProductDetailProps) {
             {/* Tab bar */}
             <div
               className="flex gap-0 mb-6 rounded-xl overflow-hidden"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
             >
               {tabs.map(tab => (
                 <button
@@ -586,15 +656,25 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                         <div
                           key={key}
                           className="grid grid-cols-1 sm:grid-cols-[14rem_1fr] gap-1 sm:gap-3 py-3"
-                          style={i % 2 === 0 ? { background: "rgba(255,255,255,0.03)" } : undefined}
+                          style={
+                            i % 2 === 0
+                              ? { background: "rgba(255,255,255,0.03)" }
+                              : undefined
+                          }
                         >
-                          <dt className="text-sm text-white/80 font-semibold">{key}</dt>
-                          <dd className="text-sm text-white font-medium">{String(value)}</dd>
+                          <dt className="text-sm text-white/80 font-semibold">
+                            {key}
+                          </dt>
+                          <dd className="text-sm text-white font-medium">
+                            {String(value)}
+                          </dd>
                         </div>
                       ))}
                     </dl>
                   ) : (
-                    <p className="text-white/70 text-sm">Specifications not available for this product.</p>
+                    <p className="text-white/70 text-sm">
+                      Specifications not available for this product.
+                    </p>
                   )}
                 </>
               )}
@@ -607,9 +687,13 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                       dangerouslySetInnerHTML={{ __html: item.description }}
                     />
                   ) : item.shortDescription ? (
-                    <p className="text-white/90 leading-relaxed font-medium">{item.shortDescription}</p>
+                    <p className="text-white/90 leading-relaxed font-medium">
+                      {item.shortDescription}
+                    </p>
                   ) : (
-                    <p className="text-white/70 text-sm">No description available.</p>
+                    <p className="text-white/70 text-sm">
+                      No description available.
+                    </p>
                   )}
                 </>
               )}
@@ -617,7 +701,9 @@ export default function ProductDetail({ params }: ProductDetailProps) {
               {activeTab === "reviews" && (
                 <div className="text-center py-8">
                   <StarRating rating={rating} count={reviewCount} />
-                  <p className="text-white/40 text-sm mt-4">Detailed reviews coming soon.</p>
+                  <p className="text-white/40 text-sm mt-4">
+                    Detailed reviews coming soon.
+                  </p>
                 </div>
               )}
             </div>
@@ -630,36 +716,45 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                 <p className="text-xs font-semibold uppercase tracking-widest mb-2 text-[#4ade80]">
                   You Might Also Like
                 </p>
-                <h2 className="text-2xl font-black text-white">Related Products</h2>
+                <h2 className="text-2xl font-black text-white">
+                  Related Products
+                </h2>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 sm:gap-4">
-                {(relatedProducts.slice(0, 4) as React.ComponentProps<typeof ProductCard>[]).map(
-                  (related, i) => (
-                    <motion.div
-                      key={related.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.08, duration: 0.4, ease: "easeOut" }}
-                    >
-                      <ProductCard
-                        id={related.id}
-                        slug={related.slug}
-                        name={related.name}
-                        brandName={related.brandName ?? ""}
-                        basePrice={related.basePrice}
-                        salePrice={related.salePrice}
-                        currency={related.currency ?? "LKR"}
-                        isInStock={related.isInStock}
-                        imageUrl={
-                          related.imageUrl ||
-                          ((related as any).images && (related as any).images.length > 0
-                            ? (related as any).images[0].url
-                            : undefined)
-                        }
-                      />
-                    </motion.div>
-                  )
-                )}
+                {(
+                  relatedProducts.slice(0, 4) as React.ComponentProps<
+                    typeof ProductCard
+                  >[]
+                ).map((related, i) => (
+                  <motion.div
+                    key={related.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      delay: i * 0.08,
+                      duration: 0.4,
+                      ease: "easeOut",
+                    }}
+                  >
+                    <ProductCard
+                      id={related.id}
+                      slug={related.slug}
+                      name={related.name}
+                      brandName={related.brandName ?? ""}
+                      basePrice={related.basePrice}
+                      salePrice={related.salePrice}
+                      currency={related.currency ?? "LKR"}
+                      isInStock={related.isInStock}
+                      imageUrl={
+                        related.imageUrl ||
+                        ((related as any).images &&
+                        (related as any).images.length > 0
+                          ? (related as any).images[0].url
+                          : undefined)
+                      }
+                    />
+                  </motion.div>
+                ))}
               </div>
             </div>
           )}

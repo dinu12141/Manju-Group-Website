@@ -2,14 +2,12 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import ProductCard from "@/components/ProductCard";
-import { STATIC_PRODUCTS } from "@/lib/staticData";
-
-const FEATURED_STATIC = STATIC_PRODUCTS.filter(p => p.isFeatured).slice(0, 6);
 
 export default function FlashSaleChapter() {
   const { data } = trpc.products.list.useQuery({ limit: 6, isFeatured: true });
-  const products =
-    data?.items && data.items.length > 0 ? data.items : FEATURED_STATIC;
+  const products = data?.items ?? [];
+
+  if (products.length === 0) return null;
 
   return (
     <section className="bg-white py-6 border-b border-gray-100">

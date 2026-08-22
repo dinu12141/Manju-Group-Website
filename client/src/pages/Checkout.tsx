@@ -169,7 +169,9 @@ function OrderSummaryBox({ compact = false }: { compact?: boolean }) {
               <p className="text-xs font-bold text-slate-900 line-clamp-1">
                 {item.productName}
               </p>
-              <p className="text-xs text-slate-600 font-semibold">Qty: {item.quantity}</p>
+              <p className="text-xs text-slate-600 font-semibold">
+                Qty: {item.quantity}
+              </p>
             </div>
             <p className="text-xs font-black text-[#F85606] flex-shrink-0">
               {formatPrice(Number(item.unitPrice) * item.quantity)}
@@ -183,9 +185,7 @@ function OrderSummaryBox({ compact = false }: { compact?: boolean }) {
           <span>
             Subtotal ({itemCount} item{itemCount !== 1 ? "s" : ""})
           </span>
-          <span className="font-bold text-slate-900">
-            {formatPrice(total)}
-          </span>
+          <span className="font-bold text-slate-900">{formatPrice(total)}</span>
         </div>
         <div className="flex justify-between text-slate-700 font-medium">
           <span>Shipping</span>

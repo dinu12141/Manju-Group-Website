@@ -23,45 +23,108 @@ function getProductImage(
     return imageUrl;
   }
   const nameLower = name.toLowerCase();
-  if (nameLower.includes("32") && (nameLower.includes("tv") || nameLower.includes("smart"))) {
+  if (
+    nameLower.includes("32") &&
+    (nameLower.includes("tv") || nameLower.includes("smart"))
+  ) {
     return "/dew_plus_32_tv.png";
   }
-  if (nameLower.includes("43") && (nameLower.includes("tv") || nameLower.includes("smart"))) {
+  if (
+    nameLower.includes("43") &&
+    (nameLower.includes("tv") || nameLower.includes("smart"))
+  ) {
     return "/dew_plus_43_tv.png";
   }
-  if (nameLower.includes("55") || nameLower.includes("65") || (nameLower.includes("tv") || nameLower.includes("smart"))) {
+  if (
+    nameLower.includes("55") &&
+    (nameLower.includes("tv") || nameLower.includes("smart"))
+  ) {
     return "/dew_plus_55_tv.png";
   }
-  if (nameLower.includes("1.5") || (nameLower.includes("1_5") && (nameLower.includes("ac") || nameLower.includes("air")))) {
-    return "/dew_plus_ac_1_5ton.png";
-  }
-  if (nameLower.includes("2") && (nameLower.includes("ac") || nameLower.includes("air"))) {
-    return "/dew_plus_ac_2ton.png";
-  }
-  if (nameLower.includes("ac") || nameLower.includes("air conditioner") || nameLower.includes("inverter")) {
-    return "/dew_plus_ac_1ton.png";
-  }
-  if (nameLower.includes("water") || nameLower.includes("filter") || nameLower.includes("purifier") || nameLower.includes("dispenser") || nameLower.includes("ro")) {
-    return "/ro_water_purifier.png";
-  }
-  if (nameLower.includes("scooter") || nameLower.includes("em003") || nameLower.includes("silver") || nameLower.includes("yw06")) {
-    return "/scooter_silver.png";
-  }
-  if (nameLower.includes("bike") || nameLower.includes("motor") || nameLower.includes("electric") || nameLower.includes("em005")) {
-    return "/scooter_red.png";
+  if (
+    nameLower.includes("65") &&
+    (nameLower.includes("tv") || nameLower.includes("smart"))
+  ) {
+    return "/dew_plus_65_tv.png";
   }
   if (
-    nameLower.includes("book") ||
-    nameLower.includes("ruled") ||
-    nameLower.includes("drawing") ||
-    nameLower.includes("exercise") ||
-    nameLower.includes("cr") ||
-    nameLower.includes("a4") ||
-    nameLower.includes("a5") ||
-    nameLower.includes("b5") ||
-    nameLower.includes("stationery")
+    nameLower.includes("75") &&
+    (nameLower.includes("tv") || nameLower.includes("smart"))
   ) {
-    return "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80";
+    return "/dew_plus_75_tv.png";
+  }
+  if (
+    nameLower.includes("98") &&
+    (nameLower.includes("tv") || nameLower.includes("smart"))
+  ) {
+    return "/dew_plus_98_tv.png";
+  }
+  if (
+    nameLower.includes("1.5") ||
+    (nameLower.includes("1_5") &&
+      (nameLower.includes("ac") || nameLower.includes("air")))
+  ) {
+    return "/dew_plus_ac_1_5ton.png";
+  }
+  if (
+    nameLower.includes("2") &&
+    (nameLower.includes("ac") || nameLower.includes("air"))
+  ) {
+    return "/dew_plus_ac_2ton.png";
+  }
+  if (
+    nameLower.includes("ac") ||
+    nameLower.includes("air conditioner") ||
+    nameLower.includes("inverter")
+  ) {
+    return "/dew_plus_ac_1ton.png";
+  }
+  if (nameLower.includes("commercial") && nameLower.includes("3000")) {
+    return "/dew_super_commercial_3000l.png";
+  }
+  if (nameLower.includes("commercial") && nameLower.includes("2500")) {
+    return "/dew_super_commercial_2500l.png";
+  }
+  if (nameLower.includes("commercial") && nameLower.includes("500")) {
+    return "/dew_super_commercial_500l.png";
+  }
+  if (
+    nameLower.includes("cool") ||
+    (nameLower.includes("hot") &&
+      (nameLower.includes("cold") || nameLower.includes("cool")))
+  ) {
+    return "/dew_super_hot_cold_dispenser.png";
+  }
+  if (nameLower.includes("hot") && nameLower.includes("normal")) {
+    return "/dew_super_hot_normal.png";
+  }
+  if (nameLower.includes("ro+") || nameLower.includes("ro +")) {
+    return "/dew_super_ro_plus.png";
+  }
+  if (
+    nameLower.includes("water") ||
+    nameLower.includes("filter") ||
+    nameLower.includes("purifier") ||
+    nameLower.includes("dispenser") ||
+    nameLower.includes("ro")
+  ) {
+    return "/ro_water_purifier.png";
+  }
+  if (
+    nameLower.includes("scooter") ||
+    nameLower.includes("em003") ||
+    nameLower.includes("silver") ||
+    nameLower.includes("yw06")
+  ) {
+    return "/scooter_silver.png";
+  }
+  if (
+    nameLower.includes("bike") ||
+    nameLower.includes("motor") ||
+    nameLower.includes("electric") ||
+    nameLower.includes("em005")
+  ) {
+    return "/scooter_red.png";
   }
   return FALLBACK_DEFAULT;
 }
@@ -150,7 +213,9 @@ export default function ProductCard({
   const cleanBrand = cleanText(brandName);
 
   const hasDiscount =
-    salePrice != null && Number(salePrice) > 0 && Number(salePrice) < Number(basePrice);
+    salePrice != null &&
+    Number(salePrice) > 0 &&
+    Number(salePrice) < Number(basePrice);
   const displayPrice = hasDiscount ? salePrice! : basePrice;
   const discount = hasDiscount ? getDiscountPercent(basePrice, salePrice!) : 0;
 
@@ -192,7 +257,10 @@ export default function ProductCard({
       cls: "bg-[#F85606] text-white font-bold",
     },
     isNew && { label: "NEW", cls: "bg-emerald-600 text-white font-bold" },
-    isBestSeller && { label: "HOT", cls: "bg-amber-400 text-gray-900 font-bold" },
+    isBestSeller && {
+      label: "HOT",
+      cls: "bg-amber-400 text-gray-900 font-bold",
+    },
   ].filter(Boolean) as Array<{ label: string; cls: string }>;
 
   function cartContent() {
@@ -256,7 +324,10 @@ export default function ProductCard({
                   {warrantyMonths ? (
                     <span className="text-[9px] text-gray-500 flex items-center gap-0.5">
                       <ShieldCheck size={10} className="text-emerald-600" />
-                      {warrantyMonths >= 12 ? `${Math.floor(warrantyMonths / 12)}Y` : `${warrantyMonths}M`} Warranty
+                      {warrantyMonths >= 12
+                        ? `${Math.floor(warrantyMonths / 12)}Y`
+                        : `${warrantyMonths}M`}{" "}
+                      Warranty
                     </span>
                   ) : null}
                 </div>
@@ -348,9 +419,7 @@ export default function ProductCard({
             <Heart
               size={12}
               className={
-                wishlisted
-                  ? "fill-red-500 text-red-500"
-                  : "transition-colors"
+                wishlisted ? "fill-red-500 text-red-500" : "transition-colors"
               }
             />
           </button>
@@ -365,12 +434,16 @@ export default function ProductCard({
                 <span className="text-[9px] font-bold text-[#0F2D5E] uppercase tracking-wider bg-blue-50 px-1.5 py-0.2 rounded truncate">
                   {cleanBrand}
                 </span>
-              ) : <span />}
+              ) : (
+                <span />
+              )}
 
               {warrantyMonths ? (
                 <span className="text-[9px] text-gray-500 font-medium flex items-center gap-0.5 flex-shrink-0">
                   <ShieldCheck size={10} className="text-emerald-600" />
-                  {warrantyMonths >= 12 ? `${Math.floor(warrantyMonths / 12)}Y` : `${warrantyMonths}M`}
+                  {warrantyMonths >= 12
+                    ? `${Math.floor(warrantyMonths / 12)}Y`
+                    : `${warrantyMonths}M`}
                 </span>
               ) : null}
             </div>

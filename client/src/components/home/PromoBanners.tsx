@@ -33,8 +33,13 @@ export default function PromoBanners() {
                 Eco-Friendly · 80km Range · 2400W Power
               </p>
               <div className="inline-flex items-center gap-2 text-white font-bold text-xs uppercase tracking-wider group-hover:text-amber-400 transition-colors">
-                <span className="underline underline-offset-4">Explore Models</span>
-                <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform duration-300" />
+                <span className="underline underline-offset-4">
+                  Explore Models
+                </span>
+                <ArrowRight
+                  size={14}
+                  className="group-hover:translate-x-1.5 transition-transform duration-300"
+                />
               </div>
             </div>
           </Link>
@@ -66,8 +71,13 @@ export default function PromoBanners() {
                 4K UHD · Android 12 · Immersive Audio
               </p>
               <div className="inline-flex items-center gap-2 text-white font-bold text-xs uppercase tracking-wider group-hover:text-[#60A5FA] transition-colors">
-                <span className="underline underline-offset-4">Discover Deals</span>
-                <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform duration-300" />
+                <span className="underline underline-offset-4">
+                  Discover Deals
+                </span>
+                <ArrowRight
+                  size={14}
+                  className="group-hover:translate-x-1.5 transition-transform duration-300"
+                />
               </div>
             </div>
           </Link>

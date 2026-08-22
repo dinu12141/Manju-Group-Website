@@ -318,7 +318,9 @@ export default function Admin() {
                 >
                   <span
                     className={
-                      activeTab === tab.id ? "text-amber" : "text-gray-600 font-medium"
+                      activeTab === tab.id
+                        ? "text-amber"
+                        : "text-gray-600 font-medium"
                     }
                   >
                     {tab.icon}
@@ -375,7 +377,9 @@ export default function Admin() {
                       <div className="text-xl font-bold text-gray-800">
                         {stat.value}
                       </div>
-                      <div className="text-xs text-gray-700 font-medium">{stat.label}</div>
+                      <div className="text-xs text-gray-700 font-medium">
+                        {stat.label}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -794,7 +798,8 @@ export default function Admin() {
                         key: "email",
                         header: "Email",
                         headerClassName: "hidden sm:table-cell",
-                        className: "text-gray-700 font-medium hidden sm:table-cell",
+                        className:
+                          "text-gray-700 font-medium hidden sm:table-cell",
                         render: (customer: any) => customer.email || "—",
                       },
                       {
@@ -812,7 +817,8 @@ export default function Admin() {
                         key: "joined",
                         header: "Joined",
                         headerClassName: "hidden md:table-cell",
-                        className: "text-gray-600 font-medium text-xs hidden md:table-cell",
+                        className:
+                          "text-gray-600 font-medium text-xs hidden md:table-cell",
                         render: (customer: any) =>
                           new Date(customer.createdAt).toLocaleDateString(),
                       },
@@ -1211,7 +1217,9 @@ function OrderDetailDialog({
           <div className="space-y-4 text-sm">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <div className="text-xs text-gray-600 font-medium uppercase">Customer</div>
+                <div className="text-xs text-gray-600 font-medium uppercase">
+                  Customer
+                </div>
                 <div className="font-medium text-gray-800">
                   {order.customer?.name || "Guest"}
                 </div>
@@ -1220,7 +1228,9 @@ function OrderDetailDialog({
                 </div>
               </div>
               <div>
-                <div className="text-xs text-gray-600 font-medium uppercase">Status</div>
+                <div className="text-xs text-gray-600 font-medium uppercase">
+                  Status
+                </div>
                 <div className="font-medium text-gray-800 capitalize">
                   <span
                     className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${orderStatusBadgeClass(order.status)}`}
@@ -1235,7 +1245,9 @@ function OrderDetailDialog({
             </div>
 
             <div className="border-t border-gray-100 pt-4">
-              <div className="text-xs text-gray-600 font-medium uppercase mb-2">Items</div>
+              <div className="text-xs text-gray-600 font-medium uppercase mb-2">
+                Items
+              </div>
               <div className="space-y-2">
                 {order.items.map(item => (
                   <div

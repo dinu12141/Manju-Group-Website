@@ -95,8 +95,8 @@ export default function WhyChooseUsChapter() {
               </h2>
               <p className="text-gray-500 text-lg leading-relaxed max-w-md">
                 Sri Lanka's trusted multi-brand company delivering unparalleled
-                quality across electric bikes, smart TVs, air conditioners,
-                and water purification systems.
+                quality across electric bikes, smart TVs, air conditioners, and
+                water purification systems.
               </p>
             </div>
 

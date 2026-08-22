@@ -366,7 +366,13 @@ export default function Footer() {
                 ✓ Thank you for subscribing!
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px",
+                }}
+              >
                 <input
                   type="email"
                   value={email}
@@ -385,12 +391,16 @@ export default function Footer() {
                     boxSizing: "border-box",
                   }}
                   onFocus={e => {
-                    (e.currentTarget as HTMLInputElement).style.borderColor = "#60A5FA";
-                    (e.currentTarget as HTMLInputElement).style.background = "rgba(255, 255, 255, 0.12)";
+                    (e.currentTarget as HTMLInputElement).style.borderColor =
+                      "#60A5FA";
+                    (e.currentTarget as HTMLInputElement).style.background =
+                      "rgba(255, 255, 255, 0.12)";
                   }}
                   onBlur={e => {
-                    (e.currentTarget as HTMLInputElement).style.borderColor = "rgba(255, 255, 255, 0.2)";
-                    (e.currentTarget as HTMLInputElement).style.background = "rgba(255, 255, 255, 0.08)";
+                    (e.currentTarget as HTMLInputElement).style.borderColor =
+                      "rgba(255, 255, 255, 0.2)";
+                    (e.currentTarget as HTMLInputElement).style.background =
+                      "rgba(255, 255, 255, 0.08)";
                   }}
                 />
                 <button
@@ -452,14 +462,22 @@ export default function Footer() {
           {/* Copyright & Security */}
           <div className="flex items-center gap-2">
             <ShieldCheck size={16} className="text-[#60A5FA]" />
-            <span style={{ color: "rgba(255, 255, 255, 0.7)", fontSize: "13px", fontWeight: 500 }}>
+            <span
+              style={{
+                color: "rgba(255, 255, 255, 0.7)",
+                fontSize: "13px",
+                fontWeight: 500,
+              }}
+            >
               © {new Date().getFullYear()} Manju Group. All Rights Reserved.
             </span>
           </div>
 
           {/* Powered by EchoMedia */}
           <div className="flex items-center gap-1.5 text-xs">
-            <span style={{ color: "rgba(255, 255, 255, 0.7)" }}>Powered by</span>
+            <span style={{ color: "rgba(255, 255, 255, 0.7)" }}>
+              Powered by
+            </span>
             <a
               href="https://www.echomediaa.com/"
               target="_blank"
@@ -497,7 +515,8 @@ export default function Footer() {
                   transition: "color 0.15s",
                 }}
                 onMouseEnter={e =>
-                  ((e.currentTarget as HTMLAnchorElement).style.color = "#ffffff")
+                  ((e.currentTarget as HTMLAnchorElement).style.color =
+                    "#ffffff")
                 }
                 onMouseLeave={e =>
                   ((e.currentTarget as HTMLAnchorElement).style.color =

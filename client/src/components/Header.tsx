@@ -39,11 +39,11 @@ export default function Header() {
   };
 
   const navLinks = [
-    { href: "/", label: "Home", icon: Home, exact: true },
-    { href: "/products", label: "Products", icon: Package },
-    { href: "/brands", label: "Brands", icon: Share2 },
-    { href: "/about", label: "About Us", icon: Info },
-    { href: "/contact", label: "Contact", icon: Phone },
+    { href: "/", label: "Home", exact: true },
+    { href: "/products", label: "Products" },
+    { href: "/brands", label: "Brands" },
+    { href: "/about", label: "About Us" },
+    { href: "/contact", label: "Contact" },
   ];
 
   const isLinkActive = (href: string, exact = false) => {
@@ -56,7 +56,6 @@ export default function Header() {
       <header className="w-full flex flex-col z-50 fixed top-0 left-0 right-0 shadow-lg font-sans">
         {/* ── Top Bar — Brand Royal Blue ──────────────────────────── */}
         <div className="bg-gradient-to-r from-[#003875] via-[#0052B4] to-[#003B7B] text-white w-full px-4 md:px-8 h-[66px] flex items-center justify-between gap-4 md:gap-8 border-b border-[#004899]/60">
-          
           {/* Official Brand Logo */}
           <Link
             href="/"
@@ -75,7 +74,8 @@ export default function Header() {
                   className="text-white text-[20px] md:text-[23px] font-black tracking-tight leading-none uppercase drop-shadow-sm"
                   style={{ fontFamily: "'Montserrat', 'Inter', sans-serif" }}
                 >
-                  MANJU <span className="text-[#60A5FA] font-extrabold">GROUP</span>
+                  MANJU{" "}
+                  <span className="text-[#60A5FA] font-extrabold">GROUP</span>
                 </span>
               </div>
               <span className="text-[10px] md:text-[11px] text-blue-100/90 font-medium tracking-[0.16em] uppercase mt-0.5 flex items-center gap-1">
@@ -105,7 +105,9 @@ export default function Header() {
               className="h-full px-4 md:px-5 bg-gradient-to-r from-[#0052B4] to-[#003f8a] text-white flex items-center justify-center hover:from-[#00489e] hover:to-[#00336d] transition-all shrink-0 font-medium text-xs gap-1.5 shadow-sm cursor-pointer"
             >
               <Search size={18} strokeWidth={2.5} />
-              <span className="hidden sm:inline font-semibold text-xs tracking-wider text-white">SEARCH</span>
+              <span className="hidden sm:inline font-semibold text-xs tracking-wider text-white">
+                SEARCH
+              </span>
             </button>
           </div>
 
@@ -142,7 +144,11 @@ export default function Header() {
               className="relative p-2 rounded-full hover:bg-white/10 transition-colors flex items-center justify-center text-white cursor-pointer focus-visible:outline-none"
               title="Shopping Cart"
             >
-              <ShoppingCart size={22} strokeWidth={2.2} className="text-white" />
+              <ShoppingCart
+                size={22}
+                strokeWidth={2.2}
+                className="text-white"
+              />
               {itemCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 text-[11px] font-black px-1.5 min-w-[20px] h-[20px] flex items-center justify-center rounded-full shadow-md animate-in zoom-in-75">
                   {itemCount}
@@ -177,7 +183,9 @@ export default function Header() {
                     <p className="font-semibold text-sm text-gray-900 truncate">
                       {user?.name}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {user?.email}
+                    </p>
                   </div>
                   <DropdownMenuItem asChild>
                     <Link
@@ -209,66 +217,61 @@ export default function Header() {
 
         {/* ── Sub Navigation Bar ──────────────────────────────────── */}
         <div
-          className="bg-white w-full px-4 md:px-8 h-[48px] flex items-center justify-between border-b border-gray-200 shadow-sm"
+          className="bg-white w-full px-4 md:px-8 h-[50px] flex items-center justify-between border-b border-gray-200 shadow-sm relative z-40"
           style={{ color: "#1e293b", backgroundColor: "#ffffff" }}
         >
-          {/* Social Media Links */}
-          <div className="hidden sm:flex items-center gap-3 pr-4 mr-2 border-r border-gray-200 h-5">
+          {/* Left: Social Media Links */}
+          <div className="hidden md:flex items-center gap-3 pr-5 border-r border-gray-200 h-6 shrink-0">
             <a
               href="https://www.facebook.com/ManjuEnterprisesLK"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Facebook"
-              className="hover:opacity-75 transition-opacity p-1 cursor-pointer text-[#0052B4] hover:scale-110"
+              className="hover:opacity-80 transition-transform p-1 cursor-pointer text-[#0052B4] hover:scale-115"
               title="Manju Enterprises LK on Facebook"
             >
-              <Facebook size={16} />
+              <Facebook size={17} />
             </a>
             <span
               aria-label="Instagram (Coming Soon)"
-              className="p-1 text-gray-300 cursor-default opacity-50"
+              className="p-1 text-gray-300 cursor-default opacity-40"
               title="Coming Soon"
             >
-              <Instagram size={16} />
+              <Instagram size={17} />
             </span>
             <span
               aria-label="Twitter (Coming Soon)"
-              className="p-1 text-gray-300 cursor-default opacity-50"
+              className="p-1 text-gray-300 cursor-default opacity-40"
               title="Coming Soon"
             >
-              <Twitter size={16} />
+              <Twitter size={17} />
             </span>
             <span
               aria-label="YouTube (Coming Soon)"
-              className="p-1 text-gray-300 cursor-default opacity-50"
+              className="p-1 text-gray-300 cursor-default opacity-40"
               title="Coming Soon"
             >
-              <Youtube size={16} />
+              <Youtube size={17} />
             </span>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="flex items-center justify-around sm:justify-start gap-1 sm:gap-2 md:gap-3 flex-1 h-full overflow-x-auto scrollbar-none">
-            {navLinks.map(({ href, label, icon: Icon, exact }) => {
+          {/* Center Navigation Links — Full Width Balanced & Evenly Distributed (Text Only) */}
+          <nav className="flex items-center justify-around sm:justify-evenly gap-1 sm:gap-3 md:gap-6 flex-1 h-full max-w-5xl mx-auto px-2">
+            {navLinks.map(({ href, label, exact }) => {
               const active = isLinkActive(href, exact);
               return (
                 <Link
                   key={href}
                   href={href}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[14px] transition-all duration-200 whitespace-nowrap cursor-pointer ${
+                  className={`flex-1 max-w-[160px] flex items-center justify-center py-2 px-2 sm:px-4 rounded-xl text-[14px] sm:text-[15px] font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
                     active
-                      ? "bg-blue-50 border border-blue-200/80 shadow-xs"
-                      : "hover:bg-gray-100"
+                      ? "bg-[#0052B4]/10 text-[#0052B4] border border-[#0052B4]/25 shadow-xs"
+                      : "text-slate-700 hover:bg-slate-100/90 hover:text-[#0052B4]"
                   }`}
                   style={{
                     color: active ? "#0052B4" : "#1e293b",
                   }}
                 >
-                  <Icon
-                    size={17}
-                    strokeWidth={active ? 2.5 : 2}
-                    style={{ color: active ? "#0052B4" : "#475569" }}
-                  />
                   <span
                     style={{
                       color: active ? "#0052B4" : "#1e293b",
@@ -282,16 +285,11 @@ export default function Header() {
             })}
           </nav>
 
-          {/* Hotline / Customer Helpline */}
-          <div className="hidden lg:flex items-center gap-2 pl-4 text-xs font-bold">
-            <span
-              className="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200 shadow-xs"
-              style={{ color: "#0052B4" }}
-            >
-              <PhoneCall size={14} style={{ color: "#0052B4" }} />
-              <span style={{ color: "#0052B4", fontWeight: 700 }}>
-                Hotline: +94 11 234 5678
-              </span>
+          {/* Right: Hotline / Customer Helpline */}
+          <div className="hidden lg:flex items-center gap-2 pl-5 border-l border-gray-200 h-6 shrink-0">
+            <span className="flex items-center gap-2 bg-blue-50/90 px-3.5 py-1.5 rounded-full border border-blue-200/80 shadow-xs text-xs font-extrabold text-[#0052B4]">
+              <PhoneCall size={14} className="text-[#0052B4]" />
+              <span>Hotline: +94 11 234 5678</span>
             </span>
           </div>
         </div>

@@ -36,9 +36,9 @@ export default function SuggestionsSection() {
     emblaApi.on("reInit", onSelect);
   }, [emblaApi, onSelect]);
 
-  const suggestions = STATIC_PRODUCTS.filter((p) => p.id !== 3)
+  const suggestions = STATIC_PRODUCTS.filter(p => p.id !== 3)
     .slice(0, 10)
-    .map((p) => ({
+    .map(p => ({
       id: p.id,
       slug: p.slug,
       name: p.name,
@@ -91,7 +91,6 @@ export default function SuggestionsSection() {
 
         {/* Brand Royal Blue Container Area */}
         <div className="bg-gradient-to-r from-[#003875] via-[#0052B4] to-[#003366] rounded-xl p-4 md:p-6 flex flex-col md:flex-row shadow-lg">
-          
           {/* Left Brand Badge Area */}
           <div className="w-full md:w-1/4 flex flex-col items-center justify-center min-h-[160px] mb-4 md:mb-0 text-white p-4 border-b md:border-b-0 md:border-r border-white/10">
             <div className="flex flex-col items-center justify-center text-center">
@@ -113,7 +112,7 @@ export default function SuggestionsSection() {
           <div className="w-full md:w-3/4 md:pl-2">
             <div className="overflow-hidden" ref={emblaRef}>
               <div className="flex touch-pan-y -ml-4">
-                {suggestions.map((product) => (
+                {suggestions.map(product => (
                   <div
                     key={product.id}
                     className="flex-none pl-4 min-w-[70%] sm:min-w-[50%] md:min-w-[33.333%] lg:min-w-[25%]"

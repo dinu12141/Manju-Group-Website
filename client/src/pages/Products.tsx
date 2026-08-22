@@ -13,13 +13,12 @@ import {
   Tv,
   Wind,
   Droplets,
-  BookOpen,
   ShoppingBag,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import MainLayout from "@/components/MainLayout";
 import ProductCard from "@/components/ProductCard";
-import { STATIC_PRODUCTS, STATIC_BRANDS } from "@/lib/staticData";
+import { STATIC_BRANDS } from "@/lib/staticData";
 import { cleanText } from "@/lib/data";
 import {
   Select,
@@ -64,8 +63,6 @@ const CATEGORY_ICONS: Record<string, any> = {
   "smart-tvs": Tv,
   "air-conditioners": Wind,
   "water-filters": Droplets,
-  "stationery": BookOpen,
-  "exercise-books": BookOpen,
 };
 
 export default function Products() {
@@ -120,40 +117,8 @@ export default function Products() {
     sortBy,
   });
 
-  // Fallback filtering on static data if offline
-  const filteredStatic = useMemo(() => {
-    return STATIC_PRODUCTS.filter(p => {
-      if (filters.brandId && p.brandId !== filters.brandId) return false;
-      if (filters.categoryId && p.categoryId !== filters.categoryId) return false;
-      if (queryParams.isFeatured && !p.isFeatured) return false;
-      if (queryParams.isBestSeller && !p.isBestSeller) return false;
-      if (filters.bestSellersOnly && !p.isBestSeller) return false;
-      if (filters.newArrivalsOnly && !p.isNew) return false;
-      if (filters.inStockOnly && !p.isInStock) return false;
-      if (filters.priceRange) {
-        const price = Number(p.salePrice ?? p.basePrice);
-        if (price < filters.priceRange[0] || price > filters.priceRange[1])
-          return false;
-      }
-      if (queryParams.search) {
-        const q = queryParams.search.toLowerCase();
-        if (
-          !p.name.toLowerCase().includes(q) &&
-          !(p.brandName ?? "").toLowerCase().includes(q)
-        )
-          return false;
-      }
-      return true;
-    });
-  }, [filters, queryParams]);
-
-  const productsToShow =
-    data && data.items && data.items.length > 0
-      ? (data.items as any)
-      : filteredStatic;
-
-  const totalCount =
-    data && data.total !== undefined ? data.total : filteredStatic.length;
+  const productsToShow = (data?.items as any) ?? [];
+  const totalCount = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / 12));
 
   const hasActiveFilters = Boolean(
@@ -241,7 +206,10 @@ export default function Products() {
 
         <div className="container relative z-10">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-xs text-blue-200/80 mb-4" aria-label="Breadcrumb">
+          <nav
+            className="flex items-center gap-1.5 text-xs text-blue-200/80 mb-4"
+            aria-label="Breadcrumb"
+          >
             <span
               className="hover:text-white transition-colors cursor-pointer"
               onClick={() => (window.location.href = "/")}
@@ -258,7 +226,9 @@ export default function Products() {
             {selectedCategory && (
               <>
                 <ChevronRight size={12} className="text-blue-300/50" />
-                <span className="text-white font-medium">{cleanText(selectedCategory.name)}</span>
+                <span className="text-white font-medium">
+                  {cleanText(selectedCategory.name)}
+                </span>
               </>
             )}
           </nav>
@@ -274,7 +244,9 @@ export default function Products() {
                 {pageTitle}
               </h1>
               <p className="text-blue-100/80 text-sm md:text-base mt-2 max-w-xl">
-                Explore genuine multi-brand electric bikes, 4K smart TVs, inverter ACs, and water purification systems with manufacturer warranty.
+                Explore genuine multi-brand electric bikes, 4K smart TVs,
+                inverter ACs, and water purification systems with manufacturer
+                warranty.
               </p>
             </div>
 
@@ -301,7 +273,8 @@ export default function Products() {
             </button>
 
             {categories.map(cat => {
-              const IconComp = (cat.slug && CATEGORY_ICONS[cat.slug]) || ShoppingBag;
+              const IconComp =
+                (cat.slug && CATEGORY_ICONS[cat.slug]) || ShoppingBag;
               const isActive = filters.categoryId === cat.id;
               return (
                 <button
@@ -377,14 +350,23 @@ export default function Products() {
 
                 {/* Showing count */}
                 <span className="text-xs text-slate-700 font-medium hidden sm:inline-block">
-                  Showing <strong className="text-slate-900 font-bold">{productsToShow.length}</strong> of{" "}
-                  <strong className="text-slate-900 font-bold">{totalCount}</strong> products
+                  Showing{" "}
+                  <strong className="text-slate-900 font-bold">
+                    {productsToShow.length}
+                  </strong>{" "}
+                  of{" "}
+                  <strong className="text-slate-900 font-bold">
+                    {totalCount}
+                  </strong>{" "}
+                  products
                 </span>
 
                 {/* Sort + Layout Toggle */}
                 <div className="flex items-center gap-3 ml-auto">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-700 font-bold hidden md:inline">Sort:</span>
+                    <span className="text-xs text-slate-700 font-bold hidden md:inline">
+                      Sort:
+                    </span>
                     <Select
                       value={sortBy}
                       onValueChange={v => setSortBy(v as typeof sortBy)}
@@ -393,10 +375,30 @@ export default function Products() {
                         <SelectValue placeholder="Sort by" />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-slate-200 text-slate-900 rounded-xl shadow-xl z-50">
-                        <SelectItem value="newest" className="text-slate-900 font-semibold hover:bg-slate-100 cursor-pointer">Newest First</SelectItem>
-                        <SelectItem value="price_asc" className="text-slate-900 font-semibold hover:bg-slate-100 cursor-pointer">Price: Low to High</SelectItem>
-                        <SelectItem value="price_desc" className="text-slate-900 font-semibold hover:bg-slate-100 cursor-pointer">Price: High to Low</SelectItem>
-                        <SelectItem value="popular" className="text-slate-900 font-semibold hover:bg-slate-100 cursor-pointer">Most Popular</SelectItem>
+                        <SelectItem
+                          value="newest"
+                          className="text-slate-900 font-semibold hover:bg-slate-100 cursor-pointer"
+                        >
+                          Newest First
+                        </SelectItem>
+                        <SelectItem
+                          value="price_asc"
+                          className="text-slate-900 font-semibold hover:bg-slate-100 cursor-pointer"
+                        >
+                          Price: Low to High
+                        </SelectItem>
+                        <SelectItem
+                          value="price_desc"
+                          className="text-slate-900 font-semibold hover:bg-slate-100 cursor-pointer"
+                        >
+                          Price: High to Low
+                        </SelectItem>
+                        <SelectItem
+                          value="popular"
+                          className="text-slate-900 font-semibold hover:bg-slate-100 cursor-pointer"
+                        >
+                          Most Popular
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -506,7 +508,10 @@ export default function Products() {
                                 e.preventDefault();
                                 if (page > 1) {
                                   setPage(p => p - 1);
-                                  window.scrollTo({ top: 0, behavior: "smooth" });
+                                  window.scrollTo({
+                                    top: 0,
+                                    behavior: "smooth",
+                                  });
                                 }
                               }}
                               aria-disabled={page === 1}
@@ -530,7 +535,10 @@ export default function Products() {
                                   onClick={e => {
                                     e.preventDefault();
                                     setPage(p);
-                                    window.scrollTo({ top: 0, behavior: "smooth" });
+                                    window.scrollTo({
+                                      top: 0,
+                                      behavior: "smooth",
+                                    });
                                   }}
                                   className={`rounded-xl font-bold cursor-pointer transition-all ${
                                     page === p
@@ -550,7 +558,10 @@ export default function Products() {
                                 e.preventDefault();
                                 if (page < totalPages) {
                                   setPage(p => p + 1);
-                                  window.scrollTo({ top: 0, behavior: "smooth" });
+                                  window.scrollTo({
+                                    top: 0,
+                                    behavior: "smooth",
+                                  });
                                 }
                               }}
                               aria-disabled={page === totalPages}
@@ -576,7 +587,8 @@ export default function Products() {
                     No Matching Products Found
                   </h3>
                   <p className="text-sm text-gray-500 mb-6 max-w-sm">
-                    We couldn&apos;t find any products matching your active filters. Try broadening your criteria or reset filters.
+                    We couldn&apos;t find any products matching your active
+                    filters. Try broadening your criteria or reset filters.
                   </p>
                   <button
                     onClick={clearFilters}

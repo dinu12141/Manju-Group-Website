@@ -8,7 +8,18 @@ import {
   productImages,
   productVariants,
 } from "../../drizzle/schema";
-import { and, asc, desc, eq, gte, lte, like, or, sql, type SQL } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  lte,
+  like,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 
 // Shape returned to the frontend for a single product. Mirrors the legacy
 // App-API-backed shape so client components don't need to change.

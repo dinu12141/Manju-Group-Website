@@ -26,7 +26,12 @@ export interface FilterState {
 }
 
 interface FilterPanelProps {
-  brands: Array<{ id: number; name: string; slug?: string; primaryColor?: string | null }>;
+  brands: Array<{
+    id: number;
+    name: string;
+    slug?: string;
+    primaryColor?: string | null;
+  }>;
   categories?: Array<{ id: number; name: string; slug?: string }>;
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
@@ -152,7 +157,11 @@ export default function FilterPanel({
       {/* Categories */}
       {categories.length > 0 && (
         <div>
-          <SectionHeader label="Categories" icon={Layers} sectionKey="categories" />
+          <SectionHeader
+            label="Categories"
+            icon={Layers}
+            sectionKey="categories"
+          />
           <AnimatePresence initial={false}>
             {expanded.categories && (
               <motion.div
@@ -173,7 +182,9 @@ export default function FilterPanel({
                     }`}
                   >
                     <span>All Categories</span>
-                    {!filters.categoryId && <CheckCircle2 size={13} className="text-white" />}
+                    {!filters.categoryId && (
+                      <CheckCircle2 size={13} className="text-white" />
+                    )}
                   </button>
 
                   {categories.map(cat => {
@@ -183,7 +194,9 @@ export default function FilterPanel({
                         key={cat.id}
                         type="button"
                         onClick={() =>
-                          update({ categoryId: isSelected ? undefined : cat.id })
+                          update({
+                            categoryId: isSelected ? undefined : cat.id,
+                          })
                         }
                         className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left text-xs font-bold transition-all cursor-pointer ${
                           isSelected
@@ -192,7 +205,9 @@ export default function FilterPanel({
                         }`}
                       >
                         <span>{cleanText(cat.name)}</span>
-                        {isSelected && <CheckCircle2 size={13} className="text-white" />}
+                        {isSelected && (
+                          <CheckCircle2 size={13} className="text-white" />
+                        )}
                       </button>
                     );
                   })}
@@ -264,7 +279,9 @@ export default function FilterPanel({
                     onClick={() => setShowAllBrands(v => !v)}
                     className="text-xs text-[#F85606] font-bold hover:underline pl-2 mt-1 cursor-pointer"
                   >
-                    {showAllBrands ? "Show less" : `Show more (${brands.length - 8})`}
+                    {showAllBrands
+                      ? "Show less"
+                      : `Show more (${brands.length - 8})`}
                   </button>
                 )}
               </div>
@@ -277,7 +294,11 @@ export default function FilterPanel({
 
       {/* Price Range */}
       <div>
-        <SectionHeader label="Price Range (LKR)" icon={Tag} sectionKey="price" />
+        <SectionHeader
+          label="Price Range (LKR)"
+          icon={Tag}
+          sectionKey="price"
+        />
         <AnimatePresence initial={false}>
           {expanded.price && (
             <motion.div
@@ -344,7 +365,11 @@ export default function FilterPanel({
 
       {/* Availability & Highlights */}
       <div>
-        <SectionHeader label="Availability & Status" icon={Sparkles} sectionKey="availability" />
+        <SectionHeader
+          label="Availability & Status"
+          icon={Sparkles}
+          sectionKey="availability"
+        />
         <AnimatePresence initial={false}>
           {expanded.availability && (
             <motion.div
@@ -385,7 +410,8 @@ export default function FilterPanel({
                     className="border-slate-400"
                   />
                   <span className="text-xs flex items-center gap-1.5">
-                    <TrendingUp size={13} className="text-amber-600" /> Best Sellers
+                    <TrendingUp size={13} className="text-amber-600" /> Best
+                    Sellers
                   </span>
                 </label>
 
@@ -404,7 +430,8 @@ export default function FilterPanel({
                     className="border-slate-400"
                   />
                   <span className="text-xs flex items-center gap-1.5">
-                    <Sparkles size={13} className="text-blue-600" /> New Arrivals
+                    <Sparkles size={13} className="text-blue-600" /> New
+                    Arrivals
                   </span>
                 </label>
               </div>

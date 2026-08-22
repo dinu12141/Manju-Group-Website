@@ -1,11 +1,21 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { wishlists, products, brands, productImages } from "../../drizzle/schema";
+import {
+  wishlists,
+  products,
+  brands,
+  productImages,
+} from "../../drizzle/schema";
 import { eq, and, inArray } from "drizzle-orm";
 
 // In-memory fallback for guests or if DB is offline
-const MOCK_WISHLISTS: Array<{ id: number; userId?: number; sessionId?: string; productId: string }> = [];
+const MOCK_WISHLISTS: Array<{
+  id: number;
+  userId?: number;
+  sessionId?: string;
+  productId: string;
+}> = [];
 let mockWishlistIdCounter = 1;
 
 export const wishlistRouter = router({
@@ -145,10 +155,7 @@ export const wishlistRouter = router({
         .select()
         .from(wishlists)
         .where(
-          and(
-            eq(wishlists.userId, userId),
-            eq(wishlists.productId, prodIdStr)
-          )
+          and(eq(wishlists.userId, userId), eq(wishlists.productId, prodIdStr))
         )
         .limit(1);
 
@@ -191,10 +198,7 @@ export const wishlistRouter = router({
         .select()
         .from(wishlists)
         .where(
-          and(
-            eq(wishlists.userId, userId),
-            eq(wishlists.productId, prodIdStr)
-          )
+          and(eq(wishlists.userId, userId), eq(wishlists.productId, prodIdStr))
         )
         .limit(1);
 

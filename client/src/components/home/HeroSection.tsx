@@ -7,10 +7,21 @@ export default function HeroSection() {
   const [timeLeft, setTimeLeft] = useState("");
   const [isOfferEnded, setIsOfferEnded] = useState(false);
 
-  // Select products for the banners
-  const saleProduct = STATIC_PRODUCTS.find(p => p.id === 1); // Dew EM005 Electric Bike
-  const bestSellerProduct = STATIC_PRODUCTS.find(p => p.id === 2); // Next best seller
-  const offerProducts = STATIC_PRODUCTS.filter(p => [4, 7, 10].includes(p.id)); // TV, AC, Water Purifier
+  // Select products for the banners with robust fallbacks
+  const saleProduct =
+    STATIC_PRODUCTS.find(p => p.id === 52 || p.name.includes("EM005")) ||
+    STATIC_PRODUCTS[0];
+  const bestSellerProduct =
+    STATIC_PRODUCTS.find(p => p.id === 51 || p.name.includes("YW06")) ||
+    STATIC_PRODUCTS[1] ||
+    STATIC_PRODUCTS[0];
+  const offerProducts = STATIC_PRODUCTS.filter(
+    p =>
+      [45, 47, 53, 54, 41, 38].includes(p.id) ||
+      p.name.includes("Smart Tv") ||
+      p.name.includes("Inverter") ||
+      p.name.includes("Water Filter")
+  ).slice(0, 4);
 
   // Offers Slider effect
   useEffect(() => {
@@ -84,45 +95,53 @@ export default function HeroSection() {
           {/* Right Side Banners */}
           <div className="w-full lg:w-1/4 h-full flex flex-col gap-4">
             {/* Top Right: Time Sale / Best Seller Banner */}
-            {(isOfferEnded ? bestSellerProduct : saleProduct) && (() => {
-              const product = isOfferEnded ? bestSellerProduct! : saleProduct!;
-              return (
-              <Link
-                href={`/products/${product.slug}`}
-                className="flex-1 rounded bg-white overflow-hidden relative group cursor-pointer border border-red-200 shadow-sm hover:shadow-md transition-shadow block"
-              >
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent"></div>
-                <div className={`absolute top-2 left-2 ${isOfferEnded ? "bg-amber-400 text-slate-950" : "bg-red-600 text-white"} text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider shadow`}>
-                  {isOfferEnded ? "Best Seller" : "Flash Sale"}
-                </div>
-                {!isOfferEnded && (
-                  <div className="absolute top-2 right-2 bg-black/80 text-white text-[11px] font-mono font-bold px-2 py-1 rounded shadow">
-                    {timeLeft}
-                  </div>
-                )}
-                <div className="absolute bottom-3 left-3 pr-3 text-white">
-                  <h3 className="font-bold text-base leading-tight mb-1 drop-shadow-md">
-                    {product.name}
-                  </h3>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-red-400 font-bold text-lg drop-shadow-md">
-                      Rs. {Number(product.salePrice || product.basePrice).toLocaleString()}
-                    </span>
-                    {product.salePrice && (
-                      <span className="text-gray-300 text-xs line-through drop-shadow-md">
-                        Rs. {Number(product.basePrice).toLocaleString()}
-                      </span>
+            {(isOfferEnded ? bestSellerProduct : saleProduct) &&
+              (() => {
+                const product = isOfferEnded
+                  ? bestSellerProduct!
+                  : saleProduct!;
+                return (
+                  <Link
+                    href={`/products/${product.slug}`}
+                    className="flex-1 rounded bg-white overflow-hidden relative group cursor-pointer border border-red-200 shadow-sm hover:shadow-md transition-shadow block"
+                  >
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent"></div>
+                    <div
+                      className={`absolute top-2 left-2 ${isOfferEnded ? "bg-amber-400 text-slate-950" : "bg-red-600 text-white"} text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider shadow`}
+                    >
+                      {isOfferEnded ? "Best Seller" : "Flash Sale"}
+                    </div>
+                    {!isOfferEnded && (
+                      <div className="absolute top-2 right-2 bg-black/80 text-white text-[11px] font-mono font-bold px-2 py-1 rounded shadow">
+                        {timeLeft}
+                      </div>
                     )}
-                  </div>
-                </div>
-              </Link>
-              );
-            })()}
+                    <div className="absolute bottom-3 left-3 pr-3 text-white">
+                      <h3 className="font-bold text-base leading-tight mb-1 drop-shadow-md">
+                        {product.name}
+                      </h3>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-red-400 font-bold text-lg drop-shadow-md">
+                          Rs.{" "}
+                          {Number(
+                            product.salePrice || product.basePrice
+                          ).toLocaleString()}
+                        </span>
+                        {product.salePrice && (
+                          <span className="text-gray-300 text-xs line-through drop-shadow-md">
+                            Rs. {Number(product.basePrice).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })()}
 
             {/* Bottom Right: Offers Slider */}
             {offerProducts.length > 0 && (

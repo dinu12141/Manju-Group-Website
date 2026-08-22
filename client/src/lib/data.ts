@@ -108,4 +108,3 @@ export function cleanText(str: string | null | undefined): string {
     .replace(/<[^>]*>/g, "")
     .trim();
 }
-

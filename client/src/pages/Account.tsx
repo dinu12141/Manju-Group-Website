@@ -153,27 +153,45 @@ export default function Account() {
 
   return (
     <MainLayout>
-      {/* Profile Header — navy card */}
-      <div className="bg-white border-b border-gray-100 py-6">
+      {/* Profile Header */}
+      <div className="border-b border-white/10 py-8 bg-gradient-to-b from-white/5 to-transparent">
         <div className="container">
           <div
-            className="rounded-2xl px-8 py-10 flex items-center gap-6"
-            style={{ backgroundColor: "#0F2D5E" }}
+            className="rounded-3xl p-6 sm:p-8 flex flex-wrap items-center justify-between gap-6 border border-white/15 shadow-2xl relative overflow-hidden"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(15,45,94,0.9) 0%, rgba(10,25,50,0.95) 100%)",
+              backdropFilter: "blur(20px)",
+            }}
           >
-            <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black text-[#0F2D5E] font-display flex-shrink-0"
-              style={{ backgroundColor: "#C9A84C" }}
-            >
-              {user?.name?.charAt(0).toUpperCase() || "U"}
-            </div>
-            <div>
-              <h1 className="text-xl font-bold font-display text-white">
-                {user?.name || "Customer"}
-              </h1>
-              <p className="text-white/60 text-sm mt-0.5">{user?.email}</p>
-              <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 bg-white/10 rounded-full text-xs font-semibold text-white/80 capitalize">
-                {user?.role || "customer"} member
+            <div className="flex items-center gap-5">
+              <div
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-black text-[#0F2D5E] font-display flex-shrink-0 shadow-lg"
+                style={{ backgroundColor: "#C9A84C" }}
+              >
+                {user?.name?.charAt(0).toUpperCase() || "U"}
               </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-black font-display text-white tracking-tight">
+                  {user?.name || "Customer Account"}
+                </h1>
+                <p className="text-white/70 text-sm mt-0.5 font-medium">
+                  {user?.email}
+                </p>
+                <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 border border-white/15 rounded-full text-xs font-bold text-[#C9A84C] capitalize">
+                  <CheckCircle size={13} className="text-[#C9A84C]" />
+                  {user?.role || "customer"} Member
+                </div>
+              </div>
+            </div>
+
+            {/* Quick action in header */}
+            <div className="flex items-center gap-3">
+              <Link href="/products">
+                <Button className="bg-[#C9A84C] hover:bg-[#b89539] text-[#0F2D5E] font-bold text-xs h-10 px-5 rounded-xl shadow-md flex items-center gap-2">
+                  <ShoppingBag size={15} /> Continue Shopping
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -183,21 +201,16 @@ export default function Account() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <aside className="lg:col-span-1">
-            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-md p-2 space-y-1">
               {TABS.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors border-b border-gray-50 last:border-0 ${
+                  className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all ${
                     activeTab === tab.id
-                      ? "text-[#0F2D5E] font-semibold"
-                      : "text-gray-600 hover:bg-gray-50"
+                      ? "bg-[#0F2D5E] text-white shadow-sm font-bold"
+                      : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
                   }`}
-                  style={
-                    activeTab === tab.id
-                      ? { backgroundColor: "rgba(15,45,94,0.05)" }
-                      : {}
-                  }
                 >
                   <div className="flex items-center gap-2.5">
                     {tab.icon} {tab.label}
@@ -205,25 +218,37 @@ export default function Account() {
                   <div className="flex items-center gap-2">
                     {tab.count !== undefined && tab.count > 0 && (
                       <span
-                        className="text-xs text-white rounded-full px-1.5 py-0.5"
-                        style={{ backgroundColor: "#0F2D5E" }}
+                        className={`text-xs rounded-full px-2 py-0.5 font-bold ${
+                          activeTab === tab.id
+                            ? "bg-[#C9A84C] text-[#0F2D5E]"
+                            : "bg-slate-200 text-slate-800"
+                        }`}
                       >
                         {tab.count}
                       </span>
                     )}
-                    <ChevronRight size={14} className="text-gray-500 font-medium" />
+                    <ChevronRight
+                      size={14}
+                      className={
+                        activeTab === tab.id
+                          ? "text-white/70"
+                          : "text-slate-400"
+                      }
+                    />
                   </div>
                 </button>
               ))}
-              <button
-                onClick={() => {
-                  logout();
-                  toast.success("Signed out successfully");
-                }}
-                className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors"
-              >
-                <LogOut size={16} /> Sign Out
-              </button>
+              <div className="pt-2 border-t border-slate-100 mt-2">
+                <button
+                  onClick={() => {
+                    logout();
+                    toast.success("Signed out successfully");
+                  }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                >
+                  <LogOut size={16} /> Sign Out
+                </button>
+              </div>
             </div>
           </aside>
 
@@ -233,15 +258,24 @@ export default function Account() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="space-y-4"
+                className="space-y-6"
               >
+                <div className="mb-2">
+                  <h2 className="text-2xl font-black font-display text-white tracking-tight">
+                    Account Overview
+                  </h2>
+                  <p className="text-white/60 text-xs font-medium mt-0.5">
+                    Welcome back to your Manju Group member dashboard
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
                     {
                       label: "Total Orders",
                       value: orders?.length || 0,
                       icon: <ShoppingBag size={20} />,
-                      bgColor: "rgba(15,45,94,0.08)",
+                      bgColor: "rgba(15,45,94,0.1)",
                       iconColor: "#0F2D5E",
                     },
                     {
@@ -253,7 +287,7 @@ export default function Account() {
                     },
                     {
                       label: "Account Status",
-                      value: "Active",
+                      value: "Active Member",
                       icon: <User size={20} />,
                       bgColor: "#f0fdf4",
                       iconColor: "#16a34a",
@@ -261,10 +295,10 @@ export default function Account() {
                   ].map((stat, i) => (
                     <div
                       key={i}
-                      className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-3 shadow-sm"
+                      className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow"
                     >
                       <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center"
+                        className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                         style={{
                           backgroundColor: stat.bgColor,
                           color: stat.iconColor,
@@ -273,10 +307,10 @@ export default function Account() {
                         {stat.icon}
                       </div>
                       <div>
-                        <div className="text-xs text-gray-700 font-medium">
+                        <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">
                           {stat.label}
                         </div>
-                        <div className="font-bold text-gray-800">
+                        <div className="text-xl font-extrabold text-slate-900 mt-0.5">
                           {stat.value}
                         </div>
                       </div>
@@ -285,38 +319,52 @@ export default function Account() {
                 </div>
 
                 {orders && orders.length > 0 && (
-                  <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                    <h3 className="font-semibold text-gray-800 mb-3">
-                      Recent Orders
-                    </h3>
-                    <div className="space-y-2">
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-extrabold text-slate-900 text-base">
+                        Recent Orders
+                      </h3>
+                      <button
+                        onClick={() => setActiveTab("orders")}
+                        className="text-xs font-bold text-[#0F2D5E] hover:underline"
+                      >
+                        View All ({orders.length}) →
+                      </button>
+                    </div>
+                    <div className="space-y-3">
                       {orders.slice(0, 3).map((order: any) => (
                         <div
                           key={order.id}
-                          className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0"
+                          className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100/80 transition-colors"
                         >
                           <div>
-                            <div className="text-sm font-medium text-gray-800">
+                            <div className="text-sm font-bold text-slate-900">
                               #{order.orderNumber}
                             </div>
-                            <div className="text-xs text-gray-600 font-medium">
-                              {new Date(order.createdAt).toLocaleDateString()}
+                            <div className="text-xs text-slate-500 font-medium mt-0.5">
+                              {new Date(order.createdAt).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )}
                             </div>
                           </div>
                           <div className="text-right">
-                            <div
-                              className="text-sm font-bold"
-                              style={{ color: "#0F2D5E" }}
-                            >
-                              {formatPrice(Number(order.totalAmount))}
+                            <div className="text-sm font-black text-[#F85606]">
+                              {formatPrice(
+                                Number(order.totalAmount || order.total)
+                              )}
                             </div>
                             <span
-                              className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                              className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold capitalize mt-1 inline-block ${
                                 order.status === "delivered"
-                                  ? "bg-green-50 text-green-700"
+                                  ? "bg-emerald-100 text-emerald-800"
                                   : order.status === "processing"
-                                    ? "bg-blue-100 text-blue-600"
-                                    : "bg-amber-50 text-amber-700"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-amber-100 text-amber-900"
                               }`}
                             >
                               {order.status}
@@ -332,12 +380,21 @@ export default function Account() {
 
             {activeTab === "orders" && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-slate-900">
-                    My Orders ({orders?.length || 0})
-                  </h2>
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <h2 className="text-2xl font-black font-display text-white tracking-tight">
+                      My Orders ({orders?.length || 0})
+                    </h2>
+                    <p className="text-white/60 text-xs font-medium mt-0.5">
+                      Track your purchases and view order history
+                    </p>
+                  </div>
                   <Link href="/products">
-                    <Button variant="outline" size="sm" className="text-xs font-bold text-[#0F2D5E] border-slate-300">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 border-white/25 rounded-xl px-4 h-9 flex items-center gap-1.5"
+                    >
                       + Shop More
                     </Button>
                   </Link>
@@ -371,16 +428,28 @@ export default function Account() {
                               </span>
                             </div>
                             <p className="text-xs text-slate-600 font-semibold mt-0.5">
-                              Placed on {new Date(order.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                              Placed on{" "}
+                              {new Date(order.createdAt).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )}
                             </p>
                           </div>
 
                           <div className="text-right">
                             <div className="text-base font-black text-[#F85606]">
-                              {formatPrice(Number(order.totalAmount || order.total))}
+                              {formatPrice(
+                                Number(order.totalAmount || order.total)
+                              )}
                             </div>
                             <span className="text-[11px] text-slate-500 font-semibold uppercase">
-                              {order.paymentMethod === "bank" ? "Bank Transfer" : "Cash on Delivery"}
+                              {order.paymentMethod === "bank"
+                                ? "Bank Transfer"
+                                : "Cash on Delivery"}
                             </span>
                           </div>
                         </div>
@@ -389,7 +458,10 @@ export default function Account() {
                         {order.items && order.items.length > 0 && (
                           <div className="space-y-2.5 pt-1">
                             {order.items.map((item: any) => (
-                              <div key={item.id} className="flex items-center gap-3 py-1.5">
+                              <div
+                                key={item.id}
+                                className="flex items-center gap-3 py-1.5"
+                              >
                                 <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-200 flex-shrink-0 bg-slate-50">
                                   <img
                                     src={
@@ -409,11 +481,14 @@ export default function Account() {
                                     {item.productName}
                                   </p>
                                   <p className="text-xs text-slate-600 font-medium">
-                                    Qty: {item.quantity} × {formatPrice(Number(item.unitPrice))}
+                                    Qty: {item.quantity} ×{" "}
+                                    {formatPrice(Number(item.unitPrice))}
                                   </p>
                                 </div>
                                 <div className="text-xs font-black text-slate-900 flex-shrink-0">
-                                  {formatPrice(Number(item.unitPrice) * item.quantity)}
+                                  {formatPrice(
+                                    Number(item.unitPrice) * item.quantity
+                                  )}
                                 </div>
                               </div>
                             ))}
@@ -437,7 +512,7 @@ export default function Account() {
                         </Button>
                       </Link>
                     }
-                    className="bg-white border border-gray-100"
+                    className="bg-white border border-gray-100 rounded-2xl"
                   />
                 )}
               </motion.div>
@@ -445,12 +520,21 @@ export default function Account() {
 
             {activeTab === "wishlist" && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-slate-900">
-                    My Wishlist ({wishlistItems?.length || 0})
-                  </h2>
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <h2 className="text-2xl font-black font-display text-white tracking-tight">
+                      My Wishlist ({wishlistItems?.length || 0})
+                    </h2>
+                    <p className="text-white/60 text-xs font-medium mt-0.5">
+                      Products you've saved for future purchase
+                    </p>
+                  </div>
                   <Link href="/products">
-                    <Button variant="outline" size="sm" className="text-xs font-bold text-[#0F2D5E] border-slate-300">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 border-white/25 rounded-xl px-4 h-9 flex items-center gap-1.5"
+                    >
                       + Explore Products
                     </Button>
                   </Link>
@@ -485,7 +569,10 @@ export default function Account() {
                                 onClick={e => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  toggleWishlist(item.productId, item.productName);
+                                  toggleWishlist(
+                                    item.productId,
+                                    item.productName
+                                  );
                                 }}
                                 aria-label="Remove from wishlist"
                                 className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/90 shadow-xs flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors"
@@ -546,7 +633,7 @@ export default function Account() {
                         </Button>
                       </Link>
                     }
-                    className="bg-white border border-gray-100"
+                    className="bg-white border border-gray-100 rounded-2xl"
                   />
                 )}
               </motion.div>
@@ -554,26 +641,38 @@ export default function Account() {
 
             {activeTab === "settings" && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <h2 className="text-lg font-bold text-gray-800 mb-4">
-                  Account Settings
-                </h2>
-                <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-4 shadow-sm">
+                <div className="mb-5">
+                  <h2 className="text-2xl font-black font-display text-white tracking-tight">
+                    Account Settings
+                  </h2>
+                  <p className="text-white/60 text-xs font-medium mt-0.5">
+                    Your personal profile information
+                  </p>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
                   {[
-                    { label: "Name", value: user?.name },
-                    { label: "Email", value: user?.email },
-                    { label: "Account Type", value: user?.role },
+                    { label: "Full Name", value: user?.name },
+                    { label: "Email Address", value: user?.email },
+                    { label: "Account Role", value: user?.role },
                     {
                       label: "Member Since",
                       value: user?.createdAt
-                        ? new Date(user.createdAt).toLocaleDateString()
+                        ? new Date(user.createdAt).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })
                         : undefined,
                     },
                   ].map(({ label, value }) => (
-                    <div key={label}>
-                      <div className="text-xs font-semibold text-gray-700 font-medium uppercase mb-1">
+                    <div
+                      key={label}
+                      className="pb-3 border-b border-slate-100 last:border-0 last:pb-0"
+                    >
+                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
                         {label}
                       </div>
-                      <div className="text-sm text-gray-800 capitalize">
+                      <div className="text-sm font-extrabold text-slate-900 capitalize">
                         {value || "—"}
                       </div>
                     </div>

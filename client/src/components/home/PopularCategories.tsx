@@ -2,54 +2,36 @@ import { Link } from "wouter";
 
 const CATEGORIES = [
   {
-    title: "Water Purifiers",
-    subtitle: "Pure Health Daily !",
-    bg: "bg-[#f3f4f6]", // gray
-    span: "col-span-1",
-    image: "/ro_water_purifier.png",
-    brandId: 4,
+    title: "Electric Bikes",
+    subtitle: "Eco Green Mobility",
+    bg: "bg-[#ecfdf5]", // light emerald
+    image: "/scooter_red.png",
+    brandId: 1,
+    textColor: "text-emerald-600",
   },
   {
     title: "Smart TVs",
-    subtitle: "Crystal Clear Vision !",
-    bg: "bg-[#fdf4ed]", // peach
-    span: "col-span-1 md:col-span-2",
+    subtitle: "Crystal Clear 4K",
+    bg: "bg-[#eff6ff]", // light blue
     image: "/dew_plus_55_tv.png",
     brandId: 2,
-  },
-  {
-    title: "Electric Bikes",
-    subtitle: "Eco-friendly Rides !",
-    bg: "bg-[#eef8ed]", // light green
-    span: "col-span-1",
-    image: "/scooter_red.png",
-    brandId: 1,
+    textColor: "text-blue-600",
   },
   {
     title: "Air Conditioners",
-    subtitle: "Cooling Perfection !",
-    bg: "bg-[#fef8d8]", // light yellow
-    span: "col-span-1 md:col-span-2",
-    image: "/dew_plus_ac_1ton.png",
+    subtitle: "Smart Inverter Comfort",
+    bg: "bg-[#fef9c3]", // light amber/yellow
+    image: "/dew_plus_ac_1_5ton.png",
     brandId: 3,
+    textColor: "text-amber-600",
   },
   {
-    title: "Water Dispensers",
-    subtitle: "Hot & Cold Instant !",
-    bg: "bg-[#e5e7eb]", // darker gray
-    span: "col-span-1",
-    image:
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=400&q=80",
+    title: "Water Purifiers",
+    subtitle: "Pure Health Solutions",
+    bg: "bg-[#e0f2fe]", // light cyan
+    image: "/ro_water_purifier.png",
     brandId: 4,
-  },
-  {
-    title: "Stationery & Books",
-    subtitle: "Quality Education !",
-    bg: "bg-[#e5f4fb]", // light blue
-    span: "col-span-1",
-    image:
-      "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=400&q=80",
-    brandId: 5,
+    textColor: "text-cyan-600",
   },
 ];
 
@@ -65,31 +47,38 @@ export default function PopularCategories() {
           </h2>
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Grid: 4 Core Categories */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {CATEGORIES.map((cat, idx) => (
             <Link
               key={idx}
               href={`/products?brandId=${cat.brandId}`}
-              className={`block relative rounded-xl overflow-hidden p-6 cursor-pointer hover:shadow-lg transition-shadow duration-300 h-[180px] sm:h-[220px] ${cat.bg} ${cat.span} group w-full`}
+              className={`block relative rounded-2xl overflow-hidden p-6 cursor-pointer border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-[210px] ${cat.bg} group w-full`}
             >
-              <div className="relative z-10 flex flex-col h-full">
-                <span
-                  className={`text-[12px] sm:text-[14px] mb-1 font-medium ${idx === 1 || idx === 3 ? "text-orange-500" : idx === 2 ? "text-green-600" : "text-gray-500"}`}
-                >
-                  {cat.subtitle}
-                </span>
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-700">
-                  {cat.title}
-                </h3>
+              <div className="relative z-10 flex flex-col h-full justify-between max-w-[55%]">
+                <div>
+                  <span
+                    className={`text-[12px] sm:text-[13px] font-bold uppercase tracking-wider block mb-1.5 ${cat.textColor}`}
+                  >
+                    {cat.subtitle}
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 font-display leading-tight">
+                    {cat.title}
+                  </h3>
+                </div>
+
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#0052B4] group-hover:translate-x-1 transition-transform">
+                  <span>Explore</span>
+                  <span>→</span>
+                </div>
               </div>
 
               {/* Image positioned at bottom right */}
-              <div className="absolute right-0 bottom-0 w-1/2 h-full p-2 flex items-end justify-end transition-transform duration-500 group-hover:scale-110">
+              <div className="absolute right-2 bottom-2 w-1/2 h-full flex items-end justify-end transition-transform duration-500 group-hover:scale-110 pointer-events-none">
                 <img
                   src={cat.image}
                   alt={cat.title}
-                  className="max-h-[80%] max-w-full object-contain rounded-md mix-blend-multiply drop-shadow-md"
+                  className="max-h-[85%] max-w-full object-contain drop-shadow-lg"
                 />
               </div>
             </Link>

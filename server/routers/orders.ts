@@ -76,9 +76,7 @@ export const ordersRouter = router({
       // Fetch images for product thumbnails
       const productIds = Array.from(
         new Set(
-          items
-            .map(i => Number(i.productId))
-            .filter(id => !isNaN(id) && id > 0)
+          items.map(i => Number(i.productId)).filter(id => !isNaN(id) && id > 0)
         )
       );
 
