@@ -479,80 +479,91 @@ export default function Brands() {
           </div>
         </div>
 
-        {/* PORTFOLIO OVERVIEW MOSAIC */}
-        <section className="py-16 md:py-20 bg-white">
-          <div className="container max-w-6xl">
-            <motion.h2
-              {...reveal()}
-              className="font-display text-2xl sm:text-3xl font-black text-[#0B2545] mb-10"
-            >
-              The Portfolio at a Glance
-            </motion.h2>
+        {/* ── PORTFOLIO OVERVIEW SHOWCASE ─────────────────────────────── */}
+        <section className="py-16 md:py-24 bg-[#F8FAFC] border-b border-slate-200/80">
+          <div className="container max-w-7xl mx-auto px-4 md:px-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0052B4]/10 text-[#0052B4] text-xs font-extrabold uppercase tracking-wider mb-2">
+                  <Sparkles size={13} />
+                  <span>Strategic Divisions</span>
+                </div>
+                <h2 className="text-2xl md:text-4xl font-black text-slate-900 font-display tracking-tight">
+                  The Portfolio at a Glance
+                </h2>
+                <p className="text-slate-600 text-sm md:text-base font-medium mt-1 max-w-xl">
+                  Four specialized brand divisions engineered for performance, reliability, and everyday convenience.
+                </p>
+              </div>
+            </div>
 
             {isLoading && !orderedBrands.length ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-64 rounded-2xl" />
+                  <Skeleton key={i} className="h-80 rounded-3xl" />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {orderedBrands.map((brand, i) => {
                   const c = BRAND_CONTENT[brand!.slug];
                   const Icon = c.icon;
-                  const isWide = i === 0;
                   return (
                     <motion.button
                       key={brand!.id}
                       onClick={() => scrollToCategory(c.category)}
                       {...reveal(i * 0.08)}
-                      className={`group text-left rounded-[20px] border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow ${
-                        isWide ? "md:col-span-2" : ""
-                      }`}
-                      style={{ backgroundColor: c.accentSoft }}
+                      className="group text-left rounded-3xl bg-white border border-slate-200 p-6 flex flex-col justify-between hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden cursor-pointer w-full"
                     >
+                      {/* Top Ambient Glow */}
                       <div
-                        className={`flex ${isWide ? "flex-col sm:flex-row" : "flex-col"} items-center`}
-                      >
-                        <div
-                          className={`flex items-center justify-center p-6 ${isWide ? "sm:w-1/2" : "w-full"}`}
-                        >
-                          <img
-                            src={c.overviewImage}
-                            alt={brand!.name}
-                            loading="lazy"
-                            className="h-40 w-auto object-contain group-hover:scale-[1.03] transition-transform duration-500"
-                          />
-                        </div>
-                        <div
-                          className={`p-6 pt-0 sm:pt-6 ${isWide ? "sm:w-1/2" : "w-full"}`}
-                        >
-                          <div className="flex items-center gap-2 mb-3">
-                            <Icon size={16} style={{ color: c.accent }} />
-                            <span
-                              className="text-xs font-bold uppercase tracking-widest"
-                              style={{ color: c.accent }}
-                            >
-                              {c.categoryLabel}
-                            </span>
-                          </div>
-                          <h3 className="text-xl font-black text-[#0B2545] mb-2">
-                            {brand!.name}
-                          </h3>
-                          <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                            {c.overviewValueProp}
-                          </p>
+                        className="absolute top-0 right-0 w-36 h-36 rounded-full blur-2xl opacity-30 group-hover:opacity-60 transition-opacity pointer-events-none"
+                        style={{ backgroundColor: c.accent }}
+                      />
+
+                      {/* Header Info */}
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between gap-2 mb-3">
                           <span
-                            className="inline-flex items-center gap-1.5 text-sm font-semibold"
-                            style={{ color: c.accent }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider text-white shadow-xs"
+                            style={{ backgroundColor: c.accent }}
                           >
-                            Explore Brand
-                            <ArrowRight
-                              size={14}
-                              className="group-hover:translate-x-1 transition-transform"
-                            />
+                            <Icon size={12} />
+                            <span>{c.categoryLabel}</span>
                           </span>
                         </div>
+
+                        <h3 className="text-xl md:text-2xl font-black text-slate-900 font-display mb-1.5 group-hover:text-[#0052B4] transition-colors">
+                          {brand!.name}
+                        </h3>
+
+                        <p className="text-slate-600 text-xs font-medium leading-relaxed line-clamp-2">
+                          {c.overviewValueProp}
+                        </p>
+                      </div>
+
+                      {/* Transparent Centered Product Visual Stage */}
+                      <div className="relative z-10 w-full h-44 my-4 flex items-center justify-center">
+                        <img
+                          src={c.overviewImage}
+                          alt={brand!.name}
+                          loading="lazy"
+                          className="max-h-full max-w-full object-contain drop-shadow-md group-hover:scale-105 group-hover:drop-shadow-xl transition-all duration-500"
+                        />
+                      </div>
+
+                      {/* Bottom Action */}
+                      <div className="relative z-10 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black">
+                        <span
+                          className="inline-flex items-center gap-1.5 font-bold"
+                          style={{ color: c.accent }}
+                        >
+                          Explore Brand
+                          <ArrowRight
+                            size={14}
+                            className="group-hover:translate-x-1 transition-transform"
+                          />
+                        </span>
                       </div>
                     </motion.button>
                   );
