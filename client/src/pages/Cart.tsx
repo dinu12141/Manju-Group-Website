@@ -32,9 +32,6 @@ const FALLBACK_IMAGES: Record<string, string> = {
     "https://images.unsplash.com/photo-1548186277-8eb4d5e2fc0f?auto=format&fit=crop&w=400&q=75",
   filter:
     "https://images.unsplash.com/photo-1548186277-8eb4d5e2fc0f?auto=format&fit=crop&w=400&q=75",
-  book: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=400&q=75",
-  exercise:
-    "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=400&q=75",
 };
 
 function getProductImage(

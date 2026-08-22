@@ -13,9 +13,11 @@ import {
   asc,
   desc,
   eq,
+  ne,
   gte,
   lte,
   like,
+  notLike,
   or,
   sql,
   type SQL,
@@ -206,8 +208,8 @@ export const productsRouter = router({
   list: publicProcedure
     .input(
       z.object({
-        page: z.number().default(1),
-        limit: z.number().default(12),
+        page: z.number().int().min(1).default(1),
+        limit: z.number().int().min(1).max(100).default(12),
         brandId: z.union([z.number(), z.string()]).optional(),
         categoryId: z.union([z.number(), z.string()]).optional(),
         minPrice: z.number().optional(),
@@ -226,7 +228,14 @@ export const productsRouter = router({
       const db = await getDb();
       if (!db) return { items: [], total: 0 };
 
-      const conditions: SQL[] = [eq(products.isActive, true)];
+      const conditions: SQL[] = [
+        eq(products.isActive, true),
+        ne(products.categoryId, 5),
+        ne(products.brandId, 5),
+        notLike(products.name, "%Exercise Book%"),
+        notLike(products.name, "%Drawing Book%"),
+        notLike(products.name, "%Ruled%"),
+      ];
 
       if (input.brandId) {
         conditions.push(eq(products.brandId, Number(input.brandId)));
@@ -353,7 +362,7 @@ export const productsRouter = router({
         productId: z.union([z.number(), z.string()]),
         brandId: z.union([z.number(), z.string()]).optional(),
         categoryId: z.union([z.number(), z.string()]).optional(),
-        limit: z.number().default(4),
+        limit: z.number().int().min(1).max(100).default(4),
       })
     )
     .query(async ({ input }) => {
@@ -384,7 +393,7 @@ export const productsRouter = router({
     }),
 
   getFeatured: publicProcedure
-    .input(z.object({ limit: z.number().default(8) }).optional())
+    .input(z.object({ limit: z.number().int().min(1).max(100).default(8) }).optional())
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) return [];
@@ -402,7 +411,7 @@ export const productsRouter = router({
     }),
 
   search: publicProcedure
-    .input(z.object({ query: z.string(), limit: z.number().default(8) }))
+    .input(z.object({ query: z.string(), limit: z.number().int().min(1).max(100).default(8) }))
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) return [];

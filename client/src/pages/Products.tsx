@@ -88,18 +88,32 @@ export default function Products() {
   const { data: categoriesData } = trpc.categories.list.useQuery();
 
   const brands = useMemo(() => {
-    if (brandsData && brandsData.length > 0) return brandsData;
-    return STATIC_BRANDS;
+    const raw = brandsData && brandsData.length > 0 ? brandsData : STATIC_BRANDS;
+    return raw.filter(
+      b =>
+        !b.slug.toLowerCase().includes("exercise") &&
+        !b.name.toLowerCase().includes("exercise") &&
+        !b.name.toLowerCase().includes("stationery")
+    );
   }, [brandsData]);
 
   const categories = useMemo(() => {
-    if (categoriesData && categoriesData.length > 0) return categoriesData;
-    return [
-      { id: 1, name: "Electric Bikes", slug: "electric-bikes" },
-      { id: 2, name: "Smart TVs", slug: "smart-tvs" },
-      { id: 3, name: "Air Conditioners", slug: "air-conditioners" },
-      { id: 4, name: "Water Filters", slug: "water-filters" },
-    ];
+    const raw =
+      categoriesData && categoriesData.length > 0
+        ? categoriesData
+        : [
+            { id: 1, name: "Electric Bikes", slug: "electric-bikes" },
+            { id: 2, name: "Smart TVs", slug: "smart-tvs" },
+            { id: 3, name: "Air Conditioners", slug: "air-conditioners" },
+            { id: 4, name: "Water Filters", slug: "water-filters" },
+          ];
+    return raw.filter(
+      c =>
+        !c.slug.toLowerCase().includes("stationery") &&
+        !c.slug.toLowerCase().includes("exercise") &&
+        !c.name.toLowerCase().includes("stationery") &&
+        !c.name.toLowerCase().includes("exercise")
+    );
   }, [categoriesData]);
 
   const { data, isLoading } = trpc.products.list.useQuery({
