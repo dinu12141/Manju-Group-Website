@@ -4,6 +4,7 @@ import Header from "./Header";
 import Footer from "./Footer";
 import AIChatWidget from "./AIChatWidget";
 import SceneCanvas from "./home/SceneCanvas";
+import MobileBottomNav from "./MobileBottomNav";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -49,11 +50,12 @@ export default function MainLayout({
       />
 
       {/* Main content above canvas layers */}
-      <div className="relative z-10 min-h-screen flex flex-col">
+      <div className="relative z-10 min-h-screen flex flex-col pb-16 md:pb-0">
         <Header />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 w-full">{children}</main>
         {!hideFooter && <Footer />}
         <AIChatWidget />
+        <MobileBottomNav />
       </div>
     </div>
   );
