@@ -23,6 +23,7 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import MainLayout from "@/components/MainLayout";
 import ProductCard from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { STATIC_PRODUCTS } from "@/lib/staticData";
 interface ProductDetailProps {
   params: { slug: string };
 }
@@ -130,6 +131,21 @@ export default function ProductDetail({ params }: ProductDetailProps) {
     );
   }
 
+  // Resilient Static Product Fallback for production stability
+  const staticFound = STATIC_PRODUCTS.find(p => {
+    if (!slug) return false;
+    const sLower = slug.toLowerCase();
+    if (p.slug.toLowerCase() === sLower) return true;
+    if (String(p.id) === slug) return true;
+    if (p.sku.toLowerCase() === sLower) return true;
+    const cleanP = p.slug.replace(/-\d+$/, "").toLowerCase();
+    const cleanS = sLower.replace(/-\d+$/, "");
+    if (cleanP === cleanS) return true;
+    const nameSlug = p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    if (nameSlug === sLower || nameSlug.includes(cleanS) || cleanS.includes(nameSlug)) return true;
+    return false;
+  });
+
   const item: NormalizedProduct | null = dbProduct
     ? {
         id: dbProduct.id,
@@ -150,10 +166,29 @@ export default function ProductDetail({ params }: ProductDetailProps) {
           | null
           | undefined,
         warrantyMonths: dbProduct.warrantyMonths,
-        images: (dbProduct.images ?? []).map((img: { url: string }) => ({
-          url: img.url,
-        })),
+        images: (dbProduct.images && dbProduct.images.length > 0)
+          ? dbProduct.images.map((img: { url: string }) => ({ url: img.url }))
+          : [{ url: (dbProduct as any).imageUrl || (staticFound ? staticFound.imageUrl : "/ads/ad_dew_super_ro_system_1.png") }],
         sku: dbProduct.sku,
+      }
+    : staticFound
+    ? {
+        id: staticFound.id,
+        slug: staticFound.slug,
+        name: staticFound.name,
+        shortDescription: staticFound.shortDescription,
+        description: staticFound.description,
+        brandName: staticFound.brandName,
+        brandId: staticFound.brandId ?? 4,
+        categoryId: staticFound.categoryId ?? 4,
+        basePrice: staticFound.basePrice,
+        salePrice: staticFound.salePrice,
+        currency: staticFound.currency,
+        isInStock: staticFound.isInStock ?? true,
+        specifications: staticFound.specifications,
+        warrantyMonths: staticFound.warrantyMonths,
+        images: [{ url: staticFound.imageUrl }],
+        sku: staticFound.sku,
       }
     : null;
 

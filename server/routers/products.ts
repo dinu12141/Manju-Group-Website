@@ -312,13 +312,34 @@ export const productsRouter = router({
       const db = await getDb();
       if (!db) return null;
 
-      const rows = await db
+      // 1. Exact slug lookup
+      let rows = await db
         .select({ product: products, brand: brands, category: categories })
         .from(products)
         .leftJoin(brands, eq(products.brandId, brands.id))
         .leftJoin(categories, eq(products.categoryId, categories.id))
         .where(eq(products.slug, input.slug))
         .limit(1);
+
+      // 2. If not found, try SKU, ID, or base slug lookup
+      if (rows.length === 0) {
+        const isNum = !isNaN(Number(input.slug));
+        const conds: SQL[] = [
+          eq(products.sku, input.slug),
+          like(products.slug, `%${input.slug.replace(/-\d+$/, "")}%`),
+        ];
+        if (isNum) {
+          conds.push(eq(products.id, Number(input.slug)));
+        }
+
+        rows = await db
+          .select({ product: products, brand: brands, category: categories })
+          .from(products)
+          .leftJoin(brands, eq(products.brandId, brands.id))
+          .leftJoin(categories, eq(products.categoryId, categories.id))
+          .where(or(...conds) as SQL)
+          .limit(1);
+      }
 
       if (rows.length === 0) return null;
 
