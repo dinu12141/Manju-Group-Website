@@ -8,6 +8,10 @@ import {
   Mail,
   Cpu,
   Bot,
+  Megaphone,
+  Video,
+  Film,
+  Image as ImageIcon,
   Plus,
   Edit2,
   Trash2,
@@ -28,8 +32,11 @@ import {
   Building,
   Layers,
   Sparkles,
+  Zap,
   ChevronRight,
   X,
+  Save,
+  RotateCcw,
 } from "lucide-react";
 import {
   AreaChart,
@@ -44,6 +51,14 @@ import {
 } from "recharts";
 import { STATIC_PRODUCTS, STATIC_BRANDS } from "@/lib/staticData";
 import { formatPrice } from "@/lib/data";
+import {
+  useAdSettings,
+  PRESET_AD_MEDIA,
+  DEFAULT_AD_CONFIG,
+  type HomeAdConfig,
+  type HeroSlideAd,
+  type PromoBannerAd,
+} from "@/lib/adSettings";
 import { toast } from "sonner";
 import { Link } from "wouter";
 
@@ -51,6 +66,7 @@ type AdminTab =
   | "dashboard"
   | "products"
   | "orders"
+  | "ads"
   | "showrooms"
   | "inquiries"
   | "erp"
@@ -306,6 +322,14 @@ export default function Admin() {
   const [searchTerm, setSearchTerm] = useState("");
   const [brandFilter, setBrandFilter] = useState("all");
 
+  // Ad Settings Hook
+  const { config: liveAdConfig, updateConfig: saveAdConfig, resetConfig: resetAdConfig } = useAdSettings();
+  const [localAdConfig, setLocalAdConfig] = useState<HomeAdConfig>(liveAdConfig);
+
+  useEffect(() => {
+    setLocalAdConfig(liveAdConfig);
+  }, [liveAdConfig]);
+
   // Product Add / Edit Modal
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -367,13 +391,11 @@ export default function Admin() {
     if (!editingProduct) return;
 
     if (editingProduct.id) {
-      // Update
       setProductsList(prev =>
         prev.map(p => (p.id === editingProduct.id ? editingProduct : p))
       );
       toast.success(`Product "${editingProduct.name}" updated successfully`);
     } else {
-      // Create new
       const newProd = {
         ...editingProduct,
         id: Date.now(),
@@ -398,6 +420,20 @@ export default function Admin() {
       prev.map(o => (o.id === orderId ? { ...o, status: newStatus } : o))
     );
     toast.success(`Order ${orderId} status updated to ${newStatus.toUpperCase()}`);
+  };
+
+  const handleSaveAds = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    saveAdConfig(localAdConfig);
+    toast.success("📢 Home Page Ads & Hero Video Updated Live!");
+  };
+
+  const handleResetAds = () => {
+    if (confirm("Reset all Home Page banners and Hero video ads to default?")) {
+      resetAdConfig();
+      setLocalAdConfig(DEFAULT_AD_CONFIG);
+      toast.info("Banner and video ads reset to default configurations");
+    }
   };
 
   // Filtered Products
@@ -536,7 +572,7 @@ export default function Admin() {
 
             <Link href="/" target="_blank">
               <button className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1 transition-all cursor-pointer">
-                <span>View Site</span>
+                <span>View Live Site</span>
                 <ExternalLink size={13} />
               </button>
             </Link>
@@ -559,6 +595,7 @@ export default function Admin() {
               { id: "dashboard", label: "Executive Dashboard", icon: LayoutDashboard },
               { id: "products", label: "Products & Inventory", icon: Package, badge: productsList.length },
               { id: "orders", label: "Orders & Fulfillment", icon: ShoppingCart, badge: ordersList.length },
+              { id: "ads", label: "Banner & Video Ads", icon: Megaphone, badge: "Hero+Home" },
               { id: "showrooms", label: "Showroom Network", icon: MapPin, badge: SHOWROOMS_DATA.length },
               { id: "inquiries", label: "Inquiries & Leads CRM", icon: Mail, badge: INQUIRIES_DATA.length },
               { id: "erp", label: "ERP Integration Gateway", icon: Cpu },
@@ -672,7 +709,6 @@ export default function Admin() {
 
               {/* Interactive Charts */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* 7-Day Revenue Area Chart */}
                 <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                   <h3 className="text-sm font-black text-slate-900 mb-4 flex items-center justify-between">
                     <span>Revenue Velocity (Last 7 Days)</span>
@@ -707,7 +743,6 @@ export default function Admin() {
                   </div>
                 </div>
 
-                {/* Brand Revenue Share Bar Chart */}
                 <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                   <h3 className="text-sm font-black text-slate-900 mb-4 flex items-center justify-between">
                     <span>Brand Revenue Share</span>
@@ -1046,7 +1081,491 @@ export default function Admin() {
             </div>
           )}
 
-          {/* TAB 4: SHOWROOM NETWORK */}
+          {/* TAB 4: BANNER & VIDEO ADS MANAGER */}
+          {activeTab === "ads" && (
+            <div className="space-y-6">
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                    <Megaphone className="text-[#0052B4]" size={20} />
+                    <span>Home Page Banner & Video Ads Manager</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Customize Hero video, promotional badges, flash sale deals, and dual banners in real-time.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleResetAds}
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all"
+                  >
+                    <RotateCcw size={14} />
+                    <span>Reset Defaults</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveAds}
+                    className="px-5 py-2 rounded-xl bg-[#0052B4] hover:bg-blue-700 text-white text-xs font-black flex items-center gap-1.5 shadow-md cursor-pointer transition-all hover:scale-105"
+                  >
+                    <Save size={14} />
+                    <span>Save & Publish Live</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* SECTION 1: HERO MAIN VIDEO AD */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Video className="text-[#0052B4]" size={18} />
+                    <h4 className="font-extrabold text-sm text-slate-900">
+                      1. Hero Main Video / Showcase Ad (Left Canvas)
+                    </h4>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold text-[10px]">
+                    Hero 75% Width
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
+                        Video / Image Media URL
+                      </label>
+                      <input
+                        type="text"
+                        value={localAdConfig.heroVideo.videoUrl}
+                        onChange={e =>
+                          setLocalAdConfig({
+                            ...localAdConfig,
+                            heroVideo: { ...localAdConfig.heroVideo, videoUrl: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-mono"
+                        placeholder="/promo-video.mp4 or Image URL"
+                      />
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        <span className="text-[10px] text-slate-400 font-semibold mr-1 py-0.5">Quick Pick:</span>
+                        {PRESET_AD_MEDIA.map((m, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() =>
+                              setLocalAdConfig({
+                                ...localAdConfig,
+                                heroVideo: { ...localAdConfig.heroVideo, videoUrl: m.path },
+                              })
+                            }
+                            className="px-2 py-0.5 text-[10px] font-bold bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-800 rounded-md cursor-pointer transition-colors"
+                          >
+                            {m.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">Badge Text</label>
+                        <input
+                          type="text"
+                          value={localAdConfig.heroVideo.badge}
+                          onChange={e =>
+                            setLocalAdConfig({
+                              ...localAdConfig,
+                              heroVideo: { ...localAdConfig.heroVideo, badge: e.target.value },
+                            })
+                          }
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">Action Link URL</label>
+                        <input
+                          type="text"
+                          value={localAdConfig.heroVideo.linkUrl}
+                          onChange={e =>
+                            setLocalAdConfig({
+                              ...localAdConfig,
+                              heroVideo: { ...localAdConfig.heroVideo, linkUrl: e.target.value },
+                            })
+                          }
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Main Headline</label>
+                      <input
+                        type="text"
+                        value={localAdConfig.heroVideo.title}
+                        onChange={e =>
+                          setLocalAdConfig({
+                            ...localAdConfig,
+                            heroVideo: { ...localAdConfig.heroVideo, title: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Subtitle / Description</label>
+                      <textarea
+                        rows={2}
+                        value={localAdConfig.heroVideo.subtitle}
+                        onChange={e =>
+                          setLocalAdConfig({
+                            ...localAdConfig,
+                            heroVideo: { ...localAdConfig.heroVideo, subtitle: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Preview Canvas */}
+                  <div className="rounded-2xl bg-gray-950 p-4 text-white relative overflow-hidden flex flex-col justify-end min-h-[220px] border border-slate-800">
+                    {localAdConfig.heroVideo.videoUrl.endsWith(".mp4") ? (
+                      <video
+                        src={localAdConfig.heroVideo.videoUrl}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="absolute inset-0 w-full h-full object-cover opacity-60 pointer-events-none"
+                      />
+                    ) : (
+                      <img
+                        src={localAdConfig.heroVideo.videoUrl}
+                        alt="Preview"
+                        className="absolute inset-0 w-full h-full object-cover opacity-60 pointer-events-none"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
+                    <div className="relative z-10 space-y-1">
+                      <span className="px-2 py-0.5 rounded-full bg-[#0052B4] text-[9px] font-black uppercase text-blue-100">
+                        {localAdConfig.heroVideo.badge}
+                      </span>
+                      <h4 className="text-base font-extrabold">{localAdConfig.heroVideo.title}</h4>
+                      <p className="text-[11px] text-slate-300 line-clamp-2">{localAdConfig.heroVideo.subtitle}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 2: HERO TOP-RIGHT FLASH SALE AD */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Zap className="text-red-500" size={18} />
+                    <h4 className="font-extrabold text-sm text-slate-900">
+                      2. Hero Top-Right Flash Sale Ad Banner
+                    </h4>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-red-50 text-red-700 font-bold text-[10px]">
+                    Top Right Card
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">Badge Text</label>
+                        <input
+                          type="text"
+                          value={localAdConfig.heroFlashSale.badge}
+                          onChange={e =>
+                            setLocalAdConfig({
+                              ...localAdConfig,
+                              heroFlashSale: { ...localAdConfig.heroFlashSale, badge: e.target.value },
+                            })
+                          }
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">Target Link URL</label>
+                        <input
+                          type="text"
+                          value={localAdConfig.heroFlashSale.linkUrl}
+                          onChange={e =>
+                            setLocalAdConfig({
+                              ...localAdConfig,
+                              heroFlashSale: { ...localAdConfig.heroFlashSale, linkUrl: e.target.value },
+                            })
+                          }
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Product Title</label>
+                      <input
+                        type="text"
+                        value={localAdConfig.heroFlashSale.title}
+                        onChange={e =>
+                          setLocalAdConfig({
+                            ...localAdConfig,
+                            heroFlashSale: { ...localAdConfig.heroFlashSale, title: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">Offer Price (LKR)</label>
+                        <input
+                          type="text"
+                          value={localAdConfig.heroFlashSale.price}
+                          onChange={e =>
+                            setLocalAdConfig({
+                              ...localAdConfig,
+                              heroFlashSale: { ...localAdConfig.heroFlashSale, price: e.target.value },
+                            })
+                          }
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-black text-red-600"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">Original Price (LKR)</label>
+                        <input
+                          type="text"
+                          value={localAdConfig.heroFlashSale.originalPrice || ""}
+                          onChange={e =>
+                            setLocalAdConfig({
+                              ...localAdConfig,
+                              heroFlashSale: { ...localAdConfig.heroFlashSale, originalPrice: e.target.value },
+                            })
+                          }
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Banner Image URL</label>
+                      <input
+                        type="text"
+                        value={localAdConfig.heroFlashSale.imageUrl}
+                        onChange={e =>
+                          setLocalAdConfig({
+                            ...localAdConfig,
+                            heroFlashSale: { ...localAdConfig.heroFlashSale, imageUrl: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-mono text-[11px]"
+                      />
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {PRESET_AD_MEDIA.filter(m => m.type === "image").map((m, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() =>
+                              setLocalAdConfig({
+                                ...localAdConfig,
+                                heroFlashSale: { ...localAdConfig.heroFlashSale, imageUrl: m.path },
+                              })
+                            }
+                            className="px-2 py-0.5 text-[10px] font-bold bg-slate-100 hover:bg-red-50 text-slate-700 hover:text-red-700 rounded-md cursor-pointer"
+                          >
+                            {m.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Preview */}
+                  <div className="rounded-2xl bg-white border border-red-200 p-3 flex flex-col justify-between relative overflow-hidden min-h-[190px] shadow-sm">
+                    <img
+                      src={localAdConfig.heroFlashSale.imageUrl}
+                      alt="Preview"
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+                    <div className="relative z-10 flex justify-between items-start">
+                      <span className="bg-red-600 text-white font-black text-[9px] px-2 py-0.5 rounded-full uppercase">
+                        {localAdConfig.heroFlashSale.badge}
+                      </span>
+                    </div>
+                    <div className="relative z-10 text-white">
+                      <h5 className="font-bold text-xs line-clamp-1">{localAdConfig.heroFlashSale.title}</h5>
+                      <span className="text-amber-400 font-extrabold text-sm">
+                        Rs. {localAdConfig.heroFlashSale.price}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 3: HOME PAGE DUAL PROMO BANNERS */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="text-[#0052B4]" size={18} />
+                    <h4 className="font-extrabold text-sm text-slate-900">
+                      3. Home Page Dual Category Promo Banners
+                    </h4>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold text-[10px]">
+                    2 Grid Cards
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {localAdConfig.promoBanners.map((banner, bIdx) => (
+                    <div key={banner.id || bIdx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-black text-xs text-slate-800 uppercase">Banner #{bIdx + 1}</span>
+                        <select
+                          value={banner.gradientTheme}
+                          onChange={e => {
+                            const newBanners = [...localAdConfig.promoBanners];
+                            newBanners[bIdx] = { ...banner, gradientTheme: e.target.value as any };
+                            setLocalAdConfig({ ...localAdConfig, promoBanners: newBanners });
+                          }}
+                          className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold"
+                        >
+                          <option value="ebike">Theme: E-Bike Dark</option>
+                          <option value="smarttv">Theme: Smart TV Blue</option>
+                          <option value="water">Theme: Water Filter Cyan</option>
+                          <option value="ac">Theme: AC Navy</option>
+                          <option value="gold">Theme: Gold Luxury</option>
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-700 block mb-1">Badge</label>
+                          <input
+                            type="text"
+                            value={banner.badge}
+                            onChange={e => {
+                              const newBanners = [...localAdConfig.promoBanners];
+                              newBanners[bIdx] = { ...banner, badge: e.target.value };
+                              setLocalAdConfig({ ...localAdConfig, promoBanners: newBanners });
+                            }}
+                            className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-700 block mb-1">Button Text</label>
+                          <input
+                            type="text"
+                            value={banner.buttonText}
+                            onChange={e => {
+                              const newBanners = [...localAdConfig.promoBanners];
+                              newBanners[bIdx] = { ...banner, buttonText: e.target.value };
+                              setLocalAdConfig({ ...localAdConfig, promoBanners: newBanners });
+                            }}
+                            className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg font-bold"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">Headline</label>
+                        <input
+                          type="text"
+                          value={banner.title}
+                          onChange={e => {
+                            const newBanners = [...localAdConfig.promoBanners];
+                            newBanners[bIdx] = { ...banner, title: e.target.value };
+                            setLocalAdConfig({ ...localAdConfig, promoBanners: newBanners });
+                          }}
+                          className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg font-bold"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">Subtitle</label>
+                        <input
+                          type="text"
+                          value={banner.subtitle}
+                          onChange={e => {
+                            const newBanners = [...localAdConfig.promoBanners];
+                            newBanners[bIdx] = { ...banner, subtitle: e.target.value };
+                            setLocalAdConfig({ ...localAdConfig, promoBanners: newBanners });
+                          }}
+                          className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg font-medium"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">Image URL</label>
+                        <input
+                          type="text"
+                          value={banner.imageUrl}
+                          onChange={e => {
+                            const newBanners = [...localAdConfig.promoBanners];
+                            newBanners[bIdx] = { ...banner, imageUrl: e.target.value };
+                            setLocalAdConfig({ ...localAdConfig, promoBanners: newBanners });
+                          }}
+                          className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg font-mono text-[11px]"
+                        />
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {PRESET_AD_MEDIA.filter(m => m.type === "image").map((m, mIdx) => (
+                            <button
+                              key={mIdx}
+                              type="button"
+                              onClick={() => {
+                                const newBanners = [...localAdConfig.promoBanners];
+                                newBanners[bIdx] = { ...banner, imageUrl: m.path };
+                                setLocalAdConfig({ ...localAdConfig, promoBanners: newBanners });
+                              }}
+                              className="px-1.5 py-0.5 text-[9px] font-bold bg-white hover:bg-blue-100 text-slate-700 rounded border border-slate-200 cursor-pointer"
+                            >
+                              {m.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* SAVE ACTION BAR */}
+              <div className="bg-gradient-to-r from-[#001D4A] to-[#003882] p-5 rounded-2xl text-white flex items-center justify-between shadow-md">
+                <div>
+                  <h4 className="font-extrabold text-sm">Publish Ad Updates to Production</h4>
+                  <p className="text-xs text-blue-200 mt-0.5">
+                    Changes take effect immediately across all visitors and devices.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleResetAds}
+                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveAds}
+                    className="px-6 py-2.5 rounded-xl bg-[#F85606] hover:bg-[#ff641a] text-white text-xs font-black shadow-lg transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                  >
+                    <Save size={15} />
+                    <span>Save & Publish Live</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: SHOWROOM NETWORK */}
           {activeTab === "showrooms" && (
             <div className="space-y-4">
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
@@ -1095,7 +1614,7 @@ export default function Admin() {
             </div>
           )}
 
-          {/* TAB 5: INQUIRIES & LEADS CRM */}
+          {/* TAB 6: INQUIRIES & LEADS CRM */}
           {activeTab === "inquiries" && (
             <div className="space-y-4">
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
@@ -1141,7 +1660,7 @@ export default function Admin() {
             </div>
           )}
 
-          {/* TAB 6: ERP INTEGRATION GATEWAY */}
+          {/* TAB 7: ERP INTEGRATION GATEWAY */}
           {activeTab === "erp" && (
             <div className="space-y-6">
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
@@ -1192,7 +1711,7 @@ export default function Admin() {
             </div>
           )}
 
-          {/* TAB 7: AI ASSISTANT AUDIT LOG */}
+          {/* TAB 8: AI ASSISTANT AUDIT LOG */}
           {activeTab === "ai_audit" && (
             <div className="space-y-4">
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
