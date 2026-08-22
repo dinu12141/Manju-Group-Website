@@ -452,10 +452,10 @@ export default function Locations() {
                 </div>
               </div>
 
-              {/* Showroom Cards Scrollable List */}
-              <div className="space-y-3 max-h-[680px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-300">
+              {/* Showroom Cards List - Natural Smooth Flow */}
+              <div className="space-y-4 pb-8">
                 {filteredShowrooms.length === 0 ? (
-                  <div className="bg-white p-8 rounded-2xl text-center border border-slate-200 text-slate-600">
+                  <div className="bg-white p-8 rounded-2xl text-center border border-slate-200 text-slate-600 shadow-sm">
                     <p className="font-bold text-sm">
                       No showrooms found matching "{searchQuery}".
                     </p>
@@ -464,7 +464,7 @@ export default function Locations() {
                         setSearchQuery("");
                         setSelectedProvince("All");
                       }}
-                      className="mt-3 text-xs font-extrabold text-[#0052B4] hover:underline"
+                      className="mt-3 text-xs font-extrabold text-[#0052B4] hover:underline cursor-pointer"
                     >
                       Clear Search & Filters
                     </button>
@@ -475,11 +475,18 @@ export default function Locations() {
                     return (
                       <div
                         key={store.id}
-                        onClick={() => setSelectedStoreId(store.id)}
+                        onClick={() => {
+                          setSelectedStoreId(store.id);
+                          // On mobile, smoothly scroll down to map showcase if clicked
+                          if (window.innerWidth < 1024) {
+                            const mapElement = document.getElementById("interactive-map-section");
+                            mapElement?.scrollIntoView({ behavior: "smooth" });
+                          }
+                        }}
                         className={`p-5 rounded-2xl border transition-all duration-200 cursor-pointer text-slate-900 relative ${
                           isSelected
-                            ? "bg-white border-[#0052B4] ring-2 ring-[#0052B4]/20 shadow-lg scale-[1.01]"
-                            : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-md"
+                            ? "bg-white border-[#0052B4] border-l-[6px] border-l-[#0052B4] ring-2 ring-[#0052B4]/15 shadow-xl scale-[1.01]"
+                            : "bg-white border-slate-200/90 hover:border-slate-300 hover:shadow-md"
                         }`}
                       >
                         {/* Store Header */}
@@ -488,7 +495,7 @@ export default function Locations() {
                             <span className="text-[11px] font-extrabold uppercase text-[#0052B4] tracking-wider block mb-0.5">
                               {store.badge}
                             </span>
-                            <h3 className="font-black text-base text-slate-900 leading-snug">
+                            <h3 className="font-black text-lg text-slate-900 leading-snug">
                               {store.name}
                             </h3>
                           </div>
@@ -503,27 +510,33 @@ export default function Locations() {
                         <div className="space-y-2 my-3 text-xs text-slate-600 font-medium">
                           <div className="flex items-start gap-2">
                             <MapPin
-                              size={14}
+                              size={15}
                               className="text-[#0052B4] shrink-0 mt-0.5"
                             />
-                            <span>{store.address}</span>
+                            <span className="text-slate-800 font-semibold">{store.address}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Clock size={14} className="text-slate-400 shrink-0" />
+                            <Clock size={14} className="text-slate-500 shrink-0" />
                             <span>{store.hours}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Phone size={14} className="text-slate-400 shrink-0" />
-                            <span>{store.phone}</span>
+                            <Phone size={14} className="text-slate-500 shrink-0" />
+                            <a
+                              href={`tel:${store.directCall}`}
+                              className="text-slate-800 font-bold hover:text-[#0052B4]"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              {store.phone}
+                            </a>
                           </div>
                         </div>
 
                         {/* Services Badges */}
-                        <div className="flex flex-wrap gap-1.5 mb-3 pt-2 border-t border-slate-100">
+                        <div className="flex flex-wrap gap-1.5 mb-4 pt-2.5 border-t border-slate-100">
                           {store.services.map((srv, idx) => (
                             <span
                               key={idx}
-                              className="text-[10px] bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-md"
+                              className="text-[10px] bg-slate-100 text-slate-700 font-bold px-2.5 py-1 rounded-md"
                             >
                               ✓ {srv}
                             </span>
@@ -537,7 +550,7 @@ export default function Locations() {
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={e => e.stopPropagation()}
-                            className="flex-1 py-2 px-3 bg-[#0052B4] hover:bg-[#003875] text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow-xs"
+                            className="flex-1 py-2.5 px-3 bg-[#0052B4] hover:bg-[#003875] text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
                           >
                             <Navigation size={13} />
                             <span>Live Directions</span>
@@ -545,7 +558,7 @@ export default function Locations() {
                           <a
                             href={`tel:${store.directCall}`}
                             onClick={e => e.stopPropagation()}
-                            className="py-2 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all"
+                            className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                             title="Call Showroom"
                           >
                             <PhoneCall size={13} className="text-[#0052B4]" />
@@ -560,7 +573,7 @@ export default function Locations() {
             </div>
 
             {/* ── Right Column: Selected Store Showcase & Live Interactive Map (7 Cols) ─── */}
-            <div className="lg:col-span-7 flex flex-col gap-5 sticky top-28">
+            <div id="interactive-map-section" className="lg:col-span-7 flex flex-col gap-5 sticky top-28">
               {/* Selected Showroom Info Card */}
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-md">
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
