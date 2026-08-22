@@ -317,13 +317,16 @@ export default function Locations() {
 
         setSelectedStoreId(closestStore.id);
         setLocationStatus(
-          `Nearest Store Found: ${closestStore.name} (${Math.round(minDistance * 10) / 10} km away)`
+          `Nearest Store: ${closestStore.name} (${Math.round(minDistance * 10) / 10} km away)`
         );
+
+        const mapSection = document.getElementById("master-map-container");
+        mapSection?.scrollIntoView({ behavior: "smooth" });
       },
       error => {
         setIsLocating(false);
         setLocationStatus(
-          "Location access denied. You can search your town above."
+          "Location access denied. You can search your city below."
         );
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -340,10 +343,16 @@ export default function Locations() {
     return `https://maps.google.com/maps?q=${selectedStore.latitude},${selectedStore.longitude}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
   }, [selectedStore]);
 
+  const handleSelectStore = (storeId: number) => {
+    setSelectedStoreId(storeId);
+    const mapSection = document.getElementById("master-map-container");
+    mapSection?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <MainLayout>
-      {/* ── Luxury Header Banner ────────────────────────────────────────── */}
-      <section className="relative w-full bg-gradient-to-b from-[#001D4A] via-[#002D62] to-[#0F2D5E] text-white pt-12 pb-16 px-4 md:px-8 overflow-hidden border-b border-blue-900/40">
+      {/* ── Luxury Hero Section ────────────────────────────────────────── */}
+      <section className="relative w-full bg-gradient-to-b from-[#001D4A] via-[#002D62] to-[#0F2D5E] text-white pt-12 pb-14 px-4 md:px-8 overflow-hidden border-b border-blue-900/40">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/15 via-transparent to-transparent pointer-events-none" />
 
         <div className="container mx-auto max-w-6xl relative z-10">
@@ -353,17 +362,15 @@ export default function Locations() {
               <span>Island-Wide Experience Centers</span>
             </div>
             <h1 className="text-3xl md:text-5xl font-black font-display tracking-tight text-white mb-4">
-              Find a Manju Group Showroom Near You
+              Find a Manju Group Showroom
             </h1>
             <p className="text-blue-100/90 text-sm md:text-base leading-relaxed">
-              Experience genuine Dew Motors Electric Bikes, Dew Plus 4K Smart TVs,
-              DEW+ Inverter ACs, and Manju Dew Super Water Purifiers firsthand.
+              Visit our official experience centers to test-ride Dew Motors Electric Bikes, experience Dew Plus 4K Smart TVs, demo DEW+ Inverter ACs, and test water purification solutions.
             </p>
           </div>
 
-          {/* ── Smart Location Search & Live GPS Bar ──────────────────── */}
+          {/* ── Search & Live GPS Bar ──────────────────────────────────── */}
           <div className="bg-white rounded-2xl p-3 md:p-4 shadow-2xl border border-white/20 max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-3 text-slate-900">
-            {/* Search Input */}
             <div className="relative flex-1 w-full">
               <Search
                 size={18}
@@ -371,7 +378,7 @@ export default function Locations() {
               />
               <input
                 type="text"
-                placeholder="Enter your city or district (e.g. Kandy, Colombo, Galle, Negombo)..."
+                placeholder="Search by city (e.g. Colombo, Kandy, Galle, Kurunegala, Negombo)..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-[#0052B4] focus:bg-white transition-all text-slate-900 placeholder:text-slate-400"
@@ -386,7 +393,6 @@ export default function Locations() {
               )}
             </div>
 
-            {/* Live Location GPS Button */}
             <button
               onClick={handleUseLiveLocation}
               disabled={isLocating}
@@ -397,12 +403,11 @@ export default function Locations() {
                 className={`${isLocating ? "animate-spin text-amber-300" : "text-white"}`}
               />
               <span>
-                {isLocating ? "Locating You..." : "Use My Live Location"}
+                {isLocating ? "Locating Nearest..." : "Use My Live Location"}
               </span>
             </button>
           </div>
 
-          {/* Location Status Feedback */}
           {locationStatus && (
             <div className="mt-3 text-center">
               <span className="inline-flex items-center gap-2 text-xs font-bold px-3.5 py-1.5 rounded-full bg-blue-500/20 text-blue-200 border border-blue-400/30">
@@ -414,253 +419,296 @@ export default function Locations() {
         </div>
       </section>
 
-      {/* ── Interactive Map & Showrooms Body ────────────────────────────── */}
-      <section className="bg-slate-100/80 py-10 px-4 md:px-8 min-h-screen">
+      {/* ── Interactive Master Map & Showcase Section ───────────────────── */}
+      <section id="master-map-container" className="bg-slate-100 py-8 px-4 md:px-8">
         <div className="container mx-auto max-w-7xl">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* ── Left Column: Showrooms List & Filters (5 Cols) ─────── */}
-            <div className="lg:col-span-5 flex flex-col gap-4">
-              {/* Header & Quick Province Filters */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2 text-slate-900 font-extrabold text-base">
-                    <Store size={18} className="text-[#0052B4]" />
-                    <span>Official Showrooms ({filteredShowrooms.length})</span>
-                  </div>
-                  <span className="text-xs text-slate-500 font-semibold">
-                    Open Mon - Sat
-                  </span>
-                </div>
+          {/* Quick Showroom Selector Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-none mb-3">
+            <span className="text-xs font-bold text-slate-500 shrink-0 uppercase tracking-wider pl-1">
+              Select City:
+            </span>
+            {ALL_SHOWROOMS.map(s => {
+              const isSelected = s.id === selectedStoreId;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setSelectedStoreId(s.id)}
+                  className={`text-xs font-bold px-3.5 py-2 rounded-xl shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
+                    isSelected
+                      ? "bg-[#0052B4] text-white shadow-md scale-105"
+                      : "bg-white text-slate-700 hover:bg-slate-200 border border-slate-200"
+                  }`}
+                >
+                  <MapPin size={12} className={isSelected ? "text-white" : "text-[#0052B4]"} />
+                  <span>{s.city}</span>
+                </button>
+              );
+            })}
+          </div>
 
-                {/* Quick Province Badges */}
-                <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
-                  {["All", "Western", "Central", "Southern", "North Western", "Northern"].map(
-                    prov => (
-                      <button
-                        key={prov}
-                        onClick={() => setSelectedProvince(prov)}
-                        className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                          selectedProvince === prov
-                            ? "bg-[#0052B4] text-white shadow-xs"
-                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                        }`}
-                      >
-                        {prov}
-                      </button>
-                    )
-                  )}
-                </div>
-              </div>
-
-              {/* Showroom Cards List - Natural Smooth Flow */}
-              <div className="space-y-4 pb-8">
-                {filteredShowrooms.length === 0 ? (
-                  <div className="bg-white p-8 rounded-2xl text-center border border-slate-200 text-slate-600 shadow-sm">
-                    <p className="font-bold text-sm">
-                      No showrooms found matching "{searchQuery}".
-                    </p>
-                    <button
-                      onClick={() => {
-                        setSearchQuery("");
-                        setSelectedProvince("All");
-                      }}
-                      className="mt-3 text-xs font-extrabold text-[#0052B4] hover:underline cursor-pointer"
-                    >
-                      Clear Search & Filters
-                    </button>
-                  </div>
-                ) : (
-                  filteredShowrooms.map(store => {
-                    const isSelected = store.id === selectedStoreId;
-                    return (
-                      <div
-                        key={store.id}
-                        onClick={() => {
-                          setSelectedStoreId(store.id);
-                          // On mobile, smoothly scroll down to map showcase if clicked
-                          if (window.innerWidth < 1024) {
-                            const mapElement = document.getElementById("interactive-map-section");
-                            mapElement?.scrollIntoView({ behavior: "smooth" });
-                          }
-                        }}
-                        className={`p-5 rounded-2xl border transition-all duration-200 cursor-pointer text-slate-900 relative ${
-                          isSelected
-                            ? "bg-white border-[#0052B4] border-l-[6px] border-l-[#0052B4] ring-2 ring-[#0052B4]/15 shadow-xl scale-[1.01]"
-                            : "bg-white border-slate-200/90 hover:border-slate-300 hover:shadow-md"
-                        }`}
-                      >
-                        {/* Store Header */}
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <div>
-                            <span className="text-[11px] font-extrabold uppercase text-[#0052B4] tracking-wider block mb-0.5">
-                              {store.badge}
-                            </span>
-                            <h3 className="font-black text-lg text-slate-900 leading-snug">
-                              {store.name}
-                            </h3>
-                          </div>
-                          {store.distanceKm !== null && (
-                            <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-black shrink-0 border border-emerald-200">
-                              {store.distanceKm} km away
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Store Details */}
-                        <div className="space-y-2 my-3 text-xs text-slate-600 font-medium">
-                          <div className="flex items-start gap-2">
-                            <MapPin
-                              size={15}
-                              className="text-[#0052B4] shrink-0 mt-0.5"
-                            />
-                            <span className="text-slate-800 font-semibold">{store.address}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Clock size={14} className="text-slate-500 shrink-0" />
-                            <span>{store.hours}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Phone size={14} className="text-slate-500 shrink-0" />
-                            <a
-                              href={`tel:${store.directCall}`}
-                              className="text-slate-800 font-bold hover:text-[#0052B4]"
-                              onClick={e => e.stopPropagation()}
-                            >
-                              {store.phone}
-                            </a>
-                          </div>
-                        </div>
-
-                        {/* Services Badges */}
-                        <div className="flex flex-wrap gap-1.5 mb-4 pt-2.5 border-t border-slate-100">
-                          {store.services.map((srv, idx) => (
-                            <span
-                              key={idx}
-                              className="text-[10px] bg-slate-100 text-slate-700 font-bold px-2.5 py-1 rounded-md"
-                            >
-                              ✓ {srv}
-                            </span>
-                          ))}
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-                          <a
-                            href={getDirectionsUrl(store)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={e => e.stopPropagation()}
-                            className="flex-1 py-2.5 px-3 bg-[#0052B4] hover:bg-[#003875] text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
-                          >
-                            <Navigation size={13} />
-                            <span>Live Directions</span>
-                          </a>
-                          <a
-                            href={`tel:${store.directCall}`}
-                            onClick={e => e.stopPropagation()}
-                            className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                            title="Call Showroom"
-                          >
-                            <PhoneCall size={13} className="text-[#0052B4]" />
-                            <span>Call</span>
-                          </a>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-
-            {/* ── Right Column: Selected Store Showcase & Live Interactive Map (7 Cols) ─── */}
-            <div id="interactive-map-section" className="lg:col-span-7 flex flex-col gap-5 sticky top-28">
-              {/* Selected Showroom Info Card */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-md">
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                  <div>
-                    <span className="inline-flex items-center gap-1 text-xs font-extrabold uppercase px-2.5 py-1 bg-blue-50 text-[#0052B4] rounded-full border border-blue-200 mb-1.5">
+          {/* Master Map Display Card */}
+          <div className="bg-white rounded-3xl p-4 md:p-6 border border-slate-200/90 shadow-xl overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              {/* Left Info Panel for Active Showroom (4 cols) */}
+              <div className="lg:col-span-5 flex flex-col justify-between h-full space-y-4">
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase px-2.5 py-1 bg-blue-50 text-[#0052B4] rounded-full border border-blue-200">
                       <Sparkles size={12} />
-                      Active Showroom Selected
+                      {selectedStore.badge}
                     </span>
-                    <h2 className="text-2xl font-black text-slate-900 font-display">
-                      {selectedStore.name}
-                    </h2>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">
+                      ● Open Today
+                    </span>
                   </div>
 
-                  <a
-                    href={getDirectionsUrl(selectedStore)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
-                  >
-                    <Navigation size={15} />
-                    <span>Navigate on Google Maps</span>
-                    <ExternalLink size={13} />
-                  </a>
-                </div>
+                  <h2 className="text-2xl md:text-3xl font-black text-slate-900 font-display leading-tight mb-3">
+                    {selectedStore.name}
+                  </h2>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-medium text-slate-700 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                  <div className="flex items-start gap-2.5">
-                    <MapPin size={16} className="text-[#0052B4] shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-slate-900 block font-bold">
-                        Address:
-                      </strong>
-                      <span>{selectedStore.address}</span>
+                  <div className="space-y-3 text-xs md:text-sm text-slate-700 font-medium bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div className="flex items-start gap-2.5">
+                      <MapPin size={16} className="text-[#0052B4] shrink-0 mt-0.5" />
+                      <span className="font-semibold text-slate-900 leading-relaxed">
+                        {selectedStore.address}
+                      </span>
                     </div>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Phone size={16} className="text-[#0052B4] shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-slate-900 block font-bold">
-                        Hotline / Contact:
-                      </strong>
+                    <div className="flex items-center gap-2.5">
+                      <Clock size={16} className="text-slate-500 shrink-0" />
+                      <span>{selectedStore.hours}</span>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <Phone size={16} className="text-[#0052B4] shrink-0" />
                       <a
                         href={`tel:${selectedStore.directCall}`}
-                        className="text-[#0052B4] font-extrabold hover:underline"
+                        className="font-extrabold text-[#0052B4] hover:underline"
                       >
                         {selectedStore.phone}
                       </a>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Dynamic Interactive Google Map Embed */}
-              <div className="bg-white p-2.5 rounded-2xl border border-slate-200 shadow-md overflow-hidden relative">
-                <div className="w-full h-[460px] rounded-xl overflow-hidden relative">
-                  <iframe
-                    key={selectedStore.id}
-                    src={mapEmbedUrl}
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title={`Google Map - ${selectedStore.name}`}
-                    className="w-full h-full object-cover"
-                  />
+                  <div className="mt-4">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
+                      Available In-Store Services:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedStore.services.map((srv, i) => (
+                        <span
+                          key={i}
+                          className="text-[11px] bg-blue-50/80 text-[#0052B4] font-bold px-2.5 py-1 rounded-lg border border-blue-100"
+                        >
+                          ✓ {srv}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="p-3 bg-white flex items-center justify-between text-xs text-slate-600 font-semibold border-t border-slate-100">
-                  <span className="flex items-center gap-1.5">
-                    <MapPin size={14} className="text-[#0052B4]" />
-                    <span>Showing map coordinates for {selectedStore.city}, Sri Lanka</span>
-                  </span>
+                {/* Primary Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
                   <a
                     href={getDirectionsUrl(selectedStore)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[#0052B4] hover:underline font-bold flex items-center gap-1"
+                    className="flex-1 py-3 px-4 bg-[#0052B4] hover:bg-[#003875] text-white rounded-xl text-xs md:text-sm font-extrabold flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
                   >
-                    <span>Open in Fullscreen Map</span>
-                    <span>↗</span>
+                    <Navigation size={15} />
+                    <span>Navigate on Google Maps</span>
+                    <ExternalLink size={13} />
+                  </a>
+                  <a
+                    href={`tel:${selectedStore.directCall}`}
+                    className="py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl text-xs md:text-sm font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <PhoneCall size={15} className="text-[#0052B4]" />
+                    <span>Call Store</span>
                   </a>
                 </div>
               </div>
+
+              {/* Right Interactive Embedded Google Map (7 cols) */}
+              <div className="lg:col-span-7 h-[380px] md:h-[440px] rounded-2xl overflow-hidden border border-slate-200 relative shadow-inner">
+                <iframe
+                  key={selectedStore.id}
+                  src={mapEmbedUrl}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title={`Google Map - ${selectedStore.name}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── Island-Wide Showrooms 3-Column Directory Section ───────────── */}
+      <section className="bg-slate-50 py-12 px-4 md:px-8 min-h-screen">
+        <div className="container mx-auto max-w-7xl">
+          {/* Section Header & Province Filter Tabs */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-4 border-b border-slate-200">
+            <div>
+              <div className="inline-flex items-center gap-2 mb-1.5">
+                <Store size={18} className="text-[#0052B4]" />
+                <span className="text-xs font-extrabold uppercase tracking-widest text-[#0052B4]">
+                  National Network
+                </span>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-black text-slate-900 font-display">
+                All Showrooms & Service Centers ({filteredShowrooms.length})
+              </h2>
+            </div>
+
+            {/* Province Badges */}
+            <div className="flex flex-wrap gap-1.5">
+              {["All", "Western", "Central", "Southern", "North Western", "Northern"].map(
+                prov => (
+                  <button
+                    key={prov}
+                    onClick={() => setSelectedProvince(prov)}
+                    className={`text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      selectedProvince === prov
+                        ? "bg-[#0052B4] text-white shadow-xs"
+                        : "bg-white text-slate-700 hover:bg-slate-200 border border-slate-200"
+                    }`}
+                  >
+                    {prov}
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+
+          {/* 3-Column Balanced Responsive Grid */}
+          {filteredShowrooms.length === 0 ? (
+            <div className="bg-white p-12 rounded-3xl text-center border border-slate-200 text-slate-600 max-w-lg mx-auto shadow-sm">
+              <p className="font-bold text-base mb-2">
+                No showrooms found matching "{searchQuery}".
+              </p>
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedProvince("All");
+                }}
+                className="mt-2 text-xs font-extrabold text-[#0052B4] hover:underline cursor-pointer"
+              >
+                Clear Search & View All 9 Locations
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredShowrooms.map(store => {
+                const isSelected = store.id === selectedStoreId;
+                return (
+                  <div
+                    key={store.id}
+                    className={`bg-white rounded-2xl border p-5 flex flex-col justify-between transition-all duration-200 shadow-sm hover:shadow-lg ${
+                      isSelected
+                        ? "border-[#0052B4] ring-2 ring-[#0052B4]/20 border-t-[5px] border-t-[#0052B4]"
+                        : "border-slate-200/90 hover:border-slate-300"
+                    }`}
+                  >
+                    <div>
+                      {/* Card Header */}
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <span className="text-[11px] font-extrabold uppercase text-[#0052B4] tracking-wider block">
+                          {store.badge}
+                        </span>
+                        {store.distanceKm !== null ? (
+                          <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-black shrink-0 border border-emerald-200">
+                            {store.distanceKm} km away
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-emerald-600 font-bold uppercase">
+                            Open
+                          </span>
+                        )}
+                      </div>
+
+                      <h3 className="font-black text-lg text-slate-900 leading-snug mb-3">
+                        {store.name}
+                      </h3>
+
+                      {/* Store Details */}
+                      <div className="space-y-2 mb-4 text-xs text-slate-600 font-medium">
+                        <div className="flex items-start gap-2">
+                          <MapPin
+                            size={15}
+                            className="text-[#0052B4] shrink-0 mt-0.5"
+                          />
+                          <span className="text-slate-800 font-semibold">{store.address}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock size={14} className="text-slate-400 shrink-0" />
+                          <span>{store.hours}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Phone size={14} className="text-slate-400 shrink-0" />
+                          <a
+                            href={`tel:${store.directCall}`}
+                            className="text-slate-800 font-bold hover:text-[#0052B4]"
+                          >
+                            {store.phone}
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* Services */}
+                      <div className="flex flex-wrap gap-1.5 mb-5 pt-3 border-t border-slate-100">
+                        {store.services.map((srv, idx) => (
+                          <span
+                            key={idx}
+                            className="text-[10px] bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-md"
+                          >
+                            ✓ {srv}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                      <button
+                        onClick={() => handleSelectStore(store.id)}
+                        className={`flex-1 py-2 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-[#0052B4] text-white shadow-xs"
+                            : "bg-blue-50 hover:bg-[#0052B4] text-[#0052B4] hover:text-white"
+                        }`}
+                      >
+                        <Compass size={13} />
+                        <span>{isSelected ? "Active On Map" : "View On Map"}</span>
+                      </button>
+
+                      <a
+                        href={getDirectionsUrl(store)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer"
+                        title="Google Maps Navigation"
+                      >
+                        <Navigation size={13} className="text-[#0052B4]" />
+                        <span>Directions</span>
+                      </a>
+
+                      <a
+                        href={`tel:${store.directCall}`}
+                        className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer"
+                        title="Call Store"
+                      >
+                        <PhoneCall size={13} className="text-[#0052B4]" />
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
     </MainLayout>
