@@ -89,15 +89,21 @@ export const cartRouter = router({
       let cart: any;
       let rawItems: any[] = [];
 
-      if (!db) {
+      try {
+        if (!db) {
+          cart = await getOrCreateMockCart(userId, sessionId);
+          rawItems = MOCK_CART_ITEMS.filter(i => i.cartId === cart.id);
+        } else {
+          cart = await getOrCreateCart(db, userId, sessionId);
+          rawItems = await db
+            .select()
+            .from(cartItems)
+            .where(eq(cartItems.cartId, cart.id));
+        }
+      } catch (err) {
+        console.warn("DB cart lookup failed, using memory fallback:", err);
         cart = await getOrCreateMockCart(userId, sessionId);
         rawItems = MOCK_CART_ITEMS.filter(i => i.cartId === cart.id);
-      } else {
-        cart = await getOrCreateCart(db, userId, sessionId);
-        rawItems = await db
-          .select()
-          .from(cartItems)
-          .where(eq(cartItems.cartId, cart.id));
       }
 
       if (rawItems.length === 0) {
@@ -188,7 +194,53 @@ export const cartRouter = router({
 
       const prodIdStr = String(input.productId);
 
-      if (!db) {
+      try {
+        if (!db) {
+          const cart = await getOrCreateMockCart(userId, sessionId);
+          const existing = MOCK_CART_ITEMS.find(
+            i => i.cartId === cart.id && i.productId === prodIdStr
+          );
+          if (existing) {
+            existing.quantity += input.quantity;
+          } else {
+            MOCK_CART_ITEMS.push({
+              id: mockCartItemIdCounter++,
+              cartId: cart.id,
+              productId: prodIdStr,
+              variantId: input.variantId ? String(input.variantId) : null,
+              quantity: input.quantity,
+              unitPrice: String(input.unitPrice),
+            });
+          }
+          return { success: true };
+        }
+
+        const cart = await getOrCreateCart(db, userId, sessionId);
+
+        const [existing] = await db
+          .select()
+          .from(cartItems)
+          .where(
+            and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, prodIdStr))
+          )
+          .limit(1);
+
+        if (existing) {
+          await db
+            .update(cartItems)
+            .set({ quantity: existing.quantity + input.quantity })
+            .where(eq(cartItems.id, existing.id));
+        } else {
+          await db.insert(cartItems).values({
+            cartId: cart.id,
+            productId: prodIdStr,
+            variantId: input.variantId ? String(input.variantId) : null,
+            quantity: input.quantity,
+            unitPrice: String(input.unitPrice),
+          });
+        }
+      } catch (err) {
+        console.warn("DB addItem failed, falling back to mock cart:", err);
         const cart = await getOrCreateMockCart(userId, sessionId);
         const existing = MOCK_CART_ITEMS.find(
           i => i.cartId === cart.id && i.productId === prodIdStr
@@ -205,32 +257,6 @@ export const cartRouter = router({
             unitPrice: String(input.unitPrice),
           });
         }
-        return { success: true };
-      }
-
-      const cart = await getOrCreateCart(db, userId, sessionId);
-
-      const [existing] = await db
-        .select()
-        .from(cartItems)
-        .where(
-          and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, prodIdStr))
-        )
-        .limit(1);
-
-      if (existing) {
-        await db
-          .update(cartItems)
-          .set({ quantity: existing.quantity + input.quantity })
-          .where(eq(cartItems.id, existing.id));
-      } else {
-        await db.insert(cartItems).values({
-          cartId: cart.id,
-          productId: prodIdStr,
-          variantId: input.variantId ? String(input.variantId) : null,
-          quantity: input.quantity,
-          unitPrice: String(input.unitPrice),
-        });
       }
 
       return { success: true };
