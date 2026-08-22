@@ -14,6 +14,7 @@ import {
   ExternalLink,
   Sparkles,
   ArrowRight,
+  ChevronDown,
 } from "lucide-react";
 import MainLayout from "@/components/MainLayout";
 
@@ -422,28 +423,29 @@ export default function Locations() {
       {/* ── Interactive Master Map & Showcase Section ───────────────────── */}
       <section id="master-map-container" className="bg-slate-100 py-8 px-4 md:px-8">
         <div className="container mx-auto max-w-7xl">
-          {/* Quick Showroom Selector Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-none mb-3">
-            <span className="text-xs font-bold text-slate-500 shrink-0 uppercase tracking-wider pl-1">
-              Select City:
-            </span>
-            {ALL_SHOWROOMS.map(s => {
-              const isSelected = s.id === selectedStoreId;
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => setSelectedStoreId(s.id)}
-                  className={`text-xs font-bold px-3.5 py-2 rounded-xl shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
-                    isSelected
-                      ? "bg-[#0052B4] text-white shadow-md scale-105"
-                      : "bg-white text-slate-700 hover:bg-slate-200 border border-slate-200"
-                  }`}
-                >
-                  <MapPin size={12} className={isSelected ? "text-white" : "text-[#0052B4]"} />
-                  <span>{s.city}</span>
-                </button>
-              );
-            })}
+          {/* Quick Showroom Select Dropdown Filter Bar */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 bg-white p-3.5 px-5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="flex items-center gap-2 text-slate-800 font-extrabold text-sm">
+              <MapPin size={18} className="text-[#0052B4]" />
+              <span>Select Showroom & City:</span>
+            </div>
+
+            <div className="relative w-full sm:w-80">
+              <select
+                value={selectedStoreId}
+                onChange={e => setSelectedStoreId(Number(e.target.value))}
+                className="w-full bg-slate-50 hover:bg-slate-100/80 border border-slate-300 text-slate-900 font-bold text-sm rounded-xl py-2.5 pl-4 pr-10 outline-none focus:ring-2 focus:ring-[#0052B4] cursor-pointer transition-colors appearance-none shadow-xs"
+              >
+                {ALL_SHOWROOMS.map(store => (
+                  <option key={store.id} value={store.id} className="py-1 text-slate-900 font-semibold">
+                    📍 {store.city} — {store.name}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-500">
+                <ChevronDown size={16} className="text-[#0052B4]" />
+              </div>
+            </div>
           </div>
 
           {/* Master Map Display Card */}
