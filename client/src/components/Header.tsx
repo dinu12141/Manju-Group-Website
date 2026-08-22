@@ -221,37 +221,37 @@ export default function Header() {
           style={{ color: "#1e293b", backgroundColor: "#ffffff" }}
         >
           {/* Left: Social Media Links */}
-          <div className="hidden md:flex items-center gap-3 pr-5 border-r border-gray-200 h-6 shrink-0">
+          <div className="hidden md:flex items-center gap-2.5 pr-5 border-r border-gray-200 h-6 shrink-0">
             <a
               href="https://www.facebook.com/ManjuEnterprisesLK"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Facebook"
-              className="hover:opacity-80 transition-transform p-1 cursor-pointer text-[#0052B4] hover:scale-115"
+              className="p-1 text-[#0052B4] hover:text-[#003875] hover:scale-115 transition-all cursor-pointer"
               title="Manju Enterprises LK on Facebook"
             >
-              <Facebook size={17} />
+              <Facebook size={18} />
             </a>
             <span
-              aria-label="Instagram (Coming Soon)"
-              className="p-1 text-gray-300 cursor-default opacity-40"
-              title="Coming Soon"
+              aria-label="Instagram"
+              className="p-1 text-slate-500 cursor-default select-none transition-colors"
+              title="Instagram (Coming Soon)"
             >
-              <Instagram size={17} />
+              <Instagram size={18} />
             </span>
             <span
-              aria-label="Twitter (Coming Soon)"
-              className="p-1 text-gray-300 cursor-default opacity-40"
-              title="Coming Soon"
+              aria-label="Twitter"
+              className="p-1 text-slate-500 cursor-default select-none transition-colors"
+              title="Twitter (Coming Soon)"
             >
-              <Twitter size={17} />
+              <Twitter size={18} />
             </span>
             <span
-              aria-label="YouTube (Coming Soon)"
-              className="p-1 text-gray-300 cursor-default opacity-40"
-              title="Coming Soon"
+              aria-label="YouTube"
+              className="p-1 text-slate-500 cursor-default select-none transition-colors"
+              title="YouTube (Coming Soon)"
             >
-              <Youtube size={17} />
+              <Youtube size={18} />
             </span>
           </div>
 
