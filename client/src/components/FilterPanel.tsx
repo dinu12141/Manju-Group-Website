@@ -36,15 +36,16 @@ interface FilterPanelProps {
 }
 
 const PRICE_PRESETS: Array<{ label: string; range: [number, number] }> = [
-  { label: "Under 10K", range: [0, 10000] },
-  { label: "10K–100K", range: [10000, 100000] },
-  { label: "100K–300K", range: [100000, 300000] },
-  { label: "300K+", range: [300000, 750000] },
+  { label: "Under 1K", range: [0, 1000] },
+  { label: "1K–50K", range: [1000, 50000] },
+  { label: "50K–200K", range: [50000, 200000] },
+  { label: "200K–500K", range: [200000, 500000] },
+  { label: "500K+", range: [500000, 1000000] },
 ];
 
 const PRICE_MIN = 0;
-const PRICE_MAX = 750000;
-const PRICE_STEP = 5000;
+const PRICE_MAX = 1000000;
+const PRICE_STEP = 500;
 
 export default function FilterPanel({
   brands,

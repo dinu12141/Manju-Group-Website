@@ -37,10 +37,9 @@ const VALUES = [
 
 const MILESTONES = [
   { year: "2008", event: "Manju Group founded in Colombo" },
-  { year: "2012", event: "Launched Manju Exercise Books brand" },
-  { year: "2015", event: "Expanded to Manju Dew Super water filters" },
-  { year: "2018", event: "Introduced Dew Plus Smart TVs" },
-  { year: "2020", event: "Launched DEW+ Air Conditioners" },
+  { year: "2015", event: "Launched Manju Dew Super water filters" },
+  { year: "2018", event: "Introduced Dew Plus 4K Smart TVs" },
+  { year: "2020", event: "Launched DEW+ Inverter Air Conditioners" },
   { year: "2022", event: "Dew Motors electric bikes introduced" },
   { year: "2024", event: "Opened 8th showroom island-wide" },
 ];
@@ -131,7 +130,7 @@ export default function About() {
               <p className="text-gray-700 font-medium leading-relaxed mb-4">
                 Manju Group is one of Sri Lanka's leading multi-brand companies,
                 operating across electric mobility, consumer electronics, home
-                comfort, water purification, and education stationery.
+                comfort, and water purification.
               </p>
               <p className="text-gray-700 font-medium leading-relaxed mb-6">
                 We are committed to delivering quality products at affordable
@@ -141,7 +140,7 @@ export default function About() {
               <div className="flex flex-col gap-3">
                 {[
                   "Island-wide delivery across all 25 districts",
-                  "5 premium brands under one trusted group",
+                  "4 premier brands under one trusted group",
                   "50,000+ happy customers nationwide",
                 ].map((point, i) => (
                   <div key={i} className="flex items-center gap-3">

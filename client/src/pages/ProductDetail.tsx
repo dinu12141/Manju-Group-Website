@@ -15,9 +15,11 @@ import {
   Plus,
   Lock,
   Check,
+  Heart,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import MainLayout from "@/components/MainLayout";
 import ProductCard from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -89,6 +91,7 @@ export default function ProductDetail({ params }: ProductDetailProps) {
 
   const [, setLocation] = useLocation();
   const { addItem } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
@@ -481,7 +484,7 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                 <button
                   onClick={handleAddToCart}
                   disabled={!item.isInStock}
-                  className="flex-1 h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   style={
                     addedToCart
                       ? { background: "rgba(74,222,128,0.2)", border: "1px solid #4ade80", color: "#4ade80" }
@@ -494,10 +497,21 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                 <button
                   onClick={handleBuyNow}
                   disabled={!item.isInStock}
-                  className="flex-1 h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2 text-black transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2 text-black transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   style={{ background: "linear-gradient(135deg, #4ade80, #22c55e)" }}
                 >
                   <Zap size={16} /> Buy Now
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleWishlist(item.id, item.name)}
+                  aria-label={isWishlisted(item.id) ? "Remove from Wishlist" : "Add to Wishlist"}
+                  className="w-12 h-12 rounded-xl flex items-center justify-center transition-all border border-white/15 hover:border-red-500/50 bg-white/5 hover:bg-red-500/10 cursor-pointer flex-shrink-0"
+                >
+                  <Heart
+                    size={20}
+                    className={isWishlisted(item.id) ? "fill-red-500 text-red-500" : "text-white/70"}
+                  />
                 </button>
               </div>
 

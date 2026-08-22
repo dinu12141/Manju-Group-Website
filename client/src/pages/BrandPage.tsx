@@ -170,38 +170,6 @@ const BRAND_VISUALS: Record<string, BrandVisual> = {
     storyImage:
       "https://images.unsplash.com/photo-1563389938-b53ccad7f4e3?auto=format&fit=crop&w=700&q=85",
   },
-  "manju-exercise-books": {
-    heroImage:
-      "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1600&q=90",
-    gradient: "from-black/80 to-violet-900/40",
-    color: "#8b5cf6",
-    features: [
-      {
-        icon: BookOpen,
-        title: "Quality Paper",
-        desc: "70 GSM to 120 GSM premium writing paper.",
-      },
-      {
-        icon: Award,
-        title: "Island-wide Trust",
-        desc: "Trusted by 500,000+ students across Sri Lanka.",
-      },
-      {
-        icon: ShieldCheck,
-        title: "Durable Covers",
-        desc: "Art board covers that withstand daily school use.",
-      },
-    ],
-    stats: [
-      { v: "10+", l: "Book Types" },
-      { v: "500K+", l: "Students" },
-      { v: "25yr", l: "Heritage" },
-    ],
-    story:
-      "For over 25 years, Manju Exercise Books have been the trusted companion of Sri Lankan students. Our books are crafted with the finest paper to help students focus on what matters most — learning. From ruled notebooks to graph books and drawing pads, we cover every student need.",
-    storyImage:
-      "https://images.unsplash.com/photo-1568667256549-094345857637?auto=format&fit=crop&w=700&q=85",
-  },
 };
 
 export default function BrandPage({ params }: BrandPageProps) {

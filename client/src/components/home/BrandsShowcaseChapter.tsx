@@ -20,22 +20,20 @@ const BRANDS = [
     accent: "#16A34A",
     accentLight: "#dcfce7",
     tag: "Mobility",
-    image:
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=600&q=80",
-    stat: { value: "89,900", label: "From LKR" },
+    image: "/scooter_silver.png",
+    stat: { value: "630,000", label: "From LKR" },
   },
   {
     slug: "dew-plus",
     name: "Dew Plus",
     tagline: "4K Smart TVs",
-    desc: "Cinematic Android TVs with frameless HDR10 display technology.",
+    desc: "Cinematic Android TVs with frameless HDR display technology.",
     icon: Tv,
     accent: "#2563EB",
     accentLight: "#dbeafe",
     tag: "Electronics",
-    image:
-      "https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=600&q=80",
-    stat: { value: "45,900", label: "From LKR" },
+    image: "/dew_plus_55_tv.png",
+    stat: { value: "74,400", label: "From LKR" },
   },
   {
     slug: "dew-plus-ac",
@@ -46,35 +44,20 @@ const BRANDS = [
     accent: "#0891B2",
     accentLight: "#cffafe",
     tag: "Cooling",
-    image:
-      "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80",
-    stat: { value: "79,900", label: "From LKR" },
+    image: "/dew_plus_ac_1ton.png",
+    stat: { value: "145,000", label: "From LKR" },
   },
   {
     slug: "manju-dew-super",
     name: "Manju Dew Super",
     tagline: "Water Filtration Systems",
-    desc: "Advanced RO systems for pure, clean drinking water at home.",
+    desc: "Advanced RO systems & commercial plants for pure drinking water.",
     icon: Droplets,
     accent: "#0D9488",
     accentLight: "#ccfbf1",
     tag: "Health",
-    image:
-      "https://images.unsplash.com/photo-1548186277-8eb4d5e2fc0f?auto=format&fit=crop&w=600&q=80",
-    stat: { value: "24,900", label: "From LKR" },
-  },
-  {
-    slug: "manju-exercise-books",
-    name: "Manju Books",
-    tagline: "Premium Stationery",
-    desc: "High-quality exercise books trusted by students island-wide.",
-    icon: BookOpen,
-    accent: "#7C3AED",
-    accentLight: "#ede9fe",
-    tag: "Education",
-    image:
-      "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80",
-    stat: { value: "150", label: "From LKR" },
+    image: "/ro_water_purifier.png",
+    stat: { value: "69,900", label: "From LKR" },
   },
 ];
 
@@ -105,7 +88,7 @@ export default function BrandsShowcaseChapter() {
               className="text-4xl sm:text-5xl font-black tracking-tight text-gray-900 leading-[1.05]"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              Five Brands,{" "}
+              Four Brands,{" "}
               <span
                 style={{
                   background: "linear-gradient(135deg, #0F2D5E, #C9A84C)",
@@ -118,7 +101,7 @@ export default function BrandsShowcaseChapter() {
               </span>
             </h2>
             <p className="text-gray-500 mt-3 text-base max-w-lg">
-              Every product category designed to improve life in Sri Lanka.
+              Engineering sustainable mobility, smart entertainment, climate comfort, and clean water across Sri Lanka.
             </p>
           </div>
           <Link href="/brands">
@@ -131,8 +114,8 @@ export default function BrandsShowcaseChapter() {
           </Link>
         </div>
 
-        {/* Bento-style grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* 4-Column Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {BRANDS.map(
             (
               {

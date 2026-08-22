@@ -6,7 +6,7 @@ const CATS = [
   {
     label: "Electric Bikes",
     icon: Zap,
-    img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=300&q=80",
+    img: "/scooter_silver.png",
     href: "/products?brandId=1",
     accent: "#16A34A",
   },
@@ -27,16 +27,9 @@ const CATS = [
   {
     label: "Water Filters",
     icon: Droplets,
-    img: "https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=300&q=80",
+    img: "/ro_water_purifier.png",
     href: "/products?brandId=4",
     accent: "#0D9488",
-  },
-  {
-    label: "Exercise Books",
-    icon: BookOpen,
-    img: "https://images.unsplash.com/photo-1531346644014-cde582069e71?auto=format&fit=crop&w=300&q=80",
-    href: "/products?brandId=5",
-    accent: "#7C3AED",
   },
 ];
 

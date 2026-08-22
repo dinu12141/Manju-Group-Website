@@ -43,10 +43,27 @@ const NAV_COLUMNS = [
 ];
 
 const SOCIAL_LINKS = [
-  { Icon: Facebook, href: "https://facebook.com", label: "Facebook" },
-  { Icon: Instagram, href: "https://instagram.com", label: "Instagram" },
-  { Icon: Twitter, href: "https://twitter.com", label: "Twitter" },
-  { Icon: Youtube, href: "https://youtube.com", label: "YouTube" },
+  {
+    Icon: Facebook,
+    href: "https://www.facebook.com/ManjuEnterprisesLK",
+    label: "Facebook",
+    enabled: true,
+  },
+  {
+    Icon: Instagram,
+    label: "Instagram (Coming Soon)",
+    enabled: false,
+  },
+  {
+    Icon: Twitter,
+    label: "Twitter (Coming Soon)",
+    enabled: false,
+  },
+  {
+    Icon: Youtube,
+    label: "YouTube (Coming Soon)",
+    enabled: false,
+  },
 ];
 
 const BRAND_BLUE = "#0052B4";
@@ -266,45 +283,69 @@ export default function Footer() {
 
           {/* Social Icons */}
           <div style={{ display: "flex", gap: "10px", marginBottom: "24px" }}>
-            {SOCIAL_LINKS.map(({ Icon, href, label }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={label}
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "rgba(255, 255, 255, 0.08)",
-                  border: "1px solid rgba(255, 255, 255, 0.18)",
-                  color: "#ffffff",
-                  textDecoration: "none",
-                  transition: "all 0.2s",
-                  flexShrink: 0,
-                }}
-                onMouseEnter={e => {
-                  const el = e.currentTarget as HTMLAnchorElement;
-                  el.style.borderColor = "#60A5FA";
-                  el.style.background = "#0052B4";
-                  el.style.boxShadow = `0 0 18px ${BRAND_BLUE_GLOW}`;
-                  el.style.transform = "translateY(-3px)";
-                }}
-                onMouseLeave={e => {
-                  const el = e.currentTarget as HTMLAnchorElement;
-                  el.style.borderColor = "rgba(255, 255, 255, 0.18)";
-                  el.style.background = "rgba(255, 255, 255, 0.08)";
-                  el.style.boxShadow = "none";
-                  el.style.transform = "translateY(0px)";
-                }}
-              >
-                <Icon size={17} />
-              </a>
-            ))}
+            {SOCIAL_LINKS.map(({ Icon, href, label, enabled }) =>
+              enabled ? (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  title="Manju Enterprises LK on Facebook"
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "rgba(0, 82, 180, 0.4)",
+                    border: "1px solid #60A5FA",
+                    color: "#ffffff",
+                    textDecoration: "none",
+                    transition: "all 0.2s",
+                    flexShrink: 0,
+                  }}
+                  onMouseEnter={e => {
+                    const el = e.currentTarget as HTMLAnchorElement;
+                    el.style.borderColor = "#60A5FA";
+                    el.style.background = "#0052B4";
+                    el.style.boxShadow = `0 0 18px ${BRAND_BLUE_GLOW}`;
+                    el.style.transform = "translateY(-3px)";
+                  }}
+                  onMouseLeave={e => {
+                    const el = e.currentTarget as HTMLAnchorElement;
+                    el.style.borderColor = "#60A5FA";
+                    el.style.background = "rgba(0, 82, 180, 0.4)";
+                    el.style.boxShadow = "none";
+                    el.style.transform = "translateY(0px)";
+                  }}
+                >
+                  <Icon size={17} />
+                </a>
+              ) : (
+                <div
+                  key={label}
+                  aria-label={label}
+                  title={label}
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "rgba(255, 255, 255, 0.04)",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    color: "rgba(255, 255, 255, 0.3)",
+                    cursor: "default",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Icon size={17} />
+                </div>
+              )
+            )}
           </div>
 
           {/* Newsletter Form */}

@@ -23,13 +23,9 @@ const CATEGORIES = [
   { id: "dew-plus", label: "Smart TVs" },
   { id: "dew-plus-ac", label: "Air Conditioners" },
   { id: "manju-dew-super", label: "Water Filters" },
-  { id: "manju-exercise-books", label: "Books" },
 ];
 
-// Verified imagery — each URL fetched and visually confirmed to depict
-// the correct subject before use (earlier IDs had silently mismatched
-// content, e.g. an "AC unit" that was actually headphones, and a
-// "notebook" that was actually a broken/dead link).
+// Verified imagery
 const PRODUCTS = [
   {
     id: "dew-plus",
@@ -46,12 +42,11 @@ const PRODUCTS = [
   {
     id: "dew-motors",
     category: "dew-motors",
-    name: "Dew Motors E-Scooter Pro",
+    name: "Dew Motors EM005 2400W",
     subtitle: "Electric Urban Mobility",
-    desc: "High-torque electric scooter engineered for Sri Lankan roads with long-range battery life.",
+    desc: "High-torque electric motorcycle engineered for Sri Lankan roads with 80km range.",
     icon: Zap,
-    image:
-      "https://images.unsplash.com/photo-1780688999276-196babc7a7a8?auto=format&fit=crop&w=600&q=80",
+    image: "/scooter_red.png",
     brand: "Dew Motors",
     brandColor: "bg-emerald-100 text-emerald-700",
     glow: "#16A34A",
@@ -59,11 +54,11 @@ const PRODUCTS = [
   {
     id: "dew-plus-ac",
     category: "dew-plus-ac",
-    name: "DEW+ Inverter AC 12000 BTU",
+    name: "DEW+ Inverter AC 1.5 Ton",
     subtitle: "Energy-Efficient Cooling",
-    desc: "Whisper-quiet inverter AC that cools fast and cuts electricity bills by up to 40%.",
+    desc: "Whisper-quiet inverter AC with R32 eco refrigerant that cuts electricity bills by up to 40%.",
     icon: Snowflake,
-    image: "/dew_plus_ac_1ton.png",
+    image: "/dew_plus_ac_1_5ton.png",
     brand: "DEW+ AC",
     brandColor: "bg-cyan-100 text-cyan-700",
     glow: "#0891B2",
@@ -73,26 +68,12 @@ const PRODUCTS = [
     category: "manju-dew-super",
     name: "Manju Dew Super RO Filter",
     subtitle: "Advanced Water Purification",
-    desc: "Multi-stage RO system delivering clean, pure, healthy drinking water for every family.",
+    desc: "Multi-stage RO system delivering clean, pure, mineral-rich drinking water for every family.",
     icon: Droplets,
-    image:
-      "https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=600&q=80",
+    image: "/ro_water_purifier.png",
     brand: "Manju Dew Super",
     brandColor: "bg-teal-100 text-teal-700",
     glow: "#0D9488",
-  },
-  {
-    id: "manju-exercise-books",
-    category: "manju-exercise-books",
-    name: "Manju Exercise Book Set",
-    subtitle: "Premium Student Stationery",
-    desc: "High-quality ruled exercise books with smooth paper finish — trusted by students island-wide.",
-    icon: BookOpen,
-    image:
-      "https://images.unsplash.com/photo-1531346644014-cde582069e71?auto=format&fit=crop&w=600&q=80",
-    brand: "Manju Books",
-    brandColor: "bg-violet-100 text-violet-700",
-    glow: "#7C3AED",
   },
 ];
 

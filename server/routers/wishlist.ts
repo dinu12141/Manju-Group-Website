@@ -1,109 +1,153 @@
 import { z } from "zod";
-import { protectedProcedure, router } from "../_core/trpc";
+import { publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { wishlists } from "../../drizzle/schema";
-import { eq, and } from "drizzle-orm";
-import axios from "axios";
+import { wishlists, products, brands, productImages } from "../../drizzle/schema";
+import { eq, and, inArray } from "drizzle-orm";
 
-const APP_API_URL = process.env.APP_API_URL || "http://localhost:3001/api/v1";
+// In-memory fallback for guests or if DB is offline
+const MOCK_WISHLISTS: Array<{ id: number; userId?: number; sessionId?: string; productId: string }> = [];
+let mockWishlistIdCounter = 1;
 
 export const wishlistRouter = router({
-  list: protectedProcedure.query(async ({ ctx }) => {
-    const db = await getDb();
-    if (!db) return [];
+  list: publicProcedure
+    .input(
+      z
+        .object({
+          sessionId: z.string().optional(),
+        })
+        .optional()
+    )
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      const userId = ctx.user?.id;
+      const sessionId = input?.sessionId;
 
-    const items = await db
-      .select()
-      .from(wishlists)
-      .where(eq(wishlists.userId, ctx.user.id));
+      if (!userId && !sessionId) {
+        return [];
+      }
 
-    if (items.length === 0) return [];
+      let rawItems: Array<{ id: number; productId: string }> = [];
 
-    const enriched = await Promise.all(
-      items.map(async i => {
-        try {
-          const res = await axios.get(`${APP_API_URL}/products/${i.productId}`);
-          const p = res.data?.data;
-          if (!p) throw new Error("Product not found");
+      if (!db || !userId) {
+        rawItems = MOCK_WISHLISTS.filter(w =>
+          userId ? w.userId === userId : w.sessionId === sessionId
+        );
+      } else {
+        rawItems = await db
+          .select({
+            id: wishlists.id,
+            productId: wishlists.productId,
+          })
+          .from(wishlists)
+          .where(eq(wishlists.userId, userId));
+      }
 
-          // Map brandName
-          let brandName = "Manju Exercise Books";
-          const brandSlugLower = p.brand?.slug?.toLowerCase();
-          const catSlugLower = p.category?.slug?.toLowerCase() || "";
-          if (
-            brandSlugLower === "dewac" ||
-            brandSlugLower === "dew-plus-ac" ||
-            catSlugLower === "dew-air-conditioners" ||
-            catSlugLower === "air-conditioners" ||
-            catSlugLower === "dew-plus-ac"
-          ) {
-            brandName = "DEW+ AC";
-          } else if (
-            brandSlugLower === "dew-motors" ||
-            catSlugLower === "electric-bike" ||
-            catSlugLower === "dew-motors" ||
-            catSlugLower === "electric-bikes"
-          ) {
-            brandName = "Dew Motors";
-          } else if (
-            brandSlugLower === "dew-plus" ||
-            catSlugLower === "smart-tv" ||
-            catSlugLower === "dew-plus" ||
-            catSlugLower === "smart-tvs"
-          ) {
-            brandName = "Dew Plus";
-          } else if (
-            brandSlugLower === "manju-dew-super" ||
-            catSlugLower.startsWith("ro-") ||
-            catSlugLower.includes("water-filter") ||
-            catSlugLower.includes("filter")
-          ) {
-            brandName = "Manju Dew Super";
+      if (rawItems.length === 0) return [];
+
+      const productIds = rawItems
+        .map(i => Number(i.productId))
+        .filter(id => !isNaN(id) && id > 0);
+
+      let productMap: Record<number, any> = {};
+      let brandMap: Record<number, any> = {};
+      let imageMap: Record<number, string> = {};
+
+      if (db && productIds.length > 0) {
+        const pRows = await db
+          .select({
+            product: products,
+            brand: brands,
+          })
+          .from(products)
+          .leftJoin(brands, eq(products.brandId, brands.id))
+          .where(inArray(products.id, productIds));
+
+        for (const row of pRows) {
+          productMap[row.product.id] = row.product;
+          if (row.brand) {
+            brandMap[row.product.id] = row.brand;
           }
-
-          return {
-            ...i,
-            productName: p.name,
-            productSlug: p.slug,
-            basePrice: Number(p.price) || 0,
-            salePrice: p.salePrice ? Number(p.salePrice) : null,
-            currency: "LKR",
-            isInStock: p.stock > 0,
-            brandName: brandName,
-            imageUrl: p.productImages?.[0]?.url || p.images?.[0] || null,
-          };
-        } catch (e) {
-          return {
-            ...i,
-            productName: "Unknown Product",
-            productSlug: "#",
-            basePrice: 0,
-            salePrice: null,
-            currency: "LKR",
-            isInStock: false,
-            brandName: "Unknown Brand",
-            imageUrl: null,
-          };
         }
+
+        const imgRows = await db
+          .select()
+          .from(productImages)
+          .where(inArray(productImages.productId, productIds))
+          .orderBy(productImages.sortOrder);
+
+        for (const img of imgRows) {
+          if (!imageMap[img.productId]) {
+            imageMap[img.productId] = img.url;
+          }
+        }
+      }
+
+      return rawItems.map(item => {
+        const numId = Number(item.productId);
+        const p = productMap[numId];
+        const b = brandMap[numId];
+        const img = imageMap[numId];
+
+        return {
+          id: item.id,
+          productId: item.productId,
+          productName: p?.name ?? `Product #${item.productId}`,
+          productSlug: p?.slug ?? "products",
+          basePrice: p?.basePrice ? Number(p.basePrice) : 0,
+          salePrice: p?.salePrice ? Number(p.salePrice) : null,
+          currency: "LKR",
+          isInStock: p ? p.isInStock : true,
+          brandName: b?.name ?? "Manju Group",
+          imageUrl: img || null,
+        };
+      });
+    }),
+
+  toggle: publicProcedure
+    .input(
+      z.object({
+        productId: z.union([z.string(), z.number()]),
+        sessionId: z.string().optional(),
       })
-    );
-
-    return enriched;
-  }),
-
-  toggle: protectedProcedure
-    .input(z.object({ productId: z.union([z.string(), z.number()]) }))
+    )
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
-      if (!db) throw new Error("DB unavailable");
+      const userId = ctx.user?.id;
+      const sessionId = input.sessionId;
+      const prodIdStr = String(input.productId);
+
+      if (!userId && !sessionId) {
+        throw new Error("User session required for wishlist");
+      }
+
+      if (!db || !userId) {
+        const existingIdx = MOCK_WISHLISTS.findIndex(w =>
+          userId
+            ? w.userId === userId && w.productId === prodIdStr
+            : w.sessionId === sessionId && w.productId === prodIdStr
+        );
+
+        if (existingIdx >= 0) {
+          MOCK_WISHLISTS.splice(existingIdx, 1);
+          return { added: false };
+        } else {
+          MOCK_WISHLISTS.push({
+            id: mockWishlistIdCounter++,
+            userId,
+            sessionId,
+            productId: prodIdStr,
+          });
+          return { added: true };
+        }
+      }
 
       const [existing] = await db
         .select()
         .from(wishlists)
         .where(
           and(
-            eq(wishlists.userId, ctx.user.id),
-            eq(wishlists.productId, String(input.productId))
+            eq(wishlists.userId, userId),
+            eq(wishlists.productId, prodIdStr)
           )
         )
         .limit(1);
@@ -112,28 +156,48 @@ export const wishlistRouter = router({
         await db.delete(wishlists).where(eq(wishlists.id, existing.id));
         return { added: false };
       } else {
-        await db
-          .insert(wishlists)
-          .values({ userId: ctx.user.id, productId: String(input.productId) });
+        await db.insert(wishlists).values({
+          userId,
+          productId: prodIdStr,
+        });
         return { added: true };
       }
     }),
 
-  isWishlisted: protectedProcedure
-    .input(z.object({ productId: z.union([z.string(), z.number()]) }))
+  isWishlisted: publicProcedure
+    .input(
+      z.object({
+        productId: z.union([z.string(), z.number()]),
+        sessionId: z.string().optional(),
+      })
+    )
     .query(async ({ ctx, input }) => {
       const db = await getDb();
-      if (!db) return false;
+      const userId = ctx.user?.id;
+      const sessionId = input.sessionId;
+      const prodIdStr = String(input.productId);
+
+      if (!userId && !sessionId) return false;
+
+      if (!db || !userId) {
+        return MOCK_WISHLISTS.some(w =>
+          userId
+            ? w.userId === userId && w.productId === prodIdStr
+            : w.sessionId === sessionId && w.productId === prodIdStr
+        );
+      }
+
       const [item] = await db
         .select()
         .from(wishlists)
         .where(
           and(
-            eq(wishlists.userId, ctx.user.id),
-            eq(wishlists.productId, String(input.productId))
+            eq(wishlists.userId, userId),
+            eq(wishlists.productId, prodIdStr)
           )
         )
         .limit(1);
+
       return !!item;
     }),
 });

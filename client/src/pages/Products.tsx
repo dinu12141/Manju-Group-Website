@@ -102,7 +102,6 @@ export default function Products() {
       { id: 2, name: "Smart TVs", slug: "smart-tvs" },
       { id: 3, name: "Air Conditioners", slug: "air-conditioners" },
       { id: 4, name: "Water Filters", slug: "water-filters" },
-      { id: 5, name: "Exercise Books", slug: "exercise-books" },
     ];
   }, [categoriesData]);
 
@@ -275,7 +274,7 @@ export default function Products() {
                 {pageTitle}
               </h1>
               <p className="text-blue-100/80 text-sm md:text-base mt-2 max-w-xl">
-                Explore genuine multi-brand electric bikes, 4K smart TVs, inverter ACs, water purifiers, and student stationery with manufacturer warranty.
+                Explore genuine multi-brand electric bikes, 4K smart TVs, inverter ACs, and water purification systems with manufacturer warranty.
               </p>
             </div>
 

@@ -64,22 +64,7 @@ const BRAND_VISUALS = {
       { v: "99.9%", l: "Pure Water" },
       { v: "1yr", l: "Service" },
     ],
-    products: ["RO Purifier", "Hot & Cold Dispenser"],
-  },
-  "manju-exercise-books": {
-    image:
-      "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1400&q=90",
-    gradient: "from-violet-900/90 to-violet-700/60",
-    accentColor: "#8b5cf6",
-    tagline: "Write Your Success Story.",
-    description:
-      "Trusted by students across all 25 districts. Quality paper, durable covers, every ruling.",
-    stats: [
-      { v: "25+", l: "Years Trusted" },
-      { v: "500K+", l: "Students" },
-      { v: "10+", l: "Book Types" },
-    ],
-    products: ["CR 200 Pages", "Single Ruled 120", "Drawing Book"],
+    products: ["RO Purifier", "Hot & Cold Dispenser", "Commercial RO Plant"],
   },
 } as const;
 

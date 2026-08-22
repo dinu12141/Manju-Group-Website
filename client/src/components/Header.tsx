@@ -213,47 +213,38 @@ export default function Header() {
           style={{ color: "#1e293b", backgroundColor: "#ffffff" }}
         >
           {/* Social Media Links */}
-          <div className="hidden sm:flex items-center gap-3 pr-4 mr-2 border-r border-gray-200 h-5" style={{ color: "#0052B4" }}>
+          <div className="hidden sm:flex items-center gap-3 pr-4 mr-2 border-r border-gray-200 h-5">
             <a
-              href="https://facebook.com"
+              href="https://www.facebook.com/ManjuEnterprisesLK"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               aria-label="Facebook"
-              className="hover:opacity-75 transition-opacity p-1 cursor-pointer"
-              style={{ color: "#0052B4" }}
+              className="hover:opacity-75 transition-opacity p-1 cursor-pointer text-[#0052B4] hover:scale-110"
+              title="Manju Enterprises LK on Facebook"
             >
               <Facebook size={16} />
             </a>
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Instagram"
-              className="hover:opacity-75 transition-opacity p-1 cursor-pointer"
-              style={{ color: "#0052B4" }}
+            <span
+              aria-label="Instagram (Coming Soon)"
+              className="p-1 text-gray-300 cursor-default opacity-50"
+              title="Coming Soon"
             >
               <Instagram size={16} />
-            </a>
-            <a
-              href="https://twitter.com"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Twitter"
-              className="hover:opacity-75 transition-opacity p-1 cursor-pointer"
-              style={{ color: "#0052B4" }}
+            </span>
+            <span
+              aria-label="Twitter (Coming Soon)"
+              className="p-1 text-gray-300 cursor-default opacity-50"
+              title="Coming Soon"
             >
               <Twitter size={16} />
-            </a>
-            <a
-              href="https://youtube.com"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="YouTube"
-              className="hover:opacity-75 transition-opacity p-1 cursor-pointer"
-              style={{ color: "#0052B4" }}
+            </span>
+            <span
+              aria-label="YouTube (Coming Soon)"
+              className="p-1 text-gray-300 cursor-default opacity-50"
+              title="Coming Soon"
             >
               <Youtube size={16} />
-            </a>
+            </span>
           </div>
 
           {/* Navigation Links */}

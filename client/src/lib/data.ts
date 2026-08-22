@@ -32,12 +32,6 @@ export const BRAND_META: Record<
     icon: "💧",
     emoji: "💧",
   },
-  "manju-exercise-books": {
-    color: "#7C3AED",
-    bgGradient: "from-[#7C3AED] to-[#6D28D9]",
-    icon: "📚",
-    emoji: "📚",
-  },
 };
 
 export const NAV_LINKS = [
@@ -69,12 +63,6 @@ export const MEGA_MENU_BRANDS = [
     name: "Manju Dew Super",
     tagline: "Water Filters",
     icon: "💧",
-  },
-  {
-    slug: "manju-exercise-books",
-    name: "Manju Exercise Books",
-    tagline: "School Stationery",
-    icon: "📚",
   },
 ];
 

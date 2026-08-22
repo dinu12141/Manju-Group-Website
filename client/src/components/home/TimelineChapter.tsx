@@ -7,8 +7,8 @@ gsap.registerPlugin(ScrollTrigger);
 const MILESTONES = [
   {
     year: "2010",
-    title: "The Genesis",
-    desc: "Founded with a mission to bring high-quality stationery to every school child.",
+    title: "The Foundation",
+    desc: "Founded with a mission to deliver premium, reliable technologies to Sri Lankan households.",
   },
   {
     year: "2015",

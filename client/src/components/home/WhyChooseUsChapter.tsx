@@ -27,7 +27,7 @@ const FEATURES = [
     hoverBorder: "hover:border-blue-200",
   },
   {
-    title: "5 Trusted Brands",
+    title: "4 Trusted Brands",
     desc: "One group, one promise across all product categories.",
     icon: Award,
     metric: "Premium Quality",
@@ -96,7 +96,7 @@ export default function WhyChooseUsChapter() {
               <p className="text-gray-500 text-lg leading-relaxed max-w-md">
                 Sri Lanka's trusted multi-brand company delivering unparalleled
                 quality across electric bikes, smart TVs, air conditioners,
-                water filters, and educational stationery.
+                and water purification systems.
               </p>
             </div>
 

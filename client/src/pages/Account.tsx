@@ -10,8 +10,12 @@ import {
   Settings,
   ChevronRight,
   CheckCircle,
+  Trash2,
+  ShoppingCart,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useWishlist } from "@/contexts/WishlistContext";
+import { useCart } from "@/contexts/CartContext";
 import { trpc } from "@/lib/trpc";
 import MainLayout from "@/components/MainLayout";
 import AuthForm from "@/components/AuthForm";
@@ -27,11 +31,10 @@ type Tab = "overview" | "orders" | "wishlist" | "settings";
 export default function Account() {
   const { user, isAuthenticated, loading, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const { items: wishlistItems, toggleWishlist } = useWishlist();
+  const { addItem } = useCart();
 
   const { data: orders } = trpc.orders.list.useQuery(undefined, {
-    enabled: isAuthenticated,
-  });
-  const { data: wishlist } = trpc.wishlist.list.useQuery(undefined, {
     enabled: isAuthenticated,
   });
 
@@ -143,7 +146,7 @@ export default function Account() {
       id: "wishlist" as Tab,
       label: "Wishlist",
       icon: <Heart size={16} />,
-      count: wishlist?.length,
+      count: wishlistItems?.length,
     },
     { id: "settings" as Tab, label: "Settings", icon: <Settings size={16} /> },
   ];
@@ -243,7 +246,7 @@ export default function Account() {
                     },
                     {
                       label: "Wishlist Items",
-                      value: wishlist?.length || 0,
+                      value: wishlistItems?.length || 0,
                       icon: <Heart size={20} />,
                       bgColor: "#fef2f2",
                       iconColor: "#ef4444",
@@ -442,46 +445,90 @@ export default function Account() {
 
             {activeTab === "wishlist" && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <h2 className="text-lg font-bold text-gray-800 mb-4">
-                  My Wishlist
-                </h2>
-                {wishlist && wishlist.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {wishlist.map(item => (
-                      <Link
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-slate-900">
+                    My Wishlist ({wishlistItems?.length || 0})
+                  </h2>
+                  <Link href="/products">
+                    <Button variant="outline" size="sm" className="text-xs font-bold text-[#0F2D5E] border-slate-300">
+                      + Explore Products
+                    </Button>
+                  </Link>
+                </div>
+                {wishlistItems && wishlistItems.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {wishlistItems.map(item => (
+                      <div
                         key={item.id}
-                        href={`/products/${item.productSlug}`}
+                        className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
                       >
-                        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
-                          <div className="h-32 bg-gray-50">
-                            {item.imageUrl ? (
-                              <img
-                                src={item.imageUrl}
-                                alt={item.productName || ""}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-500 font-medium">
-                                <Package size={28} />
-                              </div>
-                            )}
-                          </div>
-                          <div className="p-3">
-                            <div className="text-xs text-gray-600 font-medium mb-0.5">
+                        <div>
+                          <Link href={`/products/${item.productSlug}`}>
+                            <div className="h-40 bg-slate-50 relative p-3 flex items-center justify-center border-b border-slate-100 cursor-pointer">
+                              {item.imageUrl ? (
+                                <img
+                                  src={item.imageUrl}
+                                  alt={item.productName || ""}
+                                  className="w-full h-full object-contain"
+                                  onError={e => {
+                                    (e.target as HTMLImageElement).src =
+                                      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=400&q=75";
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                  <Package size={32} />
+                                </div>
+                              )}
+                              <button
+                                type="button"
+                                onClick={e => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  toggleWishlist(item.productId, item.productName);
+                                }}
+                                aria-label="Remove from wishlist"
+                                className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/90 shadow-xs flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </Link>
+
+                          <div className="p-3.5 space-y-1">
+                            <span className="text-[10px] font-bold text-[#0F2D5E] uppercase tracking-wider bg-blue-50 px-1.5 py-0.5 rounded">
                               {item.brandName}
-                            </div>
-                            <div className="text-sm font-semibold text-gray-800 line-clamp-1">
-                              {item.productName}
-                            </div>
-                            <div
-                              className="text-sm font-bold"
-                              style={{ color: "#0F2D5E" }}
-                            >
+                            </span>
+                            <Link href={`/products/${item.productSlug}`}>
+                              <h3 className="text-xs font-bold text-slate-900 line-clamp-2 hover:text-[#0F2D5E] transition-colors cursor-pointer">
+                                {item.productName}
+                              </h3>
+                            </Link>
+                            <div className="text-sm font-black text-[#F85606] pt-1">
                               {formatPrice(Number(item.basePrice))}
                             </div>
                           </div>
                         </div>
-                      </Link>
+
+                        <div className="p-3 pt-0">
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              addItem(
+                                item.productId,
+                                Number(item.basePrice),
+                                item.productName,
+                                undefined,
+                                1,
+                                true
+                              )
+                            }
+                            className="w-full bg-[#0F2D5E] hover:bg-[#1a4a8a] text-white text-xs font-bold h-9 rounded-xl flex items-center justify-center gap-1.5"
+                          >
+                            <ShoppingCart size={13} /> Add to Cart
+                          </Button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 ) : (

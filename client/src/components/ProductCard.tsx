@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { formatPrice, getDiscountPercent, cleanText } from "@/lib/data";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 
 const FALLBACK_DEFAULT = "/scooter_red.png";
 
@@ -139,11 +140,12 @@ export default function ProductCard({
   priority = false,
 }: ProductCardProps) {
   const { addItem } = useCart();
+  const { isWishlisted: checkWishlisted, toggleWishlist } = useWishlist();
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgSrc, setImgSrc] = useState(() => getProductImage(imageUrl, name));
-  const [wishlisted, setWishlisted] = useState(isWishlisted);
   const [cartState, setCartState] = useState<CartState>("idle");
 
+  const wishlisted = checkWishlisted(id);
   const cleanName = cleanText(name);
   const cleanBrand = cleanText(brandName);
 
@@ -156,14 +158,13 @@ export default function ProductCard({
   const soldCount = 45 + ((id * 37) % 350);
 
   const handleWishlist = useCallback(
-    (e: React.MouseEvent) => {
+    async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      const next = !wishlisted;
-      setWishlisted(next);
-      onWishlistToggle?.(id, next);
+      await toggleWishlist(id, cleanName);
+      onWishlistToggle?.(id, !wishlisted);
     },
-    [wishlisted, onWishlistToggle, id]
+    [toggleWishlist, id, cleanName, onWishlistToggle, wishlisted]
   );
 
   const handleAddToCart = useCallback(
