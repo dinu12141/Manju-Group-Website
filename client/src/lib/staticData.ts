@@ -90,7 +90,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/dew_super_ro_plus.png",
+    imageUrl: "/ads/ad_dew_super_ro_system_1.png",
     specifications:
       '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 100 liters per day","Sub Category":"RO+ Water Filter","Installment Plan":"Down Payment - Rs.14900\\nMonthly premium - Rs.6250 X 12 (Months)","Installment Price":"Rs. 89,900"}',
     description:
