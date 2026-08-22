@@ -6,6 +6,12 @@
       "sourceType": "github",
       "skillPath": "skills/taste-skill/SKILL.md",
       "computedHash": "899b84384f74f540ea5284d9b2e9234e050998b42eacc805410b518d4226c0b3"
+    },
+    "frontend-ui-ux-design": {
+      "source": "dauquangthanh/hanoi-rainbow",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-ui-ux-design/SKILL.md",
+      "computedHash": "9b248bd883108d9e4a8ae9149f1042b8b50adc7b9b99b9f40a26f7d4b5092ed4"
     }
   }
 }
