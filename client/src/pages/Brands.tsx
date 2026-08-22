@@ -447,21 +447,6 @@ export default function Brands() {
                         </div>
                       ))}
                     </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <Link href={`/brands/${brand!.slug}`}>
-                        <button
-                          className="text-white px-6 py-3 rounded-full text-sm font-bold shadow-md hover:opacity-90 transition-opacity"
-                          style={{ backgroundColor: c.accent }}
-                        >
-                          {c.cta}
-                        </button>
-                      </Link>
-                      <Link href={`/products?brandId=${brand!.id}`}>
-                        <span className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors underline underline-offset-4">
-                          {c.secondaryCta}
-                        </span>
-                      </Link>
-                    </div>
                   </motion.div>
                 </div>
               </div>
