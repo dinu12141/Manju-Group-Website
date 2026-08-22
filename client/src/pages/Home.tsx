@@ -29,22 +29,52 @@ export default function Home() {
 
       {/* Product Categories Grids & Banners */}
       <ProductGrid
-        title="Top Selling Categories"
-        items={products.slice(0, 5)}
-      />
-      <ProductGrid
         title="Smart TVs"
-        items={products.filter(p => p.name.includes("TV")).slice(0, 5)}
+        viewAllHref="/products?categoryId=2"
+        items={STATIC_PRODUCTS.filter(p => p.categoryId === 2).map(p => ({
+          id: p.id,
+          slug: p.slug,
+          name: p.name,
+          price: p.salePrice ? Number(p.salePrice) : Number(p.basePrice),
+          originalPrice: p.salePrice ? Number(p.basePrice) : undefined,
+          image: p.imageUrl,
+        }))}
       />
       <ProductGrid
         title="Electric Bikes"
-        items={products
-          .filter(p => p.name.includes("Bike") || p.name.includes("Scooter"))
-          .slice(0, 5)}
+        viewAllHref="/products?categoryId=1"
+        items={STATIC_PRODUCTS.filter(p => p.categoryId === 1).map(p => ({
+          id: p.id,
+          slug: p.slug,
+          name: p.name,
+          price: p.salePrice ? Number(p.salePrice) : Number(p.basePrice),
+          originalPrice: p.salePrice ? Number(p.basePrice) : undefined,
+          image: p.imageUrl,
+        }))}
       />
       <ProductGrid
         title="Air Conditioners"
-        items={products.filter(p => p.name.includes("AC")).slice(0, 5)}
+        viewAllHref="/products?categoryId=3"
+        items={STATIC_PRODUCTS.filter(p => p.categoryId === 3).map(p => ({
+          id: p.id,
+          slug: p.slug,
+          name: p.name,
+          price: p.salePrice ? Number(p.salePrice) : Number(p.basePrice),
+          originalPrice: p.salePrice ? Number(p.basePrice) : undefined,
+          image: p.imageUrl,
+        }))}
+      />
+      <ProductGrid
+        title="Water Filters & RO Systems"
+        viewAllHref="/products?categoryId=4"
+        items={STATIC_PRODUCTS.filter(p => p.categoryId === 4).map(p => ({
+          id: p.id,
+          slug: p.slug,
+          name: p.name,
+          price: p.salePrice ? Number(p.salePrice) : Number(p.basePrice),
+          originalPrice: p.salePrice ? Number(p.basePrice) : undefined,
+          image: p.imageUrl,
+        }))}
       />
 
       <PromoBanners />

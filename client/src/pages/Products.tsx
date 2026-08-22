@@ -18,7 +18,7 @@ import {
 import { trpc } from "@/lib/trpc";
 import MainLayout from "@/components/MainLayout";
 import ProductCard from "@/components/ProductCard";
-import { STATIC_BRANDS } from "@/lib/staticData";
+import { STATIC_PRODUCTS, STATIC_BRANDS } from "@/lib/staticData";
 import { cleanText } from "@/lib/data";
 import {
   Select,
@@ -117,8 +117,57 @@ export default function Products() {
     sortBy,
   });
 
-  const productsToShow = (data?.items as any) ?? [];
-  const totalCount = data?.total ?? 0;
+  // Instant fallback to STATIC_PRODUCTS so the UI never displays empty skeletons or 0 products
+  const filteredStaticProducts = useMemo(() => {
+    let list = [...STATIC_PRODUCTS];
+    if (filters.brandId) {
+      list = list.filter(p => p.brandId === Number(filters.brandId));
+    }
+    if (filters.categoryId) {
+      list = list.filter(p => p.categoryId === Number(filters.categoryId));
+    }
+    if (filters.priceRange) {
+      list = list.filter(
+        p =>
+          Number(p.basePrice) >= filters.priceRange![0] &&
+          Number(p.basePrice) <= filters.priceRange![1]
+      );
+    }
+    if (filters.bestSellersOnly || queryParams.isBestSeller) {
+      list = list.filter(p => p.isBestSeller);
+    }
+    if (queryParams.isFeatured) {
+      list = list.filter(p => p.isFeatured);
+    }
+    if (queryParams.search && queryParams.search.trim()) {
+      const term = queryParams.search.trim().toLowerCase();
+      list = list.filter(
+        p =>
+          p.name.toLowerCase().includes(term) ||
+          p.description.toLowerCase().includes(term) ||
+          p.category.toLowerCase().includes(term)
+      );
+    }
+    if (sortBy === "price_asc") {
+      list.sort((a, b) => Number(a.basePrice) - Number(b.basePrice));
+    } else if (sortBy === "price_desc") {
+      list.sort((a, b) => Number(b.basePrice) - Number(a.basePrice));
+    } else if (sortBy === "popular") {
+      list.sort((a, b) => (b.isBestSeller ? 1 : 0) - (a.isBestSeller ? 1 : 0));
+    }
+    return list;
+  }, [filters, queryParams, sortBy]);
+
+  const productsToShow =
+    data && data.items && data.items.length > 0
+      ? (data.items as any)
+      : filteredStaticProducts.slice((page - 1) * 12, page * 12);
+
+  const totalCount =
+    data && data.total && data.total > 0
+      ? data.total
+      : filteredStaticProducts.length;
+
   const totalPages = Math.max(1, Math.ceil(totalCount / 12));
 
   const hasActiveFilters = Boolean(
@@ -445,7 +494,7 @@ export default function Products() {
               )}
 
               {/* ── Product Grid / List ──────────────────────────── */}
-              {isLoading ? (
+              {isLoading && productsToShow.length === 0 ? (
                 /* Skeleton Loader */
                 <div
                   className={`grid gap-5 ${
