@@ -22,7 +22,7 @@ SIZE_OVERRIDES = {
     "banner_smarttv_cinematic.jpg": 1280,
 }
 
-DEFAULT_MAX = 900  # product photos, ad creatives, etc.
+DEFAULT_MAX = 700  # product photos, ad creatives, etc. — actual max on-page display is ~550px, this covers 2x retina
 
 SKIP_EXACT_DIMENSION_SHRINK = {"favicon-16x16.png", "favicon-32x32.png"}
 

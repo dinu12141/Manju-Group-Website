@@ -1,3 +1,21 @@
+// Force Vercel nft to trace all backend dependencies
+// (nft fails to trace TypeScript files with "type": "module")
+import "zod";
+import "bcryptjs";
+import "nanoid";
+import "google-auth-library";
+import "drizzle-orm/mysql2";
+import "drizzle-orm/mysql-core";
+import "drizzle-orm";
+import "mysql2/promise";
+import "mysql2";
+import "jose";
+import "@aws-sdk/client-s3";
+import "@aws-sdk/s3-request-presigner";
+import "axios";
+import "cookie";
+import "@trpc/server";
+
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
@@ -50,7 +68,7 @@ app.use(
 );
 
 // Fallback JSON error handler — ensure server never returns raw HTML on errors
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err, req, res, next) => {
   console.error("[API Error Handler]", err);
   if (res.headersSent) return next(err);
   res.status(err?.status || 500).json({
