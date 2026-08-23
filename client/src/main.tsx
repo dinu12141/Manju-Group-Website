@@ -37,10 +37,29 @@ queryClient.getMutationCache().subscribe(event => {
   }
 });
 
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/$/, "");
+  }
+  if (typeof window !== "undefined") {
+    const isMobileApp =
+      window.location.protocol === "capacitor:" ||
+      window.location.protocol === "file:" ||
+      (window.location.hostname === "localhost" &&
+        window.location.port !== "3000" &&
+        window.location.port !== "5173");
+
+    if (isMobileApp) {
+      return "https://manjugroup.lk";
+    }
+  }
+  return "";
+};
+
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: "/api/trpc",
+      url: `${getApiBaseUrl()}/api/trpc`,
       transformer: superjson,
       headers() {
         // Preview auto-login fallback: when the browser blocks iframe cookies

@@ -453,7 +453,7 @@ export default function Header() {
         {/* ══════════════════════════════════════════════════════════════
             MOBILE HEADER (< md): 2-Row Optimized Header with ☰ Menu
         ══════════════════════════════════════════════════════════════ */}
-        <div className="md:hidden flex flex-col w-full text-white px-3 py-2 space-y-2 bg-gradient-to-r from-[#003875] via-[#0052B4] to-[#003B7B] border-b border-[#004899]/60">
+        <div className="md:hidden flex flex-col w-full text-white px-3.5 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2.5 space-y-2 bg-gradient-to-r from-[#003875] via-[#0052B4] to-[#003B7B] border-b border-[#004899]/60 shadow-md">
           {/* Row 1: ☰ Menu Button + Logo + Right Actions */}
           <div className="flex items-center justify-between gap-2 h-[42px]">
             {/* Left: 3-Lines Hamburger Menu Button + Logo */}
@@ -781,7 +781,7 @@ export default function Header() {
       </AnimatePresence>
 
       {/* Spacer to prevent page content from going under fixed header */}
-      <div className="h-[96px] md:h-[114px] w-full shrink-0"></div>
+      <div className="h-[104px] md:h-[114px] w-full shrink-0"></div>
     </>
   );
 }

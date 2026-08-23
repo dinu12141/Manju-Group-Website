@@ -145,35 +145,39 @@ function OrderSummaryBox({ compact = false }: { compact?: boolean }) {
         </h2>
       )}
 
-      <div className="space-y-3 mb-4 max-h-56 overflow-y-auto pr-1">
+      <div className="space-y-3 mb-4 max-h-72 overflow-y-auto pr-1 divide-y divide-slate-100">
         {items.map(item => (
           <div
             key={item.id}
-            className="flex items-center gap-3 py-2 border-b border-slate-100 last:border-0"
+            className="flex items-center gap-3.5 py-2.5"
           >
-            <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 flex-shrink-0 bg-slate-50">
+            <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-xl overflow-hidden border border-slate-200 flex-shrink-0 bg-white p-1 shadow-xs">
               <img
                 src={
                   item.imageUrl ||
-                  "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=80&q=75"
+                  "/manju-logo.png"
                 }
                 alt={item.productName || ""}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 onError={e => {
-                  (e.target as HTMLImageElement).src =
-                    "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=80&q=75";
+                  (e.target as HTMLImageElement).src = "/manju-logo.png";
                 }}
               />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-900 line-clamp-1">
+              <p className="text-sm sm:text-[15px] font-extrabold text-slate-900 line-clamp-2 leading-snug">
                 {item.productName}
               </p>
-              <p className="text-xs text-slate-600 font-semibold">
-                Qty: {item.quantity}
-              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-bold">
+                  Qty: {item.quantity}
+                </span>
+                <span className="text-xs text-slate-500 font-medium">
+                  @ {formatPrice(Number(item.unitPrice))}
+                </span>
+              </div>
             </div>
-            <p className="text-xs font-black text-[#F85606] flex-shrink-0">
+            <p className="text-sm sm:text-base font-black text-[#F85606] flex-shrink-0">
               {formatPrice(Number(item.unitPrice) * item.quantity)}
             </p>
           </div>
@@ -899,66 +903,88 @@ export default function Checkout() {
                     </div>
 
                     {/* Delivery details read-only */}
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
-                          <MapPin size={14} className="text-[#0F2D5E]" />
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+                      <div className="flex items-center justify-between mb-3.5">
+                        <h3 className="font-extrabold text-gray-900 text-sm sm:text-base flex items-center gap-2">
+                          <MapPin size={17} className="text-[#0F2D5E]" />
                           Delivery Address
                         </h3>
                         <button
                           type="button"
                           onClick={() => setCurrentStep(1)}
-                          className="text-xs text-[#F85606] hover:underline font-medium"
+                          className="text-xs sm:text-sm text-[#F85606] hover:underline font-extrabold px-2 py-1"
                         >
                           Edit
                         </button>
                       </div>
-                      <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-0.5">
-                        <p className="font-semibold">
+                      <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-sm text-slate-800 space-y-1.5 shadow-2xs">
+                        <p className="font-black text-base text-slate-900">
                           {getValues("firstName")} {getValues("lastName")}
                         </p>
-                        <p>{getValues("addressLine1")}</p>
+                        <p className="font-medium text-slate-700">{getValues("addressLine1")}</p>
                         {getValues("addressLine2") && (
-                          <p>{getValues("addressLine2")}</p>
+                          <p className="font-medium text-slate-700">{getValues("addressLine2")}</p>
                         )}
-                        <p>
+                        <p className="font-bold text-slate-900">
                           {getValues("city")}, {getValues("district")}{" "}
                           {getValues("postalCode")}
                         </p>
-                        <p className="text-gray-500">{getValues("phone")}</p>
-                        <p className="text-gray-500">{getValues("email")}</p>
+                        <div className="pt-2 border-t border-slate-200/70 text-xs sm:text-sm text-slate-700 space-y-1">
+                          <p className="font-bold flex items-center gap-2 text-slate-900">
+                            <span>📞 Mobile:</span>
+                            <span className="font-extrabold text-slate-950">{getValues("phone")}</span>
+                          </p>
+                          <p className="font-semibold text-slate-600 flex items-center gap-2">
+                            <span>✉️ Email:</span>
+                            <span>{getValues("email")}</span>
+                          </p>
+                        </div>
                       </div>
                     </div>
 
                     {/* Payment method summary */}
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
-                          <CreditCard size={14} className="text-[#0F2D5E]" />
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+                      <div className="flex items-center justify-between mb-3.5">
+                        <h3 className="font-extrabold text-gray-900 text-sm sm:text-base flex items-center gap-2">
+                          <CreditCard size={17} className="text-[#0F2D5E]" />
                           Payment Method
                         </h3>
                         <button
                           type="button"
                           onClick={() => setCurrentStep(2)}
-                          className="text-xs text-[#F85606] hover:underline font-medium"
+                          className="text-xs sm:text-sm text-[#F85606] hover:underline font-extrabold px-2 py-1"
                         >
                           Edit
                         </button>
                       </div>
-                      <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 flex items-center gap-3">
+                      <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-sm text-slate-800 flex items-center gap-3.5 shadow-2xs">
                         {paymentMethod === "cod" ? (
                           <>
-                            <Truck size={18} className="text-[#0F2D5E]" />
-                            <span className="font-medium">
-                              Cash on Delivery
-                            </span>
+                            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold shrink-0">
+                              <Truck size={20} />
+                            </div>
+                            <div>
+                              <p className="font-black text-sm sm:text-base text-slate-900">
+                                Cash on Delivery (COD)
+                              </p>
+                              <p className="text-xs text-slate-500 font-medium">
+                                Pay upon receiving your package at your doorstep
+                              </p>
+                            </div>
                           </>
                         ) : (
                           <>
-                            <Building2 size={18} className="text-[#0F2D5E]" />
-                            <span className="font-medium">
-                              Direct Bank Transfer
-                            </span>
+                            <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold shrink-0">
+                              <Building2 size={20} />
+                            </div>
+                            <div>
+                              <p className="font-black text-sm sm:text-base text-slate-900">
+                                Direct Bank Transfer
+                              </p>
+                              <p className="text-xs text-slate-500 font-medium">
+                                Commercial Bank of Ceylon
+                              </p>
+                            </div>
                           </>
                         )}
                       </div>

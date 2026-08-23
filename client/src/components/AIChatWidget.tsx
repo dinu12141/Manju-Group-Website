@@ -83,6 +83,11 @@ export default function AIChatWidget() {
     }
   };
 
+  // Hide floating chat button on Checkout page to prevent covering order details and checkout button
+  if (location === "/checkout" || location.startsWith("/checkout/")) {
+    return null;
+  }
+
   return (
     <>
       {/* Floating Chat Button (Positioned above Mobile Bottom Nav: bottom-20 on mobile, bottom-6 on desktop) */}

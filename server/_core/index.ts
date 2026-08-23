@@ -51,14 +51,22 @@ async function startServer() {
   // Security headers (finding #24)
   app.use(helmet({ contentSecurityPolicy: false }));
 
-  // CORS — only allow the configured client origin (finding #23)
-  const allowedOrigins = ENV.clientOrigin
-    ? [ENV.clientOrigin, "http://localhost:3000", "http://localhost:5173"]
-    : ["http://localhost:3000", "http://localhost:5173"];
+  // CORS — allow client origin and mobile app origins
+  const allowedOrigins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://localhost",
+    "capacitor://localhost",
+    "http://localhost",
+    "https://manjugroup.lk",
+    ...(ENV.clientOrigin ? [ENV.clientOrigin] : []),
+  ];
   app.use(
     cors({
       origin: (origin, cb) => {
-        if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+        if (!origin || allowedOrigins.includes(origin) || origin.endsWith("manjugroup.lk") || origin.endsWith("vercel.app")) {
+          return cb(null, true);
+        }
         cb(new Error("CORS: origin not allowed"));
       },
       credentials: true,
