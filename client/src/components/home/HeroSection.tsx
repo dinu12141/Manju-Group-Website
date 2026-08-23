@@ -214,36 +214,37 @@ export default function HeroSection() {
             {/* Top Right: Flash Sale Ad Banner */}
             <Link
               href={heroFlashSale.linkUrl || "/products"}
-              className="flex-1 min-h-[160px] sm:min-h-[190px] rounded-2xl bg-white overflow-hidden relative group cursor-pointer border border-red-200 shadow-sm hover:shadow-md transition-all duration-300 block"
+              className="flex-1 h-[210px] sm:h-[220px] lg:h-auto min-h-[200px] rounded-2xl sm:rounded-3xl bg-gray-900 overflow-hidden relative group cursor-pointer border border-red-500/30 shadow-md hover:shadow-xl transition-all duration-300 block"
             >
               <img
                 src={heroFlashSale.imageUrl}
                 alt={heroFlashSale.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 bg-slate-100"
+                className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/10"></div>
 
               {/* Badges */}
-              <div className="absolute top-2.5 left-2.5 bg-gradient-to-r from-red-600 to-amber-600 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-md flex items-center gap-1">
-                <Zap size={11} className="fill-white" />
+              <div className="absolute top-3 left-3 bg-gradient-to-r from-red-600 to-amber-500 text-white text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-lg flex items-center gap-1 border border-white/20">
+                <Zap size={12} className="fill-white" />
                 <span>{heroFlashSale.badge || "Flash Sale"}</span>
               </div>
 
-              <div className="absolute top-2.5 right-2.5 bg-black/80 backdrop-blur-sm text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border border-white/20 shadow">
-                {timeLeft}
+              <div className="absolute top-3 right-3 bg-black/85 backdrop-blur-md text-white text-[11px] font-mono font-black px-2.5 py-1 rounded-lg border border-white/25 shadow-md flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>
+                <span>{timeLeft}</span>
               </div>
 
               {/* Title & Pricing */}
-              <div className="absolute bottom-2.5 left-2.5 right-2.5 text-white">
-                <h3 className="font-bold text-xs sm:text-sm leading-tight mb-0.5 drop-shadow-md line-clamp-2">
+              <div className="absolute bottom-3 left-3.5 right-3.5 text-white">
+                <h3 className="font-extrabold text-sm sm:text-base leading-snug mb-1 drop-shadow-md line-clamp-2">
                   {heroFlashSale.title}
                 </h3>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-amber-400 font-extrabold text-sm sm:text-base drop-shadow-md">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-amber-400 font-black text-base sm:text-lg drop-shadow-md">
                     Rs. {heroFlashSale.price}
                   </span>
                   {heroFlashSale.originalPrice && (
-                    <span className="text-gray-300 text-[10px] line-through drop-shadow-md">
+                    <span className="text-slate-300 text-xs line-through drop-shadow-md font-semibold">
                       Rs. {heroFlashSale.originalPrice}
                     </span>
                   )}
@@ -253,7 +254,7 @@ export default function HeroSection() {
 
             {/* Bottom Right: Offers Slider Ad Banner */}
             {heroSlides && heroSlides.length > 0 && (
-              <div className="flex-1 min-h-[160px] sm:min-h-[190px] rounded-2xl bg-white overflow-hidden relative border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex-1 h-[210px] sm:h-[220px] lg:h-auto min-h-[200px] rounded-2xl sm:rounded-3xl bg-gray-900 overflow-hidden relative border border-blue-400/30 shadow-md hover:shadow-xl transition-all duration-300">
                 {heroSlides.map((slide, idx) => (
                   <Link
                     key={slide.id || idx}
@@ -265,23 +266,23 @@ export default function HeroSection() {
                     <img
                       src={slide.imageUrl}
                       alt={slide.title}
-                      className="w-full h-full object-cover bg-slate-50"
+                      className="w-full h-full object-cover object-center bg-gray-900"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/10"></div>
 
-                    <div className="absolute top-2.5 left-2.5 bg-[#0052B4] text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-md">
+                    <div className="absolute top-3 left-3 bg-gradient-to-r from-[#0052B4] to-[#0070F3] text-white text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-lg border border-white/20">
                       {slide.badge || "Special Offer"}
                     </div>
 
-                    <div className="absolute bottom-2.5 left-2.5 right-2.5 text-white">
-                      <span className="text-[9px] uppercase font-bold text-blue-200 block mb-0.5">
+                    <div className="absolute bottom-3 left-3.5 right-3.5 text-white">
+                      <span className="text-[10px] uppercase font-black tracking-wider text-blue-300 block mb-0.5">
                         {slide.category}
                       </span>
-                      <h3 className="font-bold text-xs sm:text-sm line-clamp-2 leading-tight mb-0.5">
+                      <h3 className="font-extrabold text-sm sm:text-base line-clamp-2 leading-snug mb-1 drop-shadow-md">
                         {slide.title}
                       </h3>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-amber-400 font-black text-xs sm:text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-amber-400 font-black text-base sm:text-lg drop-shadow-md">
                           {slide.price.startsWith("Rs.") ? slide.price : `Rs. ${slide.price}`}
                         </span>
                       </div>
@@ -290,12 +291,12 @@ export default function HeroSection() {
                 ))}
 
                 {/* Slider Dots */}
-                <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1 z-20 pb-1 pointer-events-none">
+                <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-20 pb-0.5 pointer-events-none">
                   {heroSlides.map((_, idx) => (
                     <div
                       key={idx}
-                      className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                        idx === currentSlide ? "bg-[#0052B4] w-3" : "bg-white/50"
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        idx === currentSlide ? "bg-[#38BDF8] w-5 shadow-xs" : "bg-white/60 w-1.5"
                       }`}
                     ></div>
                   ))}
