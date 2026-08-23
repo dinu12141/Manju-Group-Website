@@ -9,6 +9,9 @@ import {
   PhoneCall,
   MapPin,
   Facebook,
+  Instagram,
+  Twitter,
+  Youtube,
   Sparkles,
   Zap,
   Tv,
@@ -378,9 +381,44 @@ export default function Header() {
             </div>
           </div>
 
-          {/* 2. Desktop Bottom Sub-Navigation Bar — Crisp White with Clean Links */}
+          {/* 2. Desktop Bottom Sub-Navigation Bar — Crisp White with Social Media + Nav Links + Hotline */}
           <div className="bg-white border-b border-gray-200/90 text-gray-700 w-full px-4 md:px-8 h-[48px] flex items-center justify-between shadow-xs">
-            <nav className="flex items-center gap-2 lg:gap-4 h-full">
+            {/* Left: Social Media Links */}
+            <div className="flex items-center gap-2 pr-4 border-r border-gray-200 h-5 shrink-0">
+              <a
+                href="https://www.facebook.com/ManjuEnterprisesLK"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1 text-[#0052B4] hover:text-[#003875] hover:scale-115 transition-all cursor-pointer"
+                title="Manju Enterprises LK on Facebook"
+              >
+                <Facebook size={16} />
+              </a>
+              <span
+                aria-label="Instagram"
+                className="p-1 text-slate-400 cursor-default select-none"
+                title="Instagram"
+              >
+                <Instagram size={16} />
+              </span>
+              <span
+                aria-label="Twitter"
+                className="p-1 text-slate-400 cursor-default select-none"
+                title="Twitter"
+              >
+                <Twitter size={16} />
+              </span>
+              <span
+                aria-label="YouTube"
+                className="p-1 text-slate-400 cursor-default select-none"
+                title="YouTube"
+              >
+                <Youtube size={16} />
+              </span>
+            </div>
+
+            {/* Center: Navigation Links */}
+            <nav className="flex items-center gap-2 lg:gap-4 h-full flex-1 px-4">
               {navLinks.map(({ href, label, exact }) => {
                 const active = isLinkActive(href, exact);
                 return (
@@ -399,8 +437,8 @@ export default function Header() {
               })}
             </nav>
 
-            {/* Desktop Hotline Direct Link */}
-            <div className="flex items-center gap-2">
+            {/* Right: Desktop Hotline Direct Link */}
+            <div className="flex items-center gap-2 shrink-0">
               <a
                 href="tel:+94112345678"
                 className="flex items-center gap-1.5 bg-blue-50 hover:bg-[#0052B4] text-[#0052B4] hover:text-white px-3.5 py-1.5 rounded-full border border-blue-200 text-xs font-extrabold transition-all duration-200 active:scale-95"
