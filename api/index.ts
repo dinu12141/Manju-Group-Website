@@ -1,26 +1,33 @@
 // Force Vercel nft to trace all backend dependencies
-// (nft fails to trace TypeScript files with "type": "module")
-import "zod";
-import "bcryptjs";
-import "nanoid";
-import "google-auth-library";
-import "drizzle-orm/mysql2";
-import "drizzle-orm/mysql-core";
-import "drizzle-orm";
-import "mysql2/promise";
-import "mysql2";
-import "jose";
-import "@aws-sdk/client-s3";
-import "@aws-sdk/s3-request-presigner";
-import "axios";
-import "cookie";
-import "@trpc/server";
+// (nft fails to trace TypeScript files with "type": "module" if imports are stripped by esbuild)
+export * as _zod from "zod";
+export * as _bcryptjs from "bcryptjs";
+export * as _nanoid from "nanoid";
+export * as _googleauth from "google-auth-library";
+export * as _drizzle1 from "drizzle-orm/mysql2";
+export * as _drizzle2 from "drizzle-orm/mysql-core";
+export * as _drizzle3 from "drizzle-orm";
+export * as _mysql1 from "mysql2/promise";
+export * as _mysql2 from "mysql2";
+export * as _jose from "jose";
+export * as _aws1 from "@aws-sdk/client-s3";
+export * as _aws2 from "@aws-sdk/s3-request-presigner";
+export * as _axios from "axios";
+export * as _cookie from "cookie";
+export * as _trpc from "@trpc/server";
 
 import "dotenv/config";
+import { validateEnv } from "../server/_core/env";
+try {
+  validateEnv();
+} catch (e) {
+  console.error("Environment Validation Failed:", e);
+}
+
 import express from "express";
 import cors from "cors";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { appRouter } from "../server/routers";
+import { appRouter } from "../server/routers/index";
 import { createContext } from "../server/_core/context";
 import { registerOAuthRoutes } from "../server/_core/oauth";
 import { registerGoogleOAuthRoutes } from "../server/_core/googleAuth";
