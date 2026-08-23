@@ -9,7 +9,6 @@ import {
   Youtube,
   ArrowRight,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 
 const NAV_COLUMNS = [
@@ -19,7 +18,7 @@ const NAV_COLUMNS = [
       { label: "Home", href: "/" },
       { label: "About Us", href: "/about" },
       { label: "Our Brands", href: "/brands" },
-      { label: "Island-Wide Showrooms", href: "/locations" },
+      { label: "Showrooms", href: "/locations" },
     ],
   },
   {
@@ -36,8 +35,8 @@ const NAV_COLUMNS = [
     heading: "Support",
     links: [
       { label: "Contact Us", href: "/contact" },
-      { label: "Frequently Asked Questions", href: "/faq" },
-      { label: "Store Locator & Maps", href: "/locations" },
+      { label: "FAQ", href: "/faq" },
+      { label: "Store Locations", href: "/locations" },
     ],
   },
 ];
@@ -51,59 +50,20 @@ const SOCIAL_LINKS = [
   },
   {
     Icon: Instagram,
-    label: "Instagram (Coming Soon)",
+    label: "Instagram",
     enabled: false,
   },
   {
     Icon: Twitter,
-    label: "Twitter (Coming Soon)",
+    label: "Twitter",
     enabled: false,
   },
   {
     Icon: Youtube,
-    label: "YouTube (Coming Soon)",
+    label: "YouTube",
     enabled: false,
   },
 ];
-
-const BRAND_BLUE = "#0052B4";
-const BRAND_BLUE_LIGHT = "#60A5FA";
-const BRAND_BLUE_GLOW = "rgba(0, 82, 180, 0.45)";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      delay: i * 0.08,
-      ease: [0.23, 1, 0.32, 1] as [number, number, number, number],
-    },
-  }),
-};
-
-function AnimatedColumn({
-  children,
-  index,
-}: {
-  children: React.ReactNode;
-  index: number;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-50px" });
-  return (
-    <motion.div
-      ref={ref}
-      custom={index}
-      variants={fadeUp}
-      initial="hidden"
-      animate={inView ? "visible" : "hidden"}
-    >
-      {children}
-    </motion.div>
-  );
-}
 
 export default function Footer() {
   const [email, setEmail] = useState("");
@@ -121,407 +81,195 @@ export default function Footer() {
   };
 
   return (
-    <footer
-      style={{
-        background: "linear-gradient(180deg, #001A3D 0%, #00122E 100%)",
-        color: "#ffffff",
-        borderTop: "2px solid #0052B4",
-        position: "relative",
-      }}
-    >
-      {/* ── Top separator line with vibrant cyan-blue glow ─────── */}
-      <div
-        style={{
-          height: "2px",
-          background: `linear-gradient(90deg, transparent 0%, #0052B4 25%, #60A5FA 50%, #0052B4 75%, transparent 100%)`,
-          boxShadow: "0 0 16px rgba(96, 165, 250, 0.6)",
-        }}
-      />
+    <footer className="w-full bg-gradient-to-b from-[#001A3D] to-[#001026] text-white border-t-2 border-[#0052B4] relative overflow-hidden font-sans">
+      {/* ── Top vibrant glow divider ─────────────────────────── */}
+      <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#0052B4] via-[#60A5FA] to-transparent shadow-[0_0_12px_rgba(96,165,250,0.6)]" />
 
-      {/* ── Wordmark & Brand Identity block ─────────────────────── */}
+      {/* ── Wordmark & Brand Identity block (Compact on Mobile) ── */}
       <motion.div
         ref={wordmarkRef}
-        initial={{ opacity: 0, scale: 0.96 }}
+        initial={{ opacity: 0, scale: 0.98 }}
         animate={wordmarkInView ? { opacity: 1, scale: 1 } : {}}
-        transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-        className="text-center flex flex-col items-center"
-        style={{ padding: "64px 24px 44px" }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="text-center flex flex-col items-center py-6 px-4 md:py-10 md:px-6"
       >
-        {/* Official Circular Logo */}
-        <motion.div
-          animate={{ y: [0, -5, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          style={{ marginBottom: "18px", display: "inline-block" }}
-        >
+        {/* Circular Official Logo */}
+        <div className="mb-2.5 md:mb-3.5 inline-block">
           <img
             src="/manju-logo.png"
-            alt="Manju Group Logo"
-            className="w-16 h-16 rounded-full shadow-[0_0_30px_rgba(0,82,180,0.7)] ring-2 ring-white/90 object-contain bg-[#0052B4]"
+            alt="Manju Group Official Logo"
+            className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full shadow-[0_0_20px_rgba(0,82,180,0.6)] ring-2 ring-white/90 object-contain bg-[#0052B4]"
           />
-        </motion.div>
+        </div>
 
-        <h2
-          style={{
-            fontSize: "clamp(2.4rem, 7vw, 5rem)",
-            fontWeight: 900,
-            letterSpacing: "-0.02em",
-            lineHeight: 1,
-            marginBottom: "14px",
-            fontFamily: "'Montserrat', sans-serif",
-          }}
-        >
-          <span style={{ color: "#ffffff" }}>MANJU</span>
-          <span style={{ color: "#60A5FA" }}> GROUP</span>
+        <h2 className="text-2xl sm:text-3xl md:text-5xl font-black tracking-tight leading-none uppercase mb-1.5 md:mb-2 font-display">
+          <span className="text-white">MANJU</span>
+          <span className="text-[#60A5FA]"> GROUP</span>
         </h2>
 
-        <p
-          style={{
-            color: "rgba(255, 255, 255, 0.75)",
-            fontSize: "13px",
-            letterSpacing: "0.2em",
-            textTransform: "uppercase",
-            fontWeight: 600,
-            maxWidth: "640px",
-          }}
-        >
+        <p className="text-blue-200/80 text-[10px] sm:text-xs md:text-sm font-semibold tracking-wider uppercase max-w-md md:max-w-xl mx-auto leading-relaxed px-2">
           Pioneering Manufacturing, Electronics &amp; Green Energy in Sri Lanka
         </p>
       </motion.div>
 
-      {/* ── Divider ─────────────────────────────────────────────── */}
-      <div
-        style={{
-          borderTop: "1px solid rgba(255, 255, 255, 0.12)",
-          marginLeft: "auto",
-          marginRight: "auto",
-          maxWidth: "1200px",
-          width: "100%",
-          padding: "0 24px",
-        }}
-      />
+      {/* ── Thin Divider ───────────────────────────────────────── */}
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="border-t border-white/10 w-full" />
+      </div>
 
-      {/* ── 4-Column Navigation & Subscription Grid ─────────────── */}
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: "54px 24px",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "40px",
-        }}
-      >
-        {NAV_COLUMNS.map((col, i) => (
-          <AnimatedColumn key={col.heading} index={i}>
-            <p
-              style={{
-                fontSize: "13px",
-                fontWeight: 800,
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-                color: "#93C5FD",
-                marginBottom: "18px",
-              }}
-            >
-              {col.heading}
+      {/* ── Responsive Navigation & Newsletter Grid ────────────── */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-10">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+          {/* Company Links */}
+          <div>
+            <p className="text-[11px] sm:text-xs md:text-sm font-extrabold uppercase tracking-wider text-[#93C5FD] mb-2.5 sm:mb-3">
+              {NAV_COLUMNS[0].heading}
             </p>
-            <ul
-              style={{
-                listStyle: "none",
-                padding: 0,
-                margin: 0,
-                display: "flex",
-                flexDirection: "column",
-                gap: "12px",
-              }}
-            >
-              {col.links.map(link => (
+            <ul className="space-y-1.5 sm:space-y-2">
+              {NAV_COLUMNS[0].links.map(link => (
                 <li key={link.href + link.label}>
                   <Link
                     href={link.href}
-                    style={{
-                      color: "rgba(255, 255, 255, 0.8)",
-                      textDecoration: "none",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      transition: "color 0.2s, transform 0.2s",
-                      display: "inline-block",
-                    }}
-                    onMouseEnter={e => {
-                      const el = e.currentTarget as HTMLAnchorElement;
-                      el.style.color = "#ffffff";
-                      el.style.transform = "translateX(4px)";
-                    }}
-                    onMouseLeave={e => {
-                      const el = e.currentTarget as HTMLAnchorElement;
-                      el.style.color = "rgba(255, 255, 255, 0.8)";
-                      el.style.transform = "translateX(0px)";
-                    }}
+                    className="text-xs sm:text-[13px] text-white/75 hover:text-white hover:translate-x-1 transition-all inline-block py-0.5"
                   >
                     {link.label}
                   </Link>
                 </li>
               ))}
             </ul>
-          </AnimatedColumn>
-        ))}
-
-        {/* Connect & Newsletter Column */}
-        <AnimatedColumn index={3}>
-          <p
-            style={{
-              fontSize: "13px",
-              fontWeight: 800,
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              color: "#93C5FD",
-              marginBottom: "18px",
-            }}
-          >
-            Connect With Us
-          </p>
-
-          {/* Social Icons */}
-          <div style={{ display: "flex", gap: "10px", marginBottom: "24px" }}>
-            {SOCIAL_LINKS.map(({ Icon, href, label, enabled }) =>
-              enabled ? (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  title="Manju Enterprises LK on Facebook"
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "rgba(0, 82, 180, 0.4)",
-                    border: "1px solid #60A5FA",
-                    color: "#ffffff",
-                    textDecoration: "none",
-                    transition: "all 0.2s",
-                    flexShrink: 0,
-                  }}
-                  onMouseEnter={e => {
-                    const el = e.currentTarget as HTMLAnchorElement;
-                    el.style.borderColor = "#60A5FA";
-                    el.style.background = "#0052B4";
-                    el.style.boxShadow = `0 0 18px ${BRAND_BLUE_GLOW}`;
-                    el.style.transform = "translateY(-3px)";
-                  }}
-                  onMouseLeave={e => {
-                    const el = e.currentTarget as HTMLAnchorElement;
-                    el.style.borderColor = "#60A5FA";
-                    el.style.background = "rgba(0, 82, 180, 0.4)";
-                    el.style.boxShadow = "none";
-                    el.style.transform = "translateY(0px)";
-                  }}
-                >
-                  <Icon size={17} />
-                </a>
-              ) : (
-                <div
-                  key={label}
-                  aria-label={label}
-                  title={label}
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "rgba(255, 255, 255, 0.04)",
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
-                    color: "rgba(255, 255, 255, 0.3)",
-                    cursor: "default",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Icon size={17} />
-                </div>
-              )
-            )}
           </div>
 
-          {/* Newsletter Form */}
-          <form onSubmit={handleSubscribe}>
-            {subscribed ? (
-              <div
-                style={{
-                  padding: "12px 16px",
-                  borderRadius: "8px",
-                  background: "rgba(0, 82, 180, 0.35)",
-                  border: "1px solid #60A5FA",
-                  color: "#ffffff",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  textAlign: "center",
-                }}
-              >
-                ✓ Thank you for subscribing!
-              </div>
-            ) : (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                }}
-              >
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  required
-                  style={{
-                    background: "rgba(255, 255, 255, 0.08)",
-                    border: "1px solid rgba(255, 255, 255, 0.2)",
-                    borderRadius: "8px",
-                    padding: "11px 16px",
-                    fontSize: "13px",
-                    color: "#ffffff",
-                    outline: "none",
-                    width: "100%",
-                    boxSizing: "border-box",
-                  }}
-                  onFocus={e => {
-                    (e.currentTarget as HTMLInputElement).style.borderColor =
-                      "#60A5FA";
-                    (e.currentTarget as HTMLInputElement).style.background =
-                      "rgba(255, 255, 255, 0.12)";
-                  }}
-                  onBlur={e => {
-                    (e.currentTarget as HTMLInputElement).style.borderColor =
-                      "rgba(255, 255, 255, 0.2)";
-                    (e.currentTarget as HTMLInputElement).style.background =
-                      "rgba(255, 255, 255, 0.08)";
-                  }}
-                />
-                <button
-                  type="submit"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    background: `linear-gradient(135deg, ${BRAND_BLUE}, #003F8A)`,
-                    color: "#ffffff",
-                    border: "1px solid rgba(255, 255, 255, 0.2)",
-                    borderRadius: "8px",
-                    padding: "11px 20px",
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    width: "100%",
-                  }}
-                  onMouseEnter={e => {
-                    const el = e.currentTarget as HTMLButtonElement;
-                    el.style.boxShadow = `0 0 24px ${BRAND_BLUE_GLOW}`;
-                    el.style.transform = "scale(1.02)";
-                  }}
-                  onMouseLeave={e => {
-                    const el = e.currentTarget as HTMLButtonElement;
-                    el.style.boxShadow = "none";
-                    el.style.transform = "scale(1)";
-                  }}
-                >
-                  Join Newsletter <ArrowRight size={15} />
-                </button>
-              </div>
-            )}
-          </form>
-        </AnimatedColumn>
+          {/* Products Links */}
+          <div>
+            <p className="text-[11px] sm:text-xs md:text-sm font-extrabold uppercase tracking-wider text-[#93C5FD] mb-2.5 sm:mb-3">
+              {NAV_COLUMNS[1].heading}
+            </p>
+            <ul className="space-y-1.5 sm:space-y-2">
+              {NAV_COLUMNS[1].links.map(link => (
+                <li key={link.href + link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-xs sm:text-[13px] text-white/75 hover:text-white hover:translate-x-1 transition-all inline-block py-0.5"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Support Links */}
+          <div>
+            <p className="text-[11px] sm:text-xs md:text-sm font-extrabold uppercase tracking-wider text-[#93C5FD] mb-2.5 sm:mb-3">
+              {NAV_COLUMNS[2].heading}
+            </p>
+            <ul className="space-y-1.5 sm:space-y-2">
+              {NAV_COLUMNS[2].links.map(link => (
+                <li key={link.href + link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-xs sm:text-[13px] text-white/75 hover:text-white hover:translate-x-1 transition-all inline-block py-0.5"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Connect & Newsletter (Full width on small phones, 1 col on desktop) */}
+          <div className="col-span-2 sm:col-span-2 md:col-span-1">
+            <p className="text-[11px] sm:text-xs md:text-sm font-extrabold uppercase tracking-wider text-[#93C5FD] mb-2.5 sm:mb-3">
+              Connect With Us
+            </p>
+
+            {/* Social Icons */}
+            <div className="flex items-center gap-2 mb-3.5">
+              {SOCIAL_LINKS.map(({ Icon, href, label, enabled }) =>
+                enabled ? (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    title="Manju Enterprises LK on Facebook"
+                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center bg-[#0052B4]/40 border border-[#60A5FA] text-white hover:bg-[#0052B4] hover:shadow-[0_0_12px_rgba(0,82,180,0.5)] transition-all cursor-pointer"
+                  >
+                    <Icon size={15} />
+                  </a>
+                ) : (
+                  <div
+                    key={label}
+                    aria-label={label}
+                    title={label}
+                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/30 cursor-default"
+                  >
+                    <Icon size={15} />
+                  </div>
+                )
+              )}
+            </div>
+
+            {/* Compact Newsletter Form */}
+            <form onSubmit={handleSubscribe} className="w-full">
+              {subscribed ? (
+                <div className="p-2 rounded-lg bg-[#0052B4]/40 border border-[#60A5FA] text-white text-xs font-bold text-center">
+                  ✓ Subscribed successfully!
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    required
+                    className="w-full bg-white/10 border border-white/20 focus:border-[#60A5FA] rounded-lg px-3 py-1.5 sm:py-2 text-xs text-white placeholder:text-white/40 outline-none transition-colors"
+                  />
+                  <button
+                    type="submit"
+                    className="w-full flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#0052B4] to-[#003F8A] hover:from-[#00479e] hover:to-[#003473] text-white rounded-lg px-3 py-1.5 sm:py-2 text-xs font-bold transition-all shadow-sm cursor-pointer active:scale-98"
+                  >
+                    <span>Subscribe</span>
+                    <ArrowRight size={13} />
+                  </button>
+                </div>
+              )}
+            </form>
+          </div>
+        </div>
       </div>
 
-      {/* ── Bottom Bar: Copyright, Policies & EchoMedia Attribution ── */}
-      <div
-        style={{
-          borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-          background: "rgba(0, 8, 20, 0.6)",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "1200px",
-            margin: "0 auto",
-            padding: "22px 24px",
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "16px",
-          }}
-        >
-          {/* Copyright & Security */}
-          <div className="flex items-center gap-2">
-            <ShieldCheck size={16} className="text-[#60A5FA]" />
-            <span
-              style={{
-                color: "rgba(255, 255, 255, 0.7)",
-                fontSize: "13px",
-                fontWeight: 500,
-              }}
-            >
-              © {new Date().getFullYear()} Manju Group. All Rights Reserved.
-            </span>
+      {/* ── Bottom Bar: Copyright & Attribution ────────────────── */}
+      <div className="border-t border-white/10 bg-black/40 py-3.5 px-4">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5 text-center sm:text-left text-[11px] sm:text-xs text-white/70">
+          {/* Copyright */}
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck size={14} className="text-[#60A5FA]" />
+            <span>© {new Date().getFullYear()} Manju Group. All Rights Reserved.</span>
           </div>
 
-          {/* Powered by EchoMedia */}
-          <div className="flex items-center gap-1.5 text-xs">
-            <span style={{ color: "rgba(255, 255, 255, 0.7)" }}>
-              Powered by
-            </span>
+          {/* EchoMedia Attribution */}
+          <div className="flex items-center gap-1">
+            <span>Powered by</span>
             <a
               href="https://www.echomediaa.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-bold hover:underline transition-colors ml-0.5"
-              style={{
-                color: "#60A5FA",
-                textDecoration: "none",
-              }}
-              onMouseEnter={e => {
-                const el = e.currentTarget as HTMLAnchorElement;
-                el.style.color = "#ffffff";
-                el.style.textDecoration = "underline";
-              }}
-              onMouseLeave={e => {
-                const el = e.currentTarget as HTMLAnchorElement;
-                el.style.color = "#60A5FA";
-                el.style.textDecoration = "none";
-              }}
+              className="text-[#60A5FA] hover:text-white font-bold transition-colors"
             >
               EchoMedia
             </a>
           </div>
 
           {/* Legal Links */}
-          <div style={{ display: "flex", gap: "20px" }}>
+          <div className="flex items-center gap-3 text-[11px] text-white/60">
             {["Privacy Policy", "Terms of Service", "Warranty"].map(label => (
               <Link
                 key={label}
                 href="/about"
-                style={{
-                  color: "rgba(255, 255, 255, 0.6)",
-                  fontSize: "12px",
-                  textDecoration: "none",
-                  transition: "color 0.15s",
-                }}
-                onMouseEnter={e =>
-                  ((e.currentTarget as HTMLAnchorElement).style.color =
-                    "#ffffff")
-                }
-                onMouseLeave={e =>
-                  ((e.currentTarget as HTMLAnchorElement).style.color =
-                    "rgba(255, 255, 255, 0.6)")
-                }
+                className="hover:text-white transition-colors"
               >
                 {label}
               </Link>
