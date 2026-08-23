@@ -49,6 +49,11 @@ function Router() {
           {params => <NewsDetail params={params as { slug: string }} />}
         </Route>
         <Route path="/account" component={Account} />
+        <Route path="/login" component={Account} />
+        <Route path="/signin" component={Account} />
+        <Route path="/register" component={Account} />
+        <Route path="/signup" component={Account} />
+        <Route path="/my-orders" component={Account} />
         <Route path="/admin" component={Admin} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
