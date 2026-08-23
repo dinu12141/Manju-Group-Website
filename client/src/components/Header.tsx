@@ -23,17 +23,42 @@ import { STATIC_PRODUCTS } from "@/lib/staticData";
 import { useCart } from "@/contexts/CartContext";
 
 const CATEGORY_ITEMS = [
-  { label: "Electric Bikes", href: "/products?categoryId=1", icon: Zap, color: "text-amber-400" },
-  { label: "Smart TVs", href: "/products?categoryId=2", icon: Tv, color: "text-blue-400" },
-  { label: "Air Conditioners", href: "/products?categoryId=3", icon: Wind, color: "text-cyan-400" },
-  { label: "Water Purifiers", href: "/products?categoryId=4", icon: Droplets, color: "text-teal-400" },
-];
-
-const BRAND_ITEMS = [
-  { label: "Dew Motors", href: "/brands/dew-motors", desc: "Electric Mobility" },
-  { label: "Dew Plus", href: "/brands/dew-plus", desc: "Smart 4K Televisions" },
-  { label: "DEW+ AC", href: "/brands/dew-plus-ac", desc: "Inverter Cooling" },
-  { label: "Manju Dew Super", href: "/brands/manju-dew-super", desc: "RO Water Systems" },
+  {
+    label: "Electric Bikes & Scooters",
+    desc: "Dew Motors • 2400W & 2000W E-Bikes",
+    href: "/products?categoryId=1",
+    icon: Zap,
+    badge: "Eco Fast",
+    badgeColor: "bg-amber-100 text-amber-900 border-amber-200",
+    iconBg: "bg-amber-50 text-amber-600 border-amber-200",
+  },
+  {
+    label: "4K Android Smart TVs",
+    desc: "Dew Plus • 32\" to 98\" Frameless Cinema",
+    href: "/products?categoryId=2",
+    icon: Tv,
+    badge: "Top Seller",
+    badgeColor: "bg-blue-100 text-blue-900 border-blue-200",
+    iconBg: "bg-blue-50 text-[#0052B4] border-blue-200",
+  },
+  {
+    label: "Inverter Air Conditioners",
+    desc: "DEW+ AC • 1.0T, 1.5T & 2.0T Split ACs",
+    href: "/products?categoryId=3",
+    icon: Wind,
+    badge: "10-Yr Warranty",
+    badgeColor: "bg-cyan-100 text-cyan-900 border-cyan-200",
+    iconBg: "bg-cyan-50 text-cyan-600 border-cyan-200",
+  },
+  {
+    label: "RO Water Purifiers & Dispensers",
+    desc: "Manju Dew Super • Alkaline Pure RO",
+    href: "/products?categoryId=4",
+    icon: Droplets,
+    badge: "Healthy RO",
+    badgeColor: "bg-emerald-100 text-emerald-900 border-emerald-200",
+    iconBg: "bg-emerald-50 text-emerald-600 border-emerald-200",
+  },
 ];
 
 export default function Header() {
@@ -502,12 +527,18 @@ export default function Header() {
                     </div>
                   </div>
 
-                  {/* Shop by Category */}
+                  {/* Shop by Category - Professional Dedicated Cards */}
                   <div>
-                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block mb-2 px-2">
-                      Shop By Category
-                    </span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center justify-between mb-2.5 px-2">
+                      <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                        Explore Categories
+                      </span>
+                      <span className="text-[10px] text-[#0052B4] font-bold">
+                        4 Product Lines
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
                       {CATEGORY_ITEMS.map(cat => {
                         const Icon = cat.icon;
                         return (
@@ -515,36 +546,40 @@ export default function Header() {
                             key={cat.href}
                             href={cat.href}
                             onClick={() => setIsMenuOpen(false)}
-                            className="p-2.5 bg-slate-50 hover:bg-blue-50 border border-slate-200/80 rounded-xl flex items-center gap-2 text-xs font-bold text-slate-800 transition-colors"
+                            className="group p-3 bg-slate-50 hover:bg-blue-50/90 border border-slate-200/80 hover:border-blue-300 rounded-2xl flex items-center justify-between gap-3 transition-all duration-200 shadow-xs hover:shadow-md cursor-pointer active:scale-98"
                           >
-                            <Icon size={15} className="text-[#0052B4] shrink-0" />
-                            <span className="truncate">{cat.label}</span>
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div
+                                className={`w-10 h-10 rounded-xl flex items-center justify-center border shrink-0 transition-transform group-hover:scale-105 ${cat.iconBg}`}
+                              >
+                                <Icon size={20} strokeWidth={2.2} />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs font-black text-slate-900 group-hover:text-[#0052B4] transition-colors truncate">
+                                    {cat.label}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] text-slate-500 font-medium block truncate">
+                                  {cat.desc}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span
+                                className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${cat.badgeColor}`}
+                              >
+                                {cat.badge}
+                              </span>
+                              <ChevronRight
+                                size={15}
+                                className="text-slate-400 group-hover:text-[#0052B4] group-hover:translate-x-0.5 transition-all"
+                              />
+                            </div>
                           </Link>
                         );
                       })}
-                    </div>
-                  </div>
-
-                  {/* Official Brands */}
-                  <div>
-                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block mb-2 px-2">
-                      Our 4 Brands
-                    </span>
-                    <div className="space-y-1.5">
-                      {BRAND_ITEMS.map(b => (
-                        <Link
-                          key={b.href}
-                          href={b.href}
-                          onClick={() => setIsMenuOpen(false)}
-                          className="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200/70 rounded-xl flex items-center justify-between text-xs font-bold text-slate-800 transition-colors"
-                        >
-                          <div>
-                            <span className="text-slate-900 block">{b.label}</span>
-                            <span className="text-[10px] text-slate-400 font-medium">{b.desc}</span>
-                          </div>
-                          <ChevronRight size={13} className="text-slate-400" />
-                        </Link>
-                      ))}
                     </div>
                   </div>
                 </div>
