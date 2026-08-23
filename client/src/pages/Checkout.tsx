@@ -155,12 +155,12 @@ function OrderSummaryBox({ compact = false }: { compact?: boolean }) {
               <img
                 src={
                   item.imageUrl ||
-                  "/manju-logo.png"
+                  "/manju-logo.webp"
                 }
                 alt={item.productName || ""}
                 className="w-full h-full object-contain"
                 onError={e => {
-                  (e.target as HTMLImageElement).src = "/manju-logo.png";
+                  (e.target as HTMLImageElement).src = "/manju-logo.webp";
                 }}
               />
             </div>

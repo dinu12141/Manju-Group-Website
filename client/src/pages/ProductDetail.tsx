@@ -184,7 +184,7 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                     (dbProduct as any).imageUrl ||
                     (staticFound
                       ? staticFound.imageUrl
-                      : "/ads/ad_dew_super_ro_system_1.png"),
+                      : "/ads/ad_dew_super_ro_system_1.webp"),
                 },
               ],
         sku: dbProduct.sku,

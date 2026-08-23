@@ -136,11 +136,11 @@ export default function HeroSection() {
   return (
     <section className="w-full bg-white py-3 sm:py-4 border-b border-gray-200">
       <div className="container mx-auto px-3 sm:px-4 md:px-6">
-        <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 lg:h-[440px]">
+        <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 lg:h-[480px]">
           {/* Main Hero Video / Banner Ad Area */}
           <div
             onClick={handleVideoClick}
-            className="w-full lg:w-3/4 min-h-[280px] sm:min-h-[340px] lg:h-full rounded-2xl bg-gray-950 relative overflow-hidden group shadow-md border border-slate-200 flex justify-center items-center cursor-pointer"
+            className="w-full lg:w-3/4 min-h-[380px] sm:min-h-[420px] lg:h-full rounded-2xl bg-gray-950 relative overflow-hidden group shadow-md border border-slate-200 flex justify-center items-center cursor-pointer"
           >
             {isVideo ? (
               <video

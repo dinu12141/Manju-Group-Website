@@ -463,7 +463,7 @@ export default function Admin() {
         >
           <div className="text-center mb-8">
             <div className="w-16 h-16 rounded-full bg-[#0052B4] border-2 border-white/80 flex items-center justify-center mx-auto mb-4 shadow-[0_0_25px_rgba(0,82,180,0.8)]">
-              <img src="/manju-logo.png" alt="Logo" className="w-12 h-12 object-contain" />
+              <img src="/manju-logo.webp" alt="Logo" className="w-12 h-12 object-contain" />
             </div>
             <h1 className="text-2xl font-black font-display tracking-tight text-white">
               MANJU GROUP
@@ -539,7 +539,7 @@ export default function Admin() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#0052B4] border border-white/80 flex items-center justify-center shadow-md">
-              <img src="/manju-logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+              <img src="/manju-logo.webp" alt="Logo" className="w-8 h-8 object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -889,7 +889,7 @@ export default function Admin() {
                       isFeatured: false,
                       isBestSeller: false,
                       isNew: true,
-                      imageUrl: "/scooter_red.png",
+                      imageUrl: "/scooter_red.webp",
                       description: "High performance Sri Lankan built equipment.",
                       shortDescription: "Official Manju Group warranty.",
                       warrantyMonths: 24,
@@ -1909,7 +1909,7 @@ export default function Admin() {
               <div className="flex items-start justify-between border-b border-slate-200 pb-5 mb-5">
                 <div>
                   <div className="flex items-center gap-2">
-                    <img src="/manju-logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+                    <img src="/manju-logo.webp" alt="Logo" className="w-8 h-8 object-contain" />
                     <span className="font-display font-black text-xl text-[#001D4A]">MANJU GROUP</span>
                   </div>
                   <p className="text-xs text-slate-500 mt-1">

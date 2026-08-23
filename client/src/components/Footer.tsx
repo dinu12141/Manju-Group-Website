@@ -96,7 +96,7 @@ export default function Footer() {
         {/* Circular Official Logo */}
         <div className="mb-2.5 md:mb-3.5 inline-block">
           <img
-            src="/manju-logo.png"
+            src="/manju-logo.webp"
             alt="Manju Group Official Logo"
             className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full shadow-[0_0_20px_rgba(0,82,180,0.6)] ring-2 ring-white/90 object-contain bg-[#0052B4]"
           />

@@ -20,7 +20,7 @@ const BRANDS = [
     accent: "#16A34A",
     accentLight: "#dcfce7",
     tag: "Mobility",
-    image: "/scooter_silver.png",
+    image: "/scooter_silver.webp",
     stat: { value: "630,000", label: "From LKR" },
   },
   {
@@ -32,7 +32,7 @@ const BRANDS = [
     accent: "#2563EB",
     accentLight: "#dbeafe",
     tag: "Electronics",
-    image: "/dew_plus_55_tv.png",
+    image: "/dew_plus_55_tv.webp",
     stat: { value: "74,400", label: "From LKR" },
   },
   {
@@ -44,7 +44,7 @@ const BRANDS = [
     accent: "#0891B2",
     accentLight: "#cffafe",
     tag: "Cooling",
-    image: "/dew_plus_ac_1ton.png",
+    image: "/dew_plus_ac_1ton.webp",
     stat: { value: "145,000", label: "From LKR" },
   },
   {
@@ -56,7 +56,7 @@ const BRANDS = [
     accent: "#0D9488",
     accentLight: "#ccfbf1",
     tag: "Health",
-    image: "/ro_water_purifier.png",
+    image: "/ro_water_purifier.webp",
     stat: { value: "69,900", label: "From LKR" },
   },
 ];

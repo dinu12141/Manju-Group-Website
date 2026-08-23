@@ -95,7 +95,7 @@ export default function SuggestionsSection() {
           <div className="w-full md:w-1/4 flex flex-col items-center justify-center min-h-[160px] mb-4 md:mb-0 text-white p-4 border-b md:border-b-0 md:border-r border-white/10">
             <div className="flex flex-col items-center justify-center text-center">
               <img
-                src="/manju-logo.png"
+                src="/manju-logo.webp"
                 alt="Manju Group"
                 className="w-20 h-20 rounded-full bg-[#0052B4] ring-4 ring-white/80 shadow-md object-contain mb-3"
               />

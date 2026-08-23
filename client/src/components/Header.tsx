@@ -181,7 +181,7 @@ export default function Header() {
             >
               <div className="relative">
                 <img
-                  src="/manju-logo.png"
+                  src="/manju-logo.webp"
                   alt="Manju Group Official Logo"
                   className="h-11 w-11 md:h-12 md:w-12 rounded-full object-contain bg-[#0052B4] ring-2 ring-white/90 shadow-md group-hover:ring-white transition-all duration-300"
                 />
@@ -260,7 +260,7 @@ export default function Header() {
                           className="flex items-center gap-3 p-2.5 hover:bg-blue-50/80 transition-colors cursor-pointer group"
                         >
                           <img
-                            src={product.imageUrl || "/manju-logo.png"}
+                            src={product.imageUrl || "/manju-logo.webp"}
                             alt={product.name}
                             className="w-10 h-10 object-contain rounded-lg bg-white border border-slate-200 p-0.5 shrink-0 group-hover:scale-105 transition-transform"
                           />
@@ -473,7 +473,7 @@ export default function Header() {
             {/* Left: Brand Logo & Title */}
             <Link href="/" className="flex items-center gap-2 active:scale-95 transition-transform">
               <img
-                src="/manju-logo.png"
+                src="/manju-logo.webp"
                 alt="Manju Logo"
                 className="w-8 h-8 rounded-full object-contain bg-[#0052B4] ring-2 ring-white/90 shadow-sm"
               />
@@ -563,7 +563,7 @@ export default function Header() {
                         className="flex items-center gap-2.5 p-2.5 hover:bg-blue-50 transition-colors"
                       >
                         <img
-                          src={product.imageUrl || "/manju-logo.png"}
+                          src={product.imageUrl || "/manju-logo.webp"}
                           alt={product.name}
                           className="w-9 h-9 object-contain rounded-lg bg-white border border-slate-200 p-0.5 shrink-0"
                         />
@@ -630,7 +630,7 @@ export default function Header() {
               <div className="bg-gradient-to-r from-[#003875] to-[#0052B4] text-white p-4 flex items-center justify-between shadow-sm shrink-0 pt-[max(env(safe-area-inset-top,0px),16px)]">
                 <div className="flex items-center gap-2.5">
                   <img
-                    src="/manju-logo.png"
+                    src="/manju-logo.webp"
                     alt="Manju Logo"
                     className="w-9 h-9 rounded-full bg-white/20 p-0.5 ring-1 ring-white/50"
                   />
@@ -791,7 +791,8 @@ export default function Header() {
       </AnimatePresence>
 
       {/* Spacer to prevent page content from going under fixed header */}
-      <div className="h-[104px] md:h-[114px] w-full shrink-0"></div>
+      <div className="md:hidden w-full shrink-0" style={{ height: 'calc(98px + max(env(safe-area-inset-top, 0px), 8px))' }}></div>
+      <div className="hidden md:block h-[114px] w-full shrink-0"></div>
     </>
   );
 }

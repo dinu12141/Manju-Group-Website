@@ -50,14 +50,14 @@ export interface HomeAdConfig {
 
 export const PRESET_AD_MEDIA = [
   { label: "Hero Promo Video", path: "/promo-video.mp4", type: "video" },
-  { label: "Dew Motors Black E-Bike (YW05)", path: "/ads/ad_dew_motors_black_ebike.png", type: "image" },
-  { label: "Dew Motors Red E-Bike (Easy Installment)", path: "/ads/ad_dew_motors_red_ebike.jpg", type: "image" },
-  { label: "Dew Plus Smart TV 4K", path: "/ads/ad_dew_plus_smart_tv.jpg", type: "image" },
-  { label: "Manju Dew Super RO Water Filter", path: "/ads/ad_dew_super_ro_system_1.png", type: "image" },
-  { label: "Manju Dew Super RO+ Promo Banner", path: "/ads/ad_dew_super_ro_system_2.jpg", type: "image" },
-  { label: "Cinematic E-Bike Banner", path: "/banner_ebike_cinematic.jpg", type: "image" },
-  { label: "Cinematic Smart TV Banner", path: "/banner_smarttv_cinematic.jpg", type: "image" },
-  { label: "DEW+ Inverter AC Unit", path: "/dew_plus_ac_1_5ton.png", type: "image" },
+  { label: "Dew Motors Black E-Bike (YW05)", path: "/ads/ad_dew_motors_black_ebike.webp", type: "image" },
+  { label: "Dew Motors Red E-Bike (Easy Installment)", path: "/ads/ad_dew_motors_red_ebike.webp", type: "image" },
+  { label: "Dew Plus Smart TV 4K", path: "/ads/ad_dew_plus_smart_tv.webp", type: "image" },
+  { label: "Manju Dew Super RO Water Filter", path: "/ads/ad_dew_super_ro_system_1.webp", type: "image" },
+  { label: "Manju Dew Super RO+ Promo Banner", path: "/ads/ad_dew_super_ro_system_2.webp", type: "image" },
+  { label: "Cinematic E-Bike Banner", path: "/banner_ebike_cinematic.webp", type: "image" },
+  { label: "Cinematic Smart TV Banner", path: "/banner_smarttv_cinematic.webp", type: "image" },
+  { label: "DEW+ Inverter AC Unit", path: "/dew_plus_ac_1_5ton.webp", type: "image" },
 ];
 
 export const DEFAULT_AD_CONFIG: HomeAdConfig = {
@@ -76,7 +76,7 @@ export const DEFAULT_AD_CONFIG: HomeAdConfig = {
     title: "Dew Motors - EM005 2400W E-Bike",
     price: "680,000",
     originalPrice: "720,000",
-    imageUrl: "/ads/ad_dew_motors_black_ebike.png",
+    imageUrl: "/ads/ad_dew_motors_black_ebike.webp",
     linkUrl: "/products/dew-motors-em005-2400w",
   },
   heroSlides: [
@@ -86,7 +86,7 @@ export const DEFAULT_AD_CONFIG: HomeAdConfig = {
       title: "Dew Super 6-Stage RO Water Filter",
       category: "Pure Water",
       price: "14,900 Down",
-      imageUrl: "/ads/ad_dew_super_ro_system_1.png",
+      imageUrl: "/ads/ad_dew_super_ro_system_1.webp",
       linkUrl: "/products/dew-super-ro-water-filter",
     },
     {
@@ -95,7 +95,7 @@ export const DEFAULT_AD_CONFIG: HomeAdConfig = {
       title: "Dew Plus 55'' 4K Smart TV",
       category: "Cinema Experience",
       price: "Rs. 169,500",
-      imageUrl: "/ads/ad_dew_plus_smart_tv.jpg",
+      imageUrl: "/ads/ad_dew_plus_smart_tv.webp",
       linkUrl: "/products/dew-plus-smart-tv-55",
     },
     {
@@ -104,7 +104,7 @@ export const DEFAULT_AD_CONFIG: HomeAdConfig = {
       title: "DEW+ Inverter 1.5 Ton AC",
       category: "Energy Saving",
       price: "Rs. 185,000",
-      imageUrl: "/dew_plus_ac_1_5ton.png",
+      imageUrl: "/dew_plus_ac_1_5ton.webp",
       linkUrl: "/products/dew-plus-inverter-split-air-conditioner-1-5-ton",
     },
     {
@@ -113,7 +113,7 @@ export const DEFAULT_AD_CONFIG: HomeAdConfig = {
       title: "Dew Motors Super YW05 E-Bike",
       category: "110Km Range",
       price: "Rs. 100,000 Down",
-      imageUrl: "/ads/ad_dew_motors_red_ebike.jpg",
+      imageUrl: "/ads/ad_dew_motors_red_ebike.webp",
       linkUrl: "/products/dew-motors-yw06-2000w",
     },
   ],
@@ -124,7 +124,7 @@ export const DEFAULT_AD_CONFIG: HomeAdConfig = {
       title: "Dew Motors Electric Bikes",
       subtitle: "Eco-Friendly · 80km Range · 2400W Power",
       buttonText: "Explore Models",
-      imageUrl: "/banner_ebike_cinematic.jpg",
+      imageUrl: "/banner_ebike_cinematic.webp",
       linkUrl: "/products?categoryId=1",
       gradientTheme: "ebike",
     },
@@ -134,7 +134,7 @@ export const DEFAULT_AD_CONFIG: HomeAdConfig = {
       title: "Dew Plus 4K Frameless Smart TVs",
       subtitle: "4K UHD · Android 12 · Immersive Audio",
       buttonText: "Discover Deals",
-      imageUrl: "/banner_smarttv_cinematic.jpg",
+      imageUrl: "/banner_smarttv_cinematic.webp",
       linkUrl: "/products?categoryId=2",
       gradientTheme: "smarttv",
     },

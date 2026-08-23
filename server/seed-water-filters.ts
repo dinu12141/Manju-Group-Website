@@ -23,7 +23,7 @@ const WATER_FILTER_PRODUCTS = [
       "Sub Category": "RO+ Water Filter",
       Capacity: "100 liters per day",
     },
-    image: "/dew_super_ro_plus.png",
+    image: "/dew_super_ro_plus.webp",
   },
   {
     slug: "dew-super-hot-normal-water-filter",
@@ -44,7 +44,7 @@ const WATER_FILTER_PRODUCTS = [
       "Sub Category": "Hot & Normal Water Filter",
       Capacity: "75 liters per day",
     },
-    image: "/dew_super_hot_normal.png",
+    image: "/dew_super_hot_normal.webp",
   },
   {
     slug: "dew-super-hotcool-normal-water-filter",
@@ -66,7 +66,7 @@ const WATER_FILTER_PRODUCTS = [
       "Sub Category": "Hot, Cool & Normal Water Filter",
       Capacity: "75 liters per day",
     },
-    image: "/dew_super_hot_cold_dispenser.png",
+    image: "/dew_super_hot_cold_dispenser.webp",
   },
   {
     slug: "dew-super-commercial-water-filter-500l",
@@ -87,7 +87,7 @@ const WATER_FILTER_PRODUCTS = [
       "Sub Category": "Commercial Water Filter",
       Capacity: "500 liters per day",
     },
-    image: "/dew_super_commercial_500l.png",
+    image: "/dew_super_commercial_500l.webp",
   },
   {
     slug: "dew-super-commercial-water-filter-2500l",
@@ -108,7 +108,7 @@ const WATER_FILTER_PRODUCTS = [
       "Sub Category": "Commercial Water Filter",
       Capacity: "2500 liters per day",
     },
-    image: "/dew_super_commercial_2500l.png",
+    image: "/dew_super_commercial_2500l.webp",
   },
   {
     slug: "dew-super-commercial-water-filter-3000l",
@@ -129,7 +129,7 @@ const WATER_FILTER_PRODUCTS = [
       "Sub Category": "Commercial Water Filter",
       Capacity: "3000 liters per day",
     },
-    image: "/dew_super_commercial_3000l.png",
+    image: "/dew_super_commercial_3000l.webp",
   },
 ];
 

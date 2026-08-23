@@ -66,7 +66,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/ads/ad_dew_super_ro_system_1.png",
+    imageUrl: "/ads/ad_dew_super_ro_system_1.webp",
     specifications:
       '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 100 liters per day","Sub Category":"RO Water Filter","Installment Plan":"Down Payment - Rs.14900\\nMonthly premium - Rs.6000 X 11 (Months)\\n                                    Rs.4000 X 01 (Month)","Installment Price":"Rs. 84,900"}',
     description:
@@ -90,7 +90,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/ads/ad_dew_super_ro_system_2.jpg",
+    imageUrl: "/ads/ad_dew_super_ro_system_2.webp",
     specifications:
       '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 100 liters per day","Sub Category":"RO+ Water Filter","Installment Plan":"Down Payment - Rs.14900\\nMonthly premium - Rs.6250 X 12 (Months)","Installment Price":"Rs. 89,900"}',
     description:
@@ -114,7 +114,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/ads/ad_dew_super_ro_system_1.png",
+    imageUrl: "/ads/ad_dew_super_ro_system_1.webp",
     specifications:
       '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 75 liters per day","Sub Category":"Hot & Normal Water Filter","Installment Plan":"Down Payment - Rs.19900\\nMonthly premium - Rs.6250 X 12 (Months)","Installment Price":"Rs. 94,900"}',
     description:
@@ -138,7 +138,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: true,
     isNew: false,
-    imageUrl: "/ads/ad_dew_super_ro_system_2.jpg",
+    imageUrl: "/ads/ad_dew_super_ro_system_2.webp",
     specifications:
       '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 75 liters per day","Sub Category":"Hot,Cool & Normal Water Filter","Installment Plan":"Down Payment - Rs.22900\\nMonthly premium - Rs.6250 X 12 (Months)","Installment Price":"Rs. 97,900"}',
     description:
@@ -162,7 +162,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/ads/ad_dew_super_ro_system_1.png",
+    imageUrl: "/ads/ad_dew_super_ro_system_1.webp",
     specifications:
       '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 500 liters per day","Sub Category":"Commercial Water Filter","Installment Plan":"Down Payment - Rs.90000\\nMonthly premium - Rs.17500 X 06 (Months)","Installment Price":"Rs. 195,000"}',
     description:
@@ -186,7 +186,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/ads/ad_dew_super_ro_system_2.jpg",
+    imageUrl: "/ads/ad_dew_super_ro_system_2.webp",
     specifications:
       '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 2500 liters per day","Sub Category":"Commercial Water Filter","Installment Plan":"Down Payment - Rs.170000\\nMonthly premium - Rs.30000 X 06 (Months)","Installment Price":"Rs. 350,000"}',
     description:
@@ -210,7 +210,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/ads/ad_dew_super_ro_system_1.png",
+    imageUrl: "/ads/ad_dew_super_ro_system_1.webp",
     specifications:
       '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 3000 liters per day","Sub Category":"Commercial Water Filter","Installment Plan":"Down Payment - Rs.225000\\nMonthly premium - Rs.37500 X 06 (Months)","Installment Price":"Rs. 450,000"}',
     description:
@@ -234,7 +234,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: true,
     isNew: false,
-    imageUrl: "/dew_plus_32_tv.png",
+    imageUrl: "/dew_plus_32_tv.webp",
     specifications:
       '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"Full HD 1080","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.10000\\nMonthly premium - Rs.6200 X 12 (Months)","Installment Price":"Rs. 84,400"}',
     description:
@@ -258,7 +258,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/dew_plus_43_tv.png",
+    imageUrl: "/dew_plus_43_tv.webp",
     specifications:
       '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"Full HD 1080","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.15000\\nMonthly premium - Rs.9150 X 12 (Months)","Installment Price":"Rs. 124,800"}',
     description:
@@ -282,7 +282,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/dew_plus_55_tv.png",
+    imageUrl: "/dew_plus_55_tv.webp",
     specifications:
       '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"4K Ultra HD","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.25000\\nMonthly premium - Rs.10250 X 18 (Months)","Installment Price":"Rs. 209,500"}',
     description:
@@ -306,7 +306,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/dew_plus_65_tv.png",
+    imageUrl: "/dew_plus_65_tv.webp",
     specifications:
       '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"4K Ultra HD","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.35000\\nMonthly premium - Rs.10950 X 24 (Months)","Installment Price":"Rs. 297,800"}',
     description:
@@ -330,7 +330,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: true,
     isNew: false,
-    imageUrl: "/dew_plus_75_tv.png",
+    imageUrl: "/dew_plus_75_tv.webp",
     specifications:
       '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"4K Ultra HD","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.50000\\nMonthly premium - Rs.19950 X 24 (Months)","Installment Price":"Rs. 528,800"}',
     description:
@@ -354,7 +354,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/dew_plus_98_tv.png",
+    imageUrl: "/dew_plus_98_tv.webp",
     specifications:
       '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"4K Ultra HD","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.100000\\nMonthly premium - Rs.37400 X 24 (Months)","Installment Price":"Rs. 997,600"}',
     description:
@@ -378,7 +378,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/scooter_silver.png",
+    imageUrl: "/scooter_silver.webp",
     specifications:
       '{"Feature 1":"Max Speed Is 65KM/H","Feature 2":"Long Life Span","Feature 3":"High/Standard Painting Technology","Feature 4":"Long Distance Range","Feature 5":"Stable & Durable Frame","Feature 6":"Swapped Lithium Battery","Sub Category":"Electric Bike","Installment Plan":"Down Payment - Rs.130000\\nMonthly premium - Rs.20889 X 36 (Months)","Installment Price":"Rs. 882,004"}',
     description:
@@ -402,7 +402,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/scooter_red.png",
+    imageUrl: "/scooter_red.webp",
     specifications:
       '{"Feature 1":"Max Speed Is 65KM/H","Feature 2":"Long Life Span","Feature 3":"High/Standard Painting Technology","Feature 4":"Long Distance Range","Feature 5":"Stable & Durable Frame","Feature 6":"Swapped Lithium Battery","Sub Category":"Electric Bike","Installment Plan":"Down Payment - Rs.130000\\nMonthly premium - Rs.26278 X 36 (Months)\\nOr\\nMonthly premium - Rs.33917 X 24 (Months)\\nOr\\nMonthly premium - Rs.56834 X 12 (Months)","Installment Price":"Rs. 957,208"}',
     description:
@@ -426,7 +426,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: true,
     isBestSeller: true,
     isNew: false,
-    imageUrl: "/dew_plus_ac_1ton.png",
+    imageUrl: "/dew_plus_ac_1ton.webp",
     specifications:
       '{"Capacity":"12,000 BTU (1.0 Ton)","Features":"WiFi Smart Control, Turbo Cooling, 4-Way Air Swing, Anti-Bacterial Filter","Warranty":"5-Year Compressor Warranty, 1-Year Comprehensive","Technology":"Full DC Inverter","Refrigerant":"Eco-Friendly R32"}',
     description:
@@ -451,7 +451,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: true,
     isBestSeller: true,
     isNew: false,
-    imageUrl: "/dew_plus_ac_1_5ton.png",
+    imageUrl: "/dew_plus_ac_1_5ton.webp",
     specifications:
       '{"Capacity":"18,000 BTU (1.5 Ton)","Features":"WiFi Smart Control, Turbo Cooling, 4-Way Air Swing, Anti-Bacterial Filter","Warranty":"5-Year Compressor Warranty, 1-Year Comprehensive","Technology":"Full DC Inverter","Refrigerant":"Eco-Friendly R32"}',
     description:
@@ -476,7 +476,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: true,
     isBestSeller: true,
     isNew: false,
-    imageUrl: "/dew_plus_ac_2ton.png",
+    imageUrl: "/dew_plus_ac_2ton.webp",
     specifications:
       '{"Capacity":"24,000 BTU (2.0 Ton)","Features":"WiFi Smart Control, Turbo Cooling, 4-Way Air Swing, Anti-Bacterial Filter","Warranty":"5-Year Compressor Warranty, 1-Year Comprehensive","Technology":"Full DC Inverter","Refrigerant":"Eco-Friendly R32"}',
     description:

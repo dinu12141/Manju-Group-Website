@@ -198,25 +198,25 @@ export default function About() {
               >
                 <div className="grid grid-cols-2 gap-3">
                   <img
-                    src="/scooter_silver.png"
+                    src="/scooter_silver.webp"
                     alt="Dew Motors electric bike"
                     loading="lazy"
                     className="h-32 w-full object-contain bg-white/5 rounded-2xl p-4"
                   />
                   <img
-                    src="/dew_plus_55_tv.png"
+                    src="/dew_plus_55_tv.webp"
                     alt="Dew Plus Smart TV"
                     loading="lazy"
                     className="h-32 w-full object-contain bg-white/5 rounded-2xl p-4"
                   />
                   <img
-                    src="/ro_water_purifier.png"
+                    src="/ro_water_purifier.webp"
                     alt="Manju Dew Super water purifier"
                     loading="lazy"
                     className="h-32 w-full object-contain bg-white/5 rounded-2xl p-4"
                   />
                   <img
-                    src="/dew_plus_ac_1_5ton.png"
+                    src="/dew_plus_ac_1_5ton.webp"
                     alt="DEW+ air conditioner"
                     loading="lazy"
                     className="h-32 w-full object-contain bg-white/5 rounded-2xl p-4"
@@ -255,7 +255,7 @@ export default function About() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
               <motion.div {...reveal()} className="flex justify-center">
                 <img
-                  src="/dew_super_hot_cold_dispenser.png"
+                  src="/dew_super_hot_cold_dispenser.webp"
                   alt="Manju Dew Super hot and cold dispenser"
                   loading="lazy"
                   className="w-full max-w-md h-auto object-contain drop-shadow-xl"
@@ -463,7 +463,7 @@ export default function About() {
               </motion.div>
               <motion.div {...reveal(0.1)} className="flex justify-center">
                 <img
-                  src="/dew_super_ro_plus.png"
+                  src="/dew_super_ro_plus.webp"
                   alt="Manju Dew Super RO purifier installation"
                   loading="lazy"
                   className="w-full max-w-md h-auto object-contain drop-shadow-xl"
