@@ -10,7 +10,15 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      const maybeDb = drizzle(process.env.DATABASE_URL);
+      let dbUrl = process.env.DATABASE_URL;
+      
+      // TiDB Serverless requires SSL for connections
+      if (dbUrl.includes("tidbcloud.com") && !dbUrl.includes("ssl=")) {
+        const separator = dbUrl.includes("?") ? "&" : "?";
+        dbUrl = `${dbUrl}${separator}ssl={"rejectUnauthorized":true}`;
+      }
+
+      const maybeDb = drizzle(dbUrl);
       _db = maybeDb;
     } catch (error: any) {
       console.warn("[Database] Failed to connect:", error.message || error);
