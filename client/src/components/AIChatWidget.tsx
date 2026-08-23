@@ -1,15 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Bot, User, Loader2, Sparkles, PhoneCall } from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
+
+const QUICK_PROMPTS = [
+  "⚡ Dew Motors E-Bikes",
+  "📺 Smart TV Prices",
+  "❄️ Inverter AC Specs",
+  "💧 RO Water Filters",
+  "💳 Installment Plans",
+];
 
 export default function AIChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +22,7 @@ export default function AIChatWidget() {
     {
       role: "assistant",
       content:
-        "Hi! I'm the Manju Group assistant. I can help you find products, compare specifications, and answer questions about our brands. How can I help you today?",
+        "👋 **Hello! Welcome to Manju Group Official AI Assistant.**\n\nI can help you with exact prices, technical specifications, installment plans, and warranties for all our genuine products:\n\n• ⚡ **Dew Motors Electric Bikes**\n• 📺 **Dew Plus 4K Smart TVs**\n• ❄️ **DEW+ Inverter ACs**\n• 💧 **Manju Dew Super Water Purifiers**\n\nHow can I help you today? (Ask in **English, සිංහල, or Singlish**!)",
     },
   ]);
   const [input, setInput] = useState("");
@@ -35,12 +40,12 @@ export default function AIChatWidget() {
 
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 100);
+      setTimeout(() => inputRef.current?.focus(), 150);
     }
   }, [isOpen]);
 
-  const handleSend = async () => {
-    const message = input.trim();
+  const handleSend = async (customMessage?: string) => {
+    const message = (customMessage || input).trim();
     if (!message || isLoading) return;
 
     const userMsg: Message = { role: "user", content: message };
@@ -63,7 +68,7 @@ export default function AIChatWidget() {
         {
           role: "assistant",
           content:
-            "Sorry, I'm having trouble connecting. Please try again or contact us at info@manjugroup.lk.",
+            "Sorry, I'm having trouble connecting to the network right now. Please call our hotline directly at **+94 11 234 5678** or email **info@manjugroup.lk**.",
         },
       ]);
     } finally {
@@ -80,150 +85,161 @@ export default function AIChatWidget() {
 
   return (
     <>
-      {/* Chat Button */}
+      {/* Floating Chat Button (Positioned above Mobile Bottom Nav: bottom-20 on mobile, bottom-6 on desktop) */}
       <motion.button
+        type="button"
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-navy text-white shadow-lg flex items-center justify-center transition-all ${isOpen ? "scale-0 opacity-0" : "scale-100 opacity-100"}`}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        aria-label="Open chat assistant"
+        className={`fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-[#003875] via-[#0052B4] to-[#0070F3] text-white shadow-[0_8px_25px_rgba(0,82,180,0.5)] border-2 border-white/80 flex items-center justify-center transition-all cursor-pointer ${
+          isOpen ? "scale-0 opacity-0 pointer-events-none" : "scale-100 opacity-100"
+        }`}
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
+        aria-label="Open AI Assistant Chat"
+        title="Chat with Manju Group AI Assistant"
       >
-        <MessageCircle size={24} />
-        <span className="absolute -top-1 -right-1 w-4 h-4 bg-green rounded-full border-2 border-white" />
+        <MessageCircle size={24} className="text-white" />
+        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-white animate-pulse" />
       </motion.button>
 
-      {/* Chat Window */}
+      {/* Chat Window Modal */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.92, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-            className="fixed bottom-6 right-6 z-50 w-[360px] max-w-[calc(100vw-2rem)] h-[500px] max-h-[calc(100vh-6rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden"
+            className="fixed bottom-20 right-3 left-3 sm:left-auto sm:right-6 sm:w-[380px] h-[520px] max-h-[calc(100vh-7.5rem)] bg-white rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.25)] border border-slate-200 z-50 flex flex-col overflow-hidden font-sans"
           >
             {/* Header */}
-            <div className="flex items-center gap-3 p-4 bg-navy text-white">
-              <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
-                <Bot size={18} />
-              </div>
-              <div className="flex-1">
-                <div className="font-semibold text-sm">Manju Assistant</div>
-                <div className="text-xs text-white/70 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-green rounded-full" /> Online
+            <div className="flex items-center justify-between p-3.5 sm:p-4 bg-gradient-to-r from-[#003875] via-[#0052B4] to-[#003B7B] text-white shrink-0 shadow-sm">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center ring-1 ring-white/40">
+                  <Bot size={18} className="text-white" />
+                </div>
+                <div>
+                  <div className="font-extrabold text-xs sm:text-sm flex items-center gap-1.5">
+                    <span>Manju AI Assistant</span>
+                    <span className="text-[9px] bg-emerald-500 text-white font-black px-1.5 py-0.2 rounded-full uppercase">
+                      Live
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-blue-100 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" />
+                    <span>Always Online • 24/7 Support</span>
+                  </div>
                 </div>
               </div>
+
               <button
+                type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-white/20 transition-colors"
+                className="p-1.5 rounded-full bg-white/10 hover:bg-white/25 text-white transition-colors cursor-pointer"
+                aria-label="Close chat"
               >
-                <X size={16} />
+                <X size={17} />
               </button>
             </div>
 
-            {/* Messages */}
+            {/* Quick Prompt Chips */}
+            <div className="bg-slate-50 px-3 py-2 border-b border-slate-100 overflow-x-auto no-scrollbar flex items-center gap-1.5 shrink-0">
+              {QUICK_PROMPTS.map((prompt, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleSend(prompt)}
+                  className="shrink-0 px-2.5 py-1 text-[11px] font-bold text-[#0052B4] bg-blue-50/90 hover:bg-[#0052B4] hover:text-white border border-blue-200/80 rounded-full transition-all cursor-pointer"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+
+            {/* Messages Area */}
             <div
               ref={scrollRef}
-              className="flex-1 overflow-y-auto p-4 space-y-3"
+              className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 bg-slate-50/50"
             >
               {messages.map((msg, i) => (
                 <div
                   key={i}
-                  className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
+                  className={`flex gap-2 text-xs sm:text-[13px] ${
+                    msg.role === "user" ? "flex-row-reverse" : ""
+                  }`}
                 >
                   <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
                       msg.role === "assistant"
-                        ? "bg-navy text-white"
-                        : "bg-gray-200 text-gray-600"
+                        ? "bg-[#0052B4] text-white shadow-xs"
+                        : "bg-slate-700 text-white"
                     }`}
                   >
-                    {msg.role === "assistant" ? (
-                      <Bot size={14} />
-                    ) : (
-                      <User size={14} />
-                    )}
+                    {msg.role === "assistant" ? <Bot size={13} /> : <User size={13} />}
                   </div>
+
                   <div
-                    className={`max-w-[75%] px-3 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                      msg.role === "assistant"
-                        ? "bg-gray-100 text-gray-800 rounded-tl-sm"
-                        : "bg-navy text-white rounded-tr-sm"
+                    className={`p-3 rounded-2xl max-w-[82%] leading-relaxed shadow-xs ${
+                      msg.role === "user"
+                        ? "bg-[#0052B4] text-white rounded-br-none"
+                        : "bg-white text-slate-900 border border-slate-200/80 rounded-bl-none prose prose-sm"
                     }`}
+                    style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
                   >
                     {msg.content}
                   </div>
                 </div>
               ))}
+
               {isLoading && (
-                <div className="flex gap-2.5">
-                  <div className="w-7 h-7 rounded-full bg-navy text-white flex items-center justify-center flex-shrink-0">
-                    <Bot size={14} />
+                <div className="flex gap-2 items-center text-xs text-slate-500">
+                  <div className="w-6 h-6 rounded-full bg-[#0052B4] text-white flex items-center justify-center shrink-0">
+                    <Bot size={13} />
                   </div>
-                  <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1">
-                    <span
-                      className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
-                      style={{ animationDelay: "0ms" }}
-                    />
-                    <span
-                      className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
-                      style={{ animationDelay: "150ms" }}
-                    />
-                    <span
-                      className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
-                      style={{ animationDelay: "300ms" }}
-                    />
+                  <div className="bg-white p-2.5 rounded-2xl border border-slate-200 flex items-center gap-2 shadow-xs">
+                    <Loader2 size={13} className="animate-spin text-[#0052B4]" />
+                    <span className="font-medium text-slate-600">Generating expert response...</span>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Quick Prompts */}
-            {messages.length === 1 && (
-              <div className="px-4 pb-2 flex flex-wrap gap-1.5">
-                {[
-                  "Electric bikes",
-                  "Smart TVs",
-                  "Water filters",
-                  "AC units",
-                ].map(prompt => (
-                  <button
-                    key={prompt}
-                    onClick={() => {
-                      setInput(prompt);
-                      inputRef.current?.focus();
-                    }}
-                    className="text-xs px-3 py-1.5 rounded-full border border-navy/20 text-navy hover:bg-navy hover:text-white transition-colors"
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Input */}
-            <div className="p-3 border-t border-gray-100">
-              <div className="flex gap-2">
-                <Input
+            {/* Input Bar */}
+            <div className="p-2.5 sm:p-3 bg-white border-t border-slate-200 shrink-0">
+              <form
+                onSubmit={e => {
+                  e.preventDefault();
+                  handleSend();
+                }}
+                className="flex items-center gap-1.5"
+              >
+                <input
                   ref={inputRef}
+                  type="text"
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask about products..."
-                  className="flex-1 h-10 text-sm border-gray-200 focus:border-navy"
-                  disabled={isLoading}
+                  placeholder="Ask anything about products, prices, warranty..."
+                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-[#0052B4] focus:ring-1 focus:ring-[#0052B4] transition-all"
                 />
                 <button
-                  onClick={handleSend}
+                  type="submit"
                   disabled={!input.trim() || isLoading}
-                  className="w-10 h-10 rounded-lg bg-navy text-white flex items-center justify-center disabled:opacity-50 hover:bg-navy-light transition-colors flex-shrink-0"
+                  className="p-2 sm:p-2.5 rounded-xl bg-[#0052B4] hover:bg-[#00479e] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
+                  aria-label="Send message"
                 >
-                  {isLoading ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    <Send size={16} />
-                  )}
+                  <Send size={15} />
                 </button>
+              </form>
+
+              <div className="flex items-center justify-between mt-1.5 px-1 text-[10px] text-slate-400">
+                <span>Supports English, සිංහල &amp; Singlish</span>
+                <a
+                  href="tel:+94112345678"
+                  className="text-[#0052B4] font-bold hover:underline flex items-center gap-0.5"
+                >
+                  <PhoneCall size={10} />
+                  <span>Call: +94 11 234 5678</span>
+                </a>
               </div>
             </div>
           </motion.div>

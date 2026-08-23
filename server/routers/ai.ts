@@ -1,11 +1,10 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
-import { STATIC_PRODUCTS, STATIC_BRANDS } from "../../client/src/lib/staticData";
 
 const SYSTEM_PROMPT = `You are the official Senior AI Product Advisor for Manju Group (Manju Enterprises), Sri Lanka's premier multi-brand manufacturer and distributor with over 22 years of trusted excellence.
 
-You have deep technical and commercial knowledge about our 4 core brands and 18 products:
+You have deep technical, commercial, and customer service knowledge about our 4 core brands and complete product catalog:
 
 1. ⚡ Dew Motors - High-Performance Electric Bikes & Scooters:
    - Dew Motors EM005 2400W (LKR 680,000): 2400W high-torque motor, 72V 35Ah Lithium-ion battery, 80-100km range per full charge, top speed 70-80 km/h, digital LCD cluster, LED lights, dual disc brakes, tubeless tires, 2-year warranty on motor and battery. Direct fuel savings of over Rs. 12,000/month.
@@ -51,7 +50,7 @@ Guidelines:
 function generateExpertResponse(userQuery: string): string {
   const query = userQuery.toLowerCase().trim();
 
-  // 1. Electric Bikes & Scooters
+  // 1. Electric Bikes & Scooters (English, Sinhala, Singlish)
   if (
     query.includes("bike") ||
     query.includes("scooter") ||
@@ -62,7 +61,10 @@ function generateExpertResponse(userQuery: string): string {
     query.includes("battery") ||
     query.includes("range") ||
     query.includes("speed") ||
-    query.includes("charge")
+    query.includes("charge") ||
+    query.includes("බයික්") ||
+    query.includes("ස්කූටර්") ||
+    query.includes("පැට්‍රල්")
   ) {
     if (query.includes("em005") || query.includes("2400")) {
       return `⚡ **Dew Motors - EM005 2400W Electric Bike**\n\n` +
@@ -101,6 +103,7 @@ function generateExpertResponse(userQuery: string): string {
     query.includes("tv") ||
     query.includes("television") ||
     query.includes("screen") ||
+    query.includes("ටීවී") ||
     query.includes("32") ||
     query.includes("43") ||
     query.includes("55") ||
@@ -155,7 +158,8 @@ function generateExpertResponse(userQuery: string): string {
     query.includes("inverter") ||
     query.includes("cool") ||
     query.includes("ton") ||
-    query.includes("btu")
+    query.includes("btu") ||
+    query.includes("ඒසී")
   ) {
     return `❄️ **DEW+ Inverter Split Air Conditioners (R32 Eco Gas)**:\n\n` +
       `1. **DEW+ 1.0 Ton Inverter AC (12,000 BTU)** — **Rs. 165,000**\n` +
@@ -181,7 +185,9 @@ function generateExpertResponse(userQuery: string): string {
     query.includes("alkaline") ||
     query.includes("500l") ||
     query.includes("2500l") ||
-    query.includes("3000l")
+    query.includes("3000l") ||
+    query.includes("වතුර") ||
+    query.includes("ෆිල්ටර්")
   ) {
     return `💧 **Manju Dew Super Water Filtration Systems**:\n\n` +
       `🏠 **Residential RO Purifiers & Dispensers**:\n` +
@@ -200,7 +206,30 @@ function generateExpertResponse(userQuery: string): string {
       `✨ **Includes**: Free Water Quality Testing, Free Installation, 2-Year Warranty, and availability of all genuine spare parts!`;
   }
 
-  // 5. Company Info, Warranty, Installments, Delivery, Contact
+  // 5. Installment Plans & Prices (Sinhala / English)
+  if (
+    query.includes("installment") ||
+    query.includes("down payment") ||
+    query.includes("monthly") ||
+    query.includes("ගෙවන්න") ||
+    query.includes("වාරික") ||
+    query.includes("නයට") ||
+    query.includes("මිල") ||
+    query.includes("ගණන්") ||
+    query.includes("kiyada") ||
+    query.includes("ganan")
+  ) {
+    return `💳 **Manju Group Easy Monthly Installment Schemes**:\n\n` +
+      `We offer flexible monthly installment plans with minimum documentation:\n\n` +
+      `1. **Water Filters**: Down payment from Rs. 14,900 + Rs. 6,000/month (11 months)\n` +
+      `2. **32" Smart TV**: Down payment Rs. 10,000 + Rs. 6,200/month (12 months)\n` +
+      `3. **43" 4K Smart TV**: Down payment Rs. 15,000 + Rs. 9,150/month (12 months)\n` +
+      `4. **55" 4K Smart TV**: Down payment Rs. 25,000 + Rs. 14,550/month (12 months)\n` +
+      `5. **Credit Card 0% Interest**: Available for Commercial Bank, Sampath Bank, HNB, Seylan & BOC cards.\n\n` +
+      `📞 Call **+94 11 234 5678** or message us with your location to arrange your installment plan!`;
+  }
+
+  // 6. Company Info, Warranty, Delivery, Showrooms
   if (
     query.includes("company") ||
     query.includes("manju") ||
@@ -214,9 +243,8 @@ function generateExpertResponse(userQuery: string): string {
     query.includes("address") ||
     query.includes("delivery") ||
     query.includes("warranty") ||
-    query.includes("installment") ||
-    query.includes("payment") ||
-    query.includes("card")
+    query.includes("වොරන්ටි") ||
+    query.includes("කොහෙද")
   ) {
     return `🏢 **Manju Group of Companies (Manju Enterprises)**\n\n` +
       `Over **22+ years** of trusted manufacturing and commercial excellence in Sri Lanka!\n\n` +
