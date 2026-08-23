@@ -17,9 +17,10 @@ import {
   Info,
   ShieldCheck,
   ShoppingBag,
+  ShoppingCart,
 } from "lucide-react";
 import { STATIC_PRODUCTS } from "@/lib/staticData";
-import { cleanText } from "@/lib/data";
+import { useCart } from "@/contexts/CartContext";
 
 const CATEGORY_ITEMS = [
   { label: "Electric Bikes", href: "/products?categoryId=1", icon: Zap, color: "text-amber-400" },
@@ -37,6 +38,7 @@ const BRAND_ITEMS = [
 
 export default function Header() {
   const [location, navigate] = useLocation();
+  const { itemCount, openDrawer } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -76,7 +78,7 @@ export default function Header() {
       const pSku = (p.sku || "").toLowerCase();
       const combined = `${pName} ${pBrand} ${pDesc} ${pSku}`;
 
-      // Exclude stationery/exercise books just in case
+      // Exclude stationery
       if (
         pName.includes("exercise") ||
         pName.includes("drawing book") ||
@@ -99,46 +101,43 @@ export default function Header() {
 
   return (
     <>
-      <header className="w-full flex flex-col z-50 fixed top-0 left-0 right-0 shadow-lg font-sans">
-        {/* ── Top Bar — Official Brand Royal Blue ──────────────────── */}
-        <div className="bg-gradient-to-r from-[#003875] via-[#0052B4] to-[#003B7B] text-white w-full px-3 sm:px-4 md:px-8 h-[60px] sm:h-[66px] flex items-center justify-between gap-3 sm:gap-4 md:gap-8 border-b border-[#004899]/60 relative">
-          
-          {/* 1. Official Brand Logo */}
+      <header className="w-full flex flex-col z-50 fixed top-0 left-0 right-0 shadow-lg font-sans bg-gradient-to-r from-[#003875] via-[#0052B4] to-[#003B7B] border-b border-[#004899]/60">
+        {/* ── DESKTOP HEADER (md:flex) ──────────────────────────── */}
+        <div className="hidden md:flex text-white w-full px-4 md:px-8 h-[66px] items-center justify-between gap-6 relative">
+          {/* Logo */}
           <Link
             href="/"
-            className="flex-shrink-0 flex items-center gap-2 sm:gap-3 group transition-transform duration-200 active:scale-95 cursor-pointer"
+            className="flex-shrink-0 flex items-center gap-3 group transition-transform duration-200 active:scale-95 cursor-pointer"
           >
             <div className="relative">
               <img
                 src="/manju-logo.png"
                 alt="Manju Group Official Logo"
-                className="h-9 w-9 sm:h-11 sm:w-11 md:h-12 md:w-12 rounded-full object-contain bg-[#0052B4] ring-2 ring-white/90 shadow-md group-hover:ring-white transition-all duration-300"
+                className="h-11 w-11 md:h-12 md:w-12 rounded-full object-contain bg-[#0052B4] ring-2 ring-white/90 shadow-md group-hover:ring-white transition-all duration-300"
               />
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-1">
                 <span
-                  className="text-white text-[16px] sm:text-[20px] md:text-[23px] font-black tracking-tight leading-none uppercase drop-shadow-sm"
+                  className="text-white text-[20px] md:text-[23px] font-black tracking-tight leading-none uppercase drop-shadow-sm"
                   style={{ fontFamily: "'Montserrat', 'Inter', sans-serif" }}
                 >
-                  MANJU{" "}
-                  <span className="text-[#60A5FA] font-extrabold">GROUP</span>
+                  MANJU <span className="text-[#60A5FA] font-extrabold">GROUP</span>
                 </span>
               </div>
-              <span className="hidden xs:flex text-[9px] sm:text-[10px] md:text-[11px] text-blue-100/90 font-medium tracking-[0.14em] uppercase mt-0.5 items-center gap-1">
-                <span>Excellence &amp; Trust</span>
+              <span className="text-[10px] md:text-[11px] text-blue-100/90 font-medium tracking-[0.14em] uppercase mt-0.5">
+                Excellence &amp; Trust
               </span>
             </div>
           </Link>
 
-          {/* 2. Smart Professional Search Bar with Real-Time Dropdown */}
-          <div ref={searchContainerRef} className="flex-1 max-w-[640px] relative z-50">
-            <div className="flex items-center h-[38px] sm:h-[42px] rounded-xl overflow-hidden bg-white shadow-md border border-blue-200/50 focus-within:ring-2 focus-within:ring-blue-400 transition-all">
+          {/* Desktop Search Bar */}
+          <div ref={searchContainerRef} className="flex-1 max-w-[620px] relative z-50">
+            <div className="flex items-center h-[42px] rounded-xl overflow-hidden bg-white shadow-md border border-blue-200/50 focus-within:ring-2 focus-within:ring-blue-400 transition-all">
               <input
                 type="text"
                 placeholder="Search electric bikes, smart TVs, ACs, water filters..."
-                className="flex-1 h-full px-3 sm:px-4 text-[12px] sm:text-[14px] outline-none placeholder:text-gray-400 font-medium min-w-0"
-                style={{ color: "#0f172a", backgroundColor: "#ffffff" }}
+                className="flex-1 h-full px-4 text-[14px] outline-none placeholder:text-gray-400 font-medium min-w-0 text-slate-900 bg-white"
                 value={searchQuery}
                 onChange={e => {
                   setSearchQuery(e.target.value);
@@ -146,40 +145,30 @@ export default function Header() {
                 }}
                 onFocus={() => setIsSearchFocused(true)}
                 onKeyDown={e => {
-                  if (e.key === "Enter") {
-                    handleSearchSubmit();
-                  }
-                  if (e.key === "Escape") {
-                    setIsSearchFocused(false);
-                  }
+                  if (e.key === "Enter") handleSearchSubmit();
+                  if (e.key === "Escape") setIsSearchFocused(false);
                 }}
               />
-
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
                   className="px-2 text-gray-400 hover:text-gray-600 transition-colors"
-                  aria-label="Clear search"
                 >
                   <X size={15} />
                 </button>
               )}
-
               <button
                 type="button"
                 onClick={() => handleSearchSubmit()}
-                aria-label="Search"
-                className="h-full px-3.5 sm:px-5 bg-gradient-to-r from-[#F85606] to-[#d64700] hover:from-[#ff641a] hover:to-[#e04d00] text-white flex items-center justify-center transition-all shrink-0 font-bold text-xs gap-1.5 shadow-sm cursor-pointer"
+                className="h-full px-5 bg-gradient-to-r from-[#F85606] to-[#d64700] hover:from-[#ff641a] hover:to-[#e04d00] text-white flex items-center justify-center transition-all shrink-0 font-bold text-xs gap-1.5 shadow-sm cursor-pointer"
               >
-                <Search size={16} strokeWidth={2.5} className="sm:w-[18px] sm:h-[18px]" />
-                <span className="hidden md:inline font-bold text-xs tracking-wider text-white uppercase">
-                  Search
-                </span>
+                <Search size={16} strokeWidth={2.5} />
+                <span className="font-bold text-xs tracking-wider uppercase">Search</span>
               </button>
             </div>
 
-            {/* Instant Live Search Results Popup */}
+            {/* Live Search Results Popup */}
             {isSearchFocused && searchQuery.trim().length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50 text-slate-900 animate-in fade-in-50 zoom-in-95 duration-150">
                 <div className="p-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
@@ -189,7 +178,6 @@ export default function Header() {
                   </span>
                   <span className="text-[10px] text-slate-400">Press Enter to view all</span>
                 </div>
-
                 {searchSuggestions.length > 0 ? (
                   <div className="divide-y divide-slate-100 max-h-[320px] overflow-y-auto">
                     {searchSuggestions.map(product => (
@@ -223,10 +211,9 @@ export default function Header() {
                   </div>
                 ) : (
                   <div className="p-5 text-center text-xs text-slate-500">
-                    No matching products found for "{searchQuery}". Try searching for <strong>E-Bike</strong>, <strong>Smart TV</strong>, <strong>AC</strong>, or <strong>Water Filter</strong>.
+                    No matching products found for "{searchQuery}".
                   </div>
                 )}
-
                 <button
                   type="button"
                   onClick={() => handleSearchSubmit()}
@@ -239,29 +226,192 @@ export default function Header() {
             )}
           </div>
 
-          {/* 3. 3-Lines Hamburger Menu Button (Iri keli thuna) */}
-          <div className="flex items-center shrink-0">
+          {/* Desktop Right Actions */}
+          <div className="flex items-center gap-3 shrink-0">
+            <a
+              href="tel:+94112345678"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors"
+            >
+              <PhoneCall size={14} className="text-emerald-400" />
+              <span>+94 11 234 5678</span>
+            </a>
+
+            <button
+              type="button"
+              onClick={openDrawer}
+              className="relative p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+              title="Cart"
+            >
+              <ShoppingCart size={20} />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#F85606] text-white text-[10px] font-black px-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full shadow-md">
+                  {itemCount}
+                </span>
+              )}
+            </button>
+
+            {/* Desktop 3-Lines Menu Button */}
             <button
               type="button"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 sm:p-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/20 flex items-center gap-1.5 cursor-pointer shadow-md"
-              title={isMenuOpen ? "Close Menu" : "Open Navigation Menu"}
-              aria-label="Toggle Menu"
+              className="px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 transition-all text-white border border-white/20 flex items-center gap-2 cursor-pointer shadow-sm"
+              title="Open Navigation Menu"
             >
-              {isMenuOpen ? (
-                <X size={22} className="text-white animate-in spin-in-90 duration-200" />
-              ) : (
-                <Menu size={22} className="text-white" strokeWidth={2.4} />
-              )}
-              <span className="hidden md:inline font-extrabold text-xs tracking-wider uppercase">
-                Menu
-              </span>
+              <Menu size={20} strokeWidth={2.4} />
+              <span className="font-extrabold text-xs tracking-wider uppercase">Menu</span>
             </button>
+          </div>
+        </div>
+
+        {/* ── MOBILE HEADER (< md) ────────────────────────────────── */}
+        <div className="md:hidden flex flex-col w-full text-white px-3 py-2 space-y-2">
+          {/* Row 1: ☰ Menu Button + Logo + Right Actions */}
+          <div className="flex items-center justify-between gap-2 h-[42px]">
+            {/* Left: 3-Lines Hamburger Menu Button + Logo */}
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setIsMenuOpen(true)}
+                className="p-2 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 text-white border border-white/25 shadow-sm flex items-center justify-center cursor-pointer"
+                aria-label="Open Navigation Menu"
+                title="Navigation Menu"
+              >
+                <Menu size={22} strokeWidth={2.5} className="text-white" />
+              </button>
+
+              <Link href="/" className="flex items-center gap-2 active:scale-95 transition-transform">
+                <img
+                  src="/manju-logo.png"
+                  alt="Manju Logo"
+                  className="w-8 h-8 rounded-full object-contain bg-[#0052B4] ring-2 ring-white/90 shadow-sm"
+                />
+                <span
+                  className="text-white text-[17px] font-black tracking-tight leading-none uppercase"
+                  style={{ fontFamily: "'Montserrat', 'Inter', sans-serif" }}
+                >
+                  MANJU <span className="text-[#60A5FA] font-extrabold">GROUP</span>
+                </span>
+              </Link>
+            </div>
+
+            {/* Right: Hotline Call + Cart Badge */}
+            <div className="flex items-center gap-1.5">
+              <a
+                href="tel:+94112345678"
+                className="p-2 rounded-xl bg-emerald-600/90 text-white flex items-center justify-center shadow-sm active:scale-95"
+                title="Call Hotline"
+              >
+                <PhoneCall size={16} />
+              </a>
+
+              <button
+                type="button"
+                onClick={openDrawer}
+                className="relative p-2 rounded-xl bg-white/15 text-white flex items-center justify-center active:scale-95 cursor-pointer"
+                title="Cart"
+              >
+                <ShoppingCart size={17} />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#F85606] text-white text-[9px] font-black min-w-[16px] h-[16px] flex items-center justify-center rounded-full">
+                    {itemCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Row 2: Full-Width Search Input with Dropdown */}
+          <div ref={searchContainerRef} className="w-full relative z-40">
+            <div className="flex items-center h-[38px] rounded-xl overflow-hidden bg-white shadow-md border border-blue-200/50">
+              <input
+                type="text"
+                placeholder="Search bikes, smart TVs, ACs, water filters..."
+                className="flex-1 h-full px-3 text-[13px] outline-none placeholder:text-gray-400 font-medium text-slate-900 bg-white min-w-0"
+                value={searchQuery}
+                onChange={e => {
+                  setSearchQuery(e.target.value);
+                  setIsSearchFocused(true);
+                }}
+                onFocus={() => setIsSearchFocused(true)}
+                onKeyDown={e => {
+                  if (e.key === "Enter") handleSearchSubmit();
+                  if (e.key === "Escape") setIsSearchFocused(false);
+                }}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="px-2 text-gray-400"
+                >
+                  <X size={14} />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => handleSearchSubmit()}
+                className="h-full px-3.5 bg-gradient-to-r from-[#F85606] to-[#d64700] text-white flex items-center justify-center font-bold text-xs shrink-0"
+              >
+                <Search size={15} strokeWidth={2.5} />
+              </button>
+            </div>
+
+            {/* Live Search Results Popup for Mobile */}
+            {isSearchFocused && searchQuery.trim().length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50 text-slate-900 animate-in fade-in-50 duration-150">
+                <div className="p-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                  <span className="flex items-center gap-1">
+                    <Sparkles size={12} className="text-[#F85606]" />
+                    Matching Products ({searchSuggestions.length})
+                  </span>
+                  <span className="text-[10px] text-slate-400">Press Enter</span>
+                </div>
+                {searchSuggestions.length > 0 ? (
+                  <div className="divide-y divide-slate-100 max-h-[260px] overflow-y-auto">
+                    {searchSuggestions.map(product => (
+                      <Link
+                        key={product.id}
+                        href={`/products/${product.slug}`}
+                        onClick={() => setIsSearchFocused(false)}
+                        className="flex items-center gap-2.5 p-2.5 hover:bg-blue-50 transition-colors"
+                      >
+                        <img
+                          src={product.imageUrl || "/manju-logo.png"}
+                          alt={product.name}
+                          className="w-9 h-9 object-contain rounded-lg bg-white border border-slate-200 p-0.5 shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <span className="font-bold text-xs text-slate-900 truncate block">
+                            {product.name}
+                          </span>
+                          <span className="text-xs font-black text-[#F85606] block">
+                            Rs. {Number(product.salePrice || product.basePrice).toLocaleString()}
+                          </span>
+                        </div>
+                        <ChevronRight size={14} className="text-slate-400 shrink-0" />
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-xs text-slate-500">
+                    No results for "{searchQuery}".
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleSearchSubmit()}
+                  className="w-full py-2 bg-slate-100 text-slate-700 text-xs font-bold transition-colors flex items-center justify-center gap-1 border-t border-slate-200"
+                >
+                  <span>View all results</span>
+                  <ChevronRight size={12} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
-      {/* ── Slide-Out Full Navigation Menu Drawer (iri keli thuna click kalama ena drawer eka) ── */}
+      {/* ── Slide-Out Full Navigation Menu Drawer ────────────────── */}
       <AnimatePresence>
         {isMenuOpen && (
           <>
@@ -275,17 +425,17 @@ export default function Header() {
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
             />
 
-            {/* Slide-in Drawer */}
+            {/* Slide-in Drawer from Left */}
             <motion.aside
-              initial={{ x: "100%" }}
+              initial={{ x: "-100%" }}
               animate={{ x: 0 }}
-              exit={{ x: "100%" }}
+              exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 280 }}
-              className="fixed top-0 right-0 bottom-0 w-full max-w-[340px] sm:max-w-[380px] bg-white text-slate-900 shadow-2xl z-50 flex flex-col justify-between overflow-y-auto no-scrollbar font-sans border-l border-slate-200"
+              className="fixed top-0 left-0 bottom-0 w-full max-w-[320px] sm:max-w-[360px] bg-white text-slate-900 shadow-2xl z-50 flex flex-col justify-between overflow-y-auto no-scrollbar font-sans border-r border-slate-200"
             >
               {/* Drawer Top Header */}
               <div>
-                <div className="bg-gradient-to-r from-[#003875] to-[#0052B4] text-white p-4 sm:p-5 flex items-center justify-between shadow-sm">
+                <div className="bg-gradient-to-r from-[#003875] to-[#0052B4] text-white p-4 flex items-center justify-between shadow-sm">
                   <div className="flex items-center gap-2.5">
                     <img
                       src="/manju-logo.png"
@@ -317,7 +467,7 @@ export default function Header() {
                   {/* Main Pages */}
                   <div>
                     <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block mb-2 px-2">
-                      Main Menu
+                      Main Pages
                     </span>
                     <div className="space-y-1">
                       {[
@@ -431,8 +581,8 @@ export default function Header() {
         )}
       </AnimatePresence>
 
-      {/* Spacer to prevent content from going under fixed header */}
-      <div className="h-[60px] sm:h-[66px] w-full shrink-0"></div>
+      {/* Spacer to prevent content from slipping under fixed header */}
+      <div className="h-[96px] md:h-[66px] w-full shrink-0"></div>
     </>
   );
 }
