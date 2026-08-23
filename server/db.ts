@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import * as mysql from "mysql2/promise";
 import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -18,7 +19,10 @@ export async function getDb() {
         dbUrl = `${dbUrl}${separator}ssl={"rejectUnauthorized":true}`;
       }
 
-      const maybeDb = drizzle(dbUrl);
+      const poolConnection = mysql.createPool({
+        uri: dbUrl,
+      });
+      const maybeDb = drizzle(poolConnection);
       _db = maybeDb;
     } catch (error: any) {
       console.warn("[Database] Failed to connect:", error.message || error);
