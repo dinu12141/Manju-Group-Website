@@ -4,7 +4,6 @@ const config: CapacitorConfig = {
   appId: "lk.manjugroup.app",
   appName: "Manju Group",
   webDir: "dist/public",
-  bundledWebRuntime: false,
   server: {
     androidScheme: "https",
     cleartext: true,

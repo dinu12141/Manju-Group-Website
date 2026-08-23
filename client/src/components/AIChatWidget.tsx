@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, Bot, User, Loader2, Sparkles, PhoneCall } from "lucide-react";
 import { trpc } from "@/lib/trpc";
@@ -17,6 +18,7 @@ const QUICK_PROMPTS = [
 ];
 
 export default function AIChatWidget() {
+  const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
