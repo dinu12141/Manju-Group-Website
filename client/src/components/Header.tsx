@@ -88,6 +88,20 @@ export default function Header() {
     setIsSearchFocused(false);
   }, [location]);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      const originalOverflow = document.body.style.overflow;
+      const originalTouchAction = document.body.style.touchAction;
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.touchAction = originalTouchAction;
+      };
+    }
+  }, [isMenuOpen]);
+
   // Handle outside click to close search dropdown
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -620,137 +634,149 @@ export default function Header() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 280 }}
-              className="fixed top-0 left-0 bottom-0 w-full max-w-[320px] sm:max-w-[360px] bg-white text-slate-900 shadow-2xl z-50 flex flex-col justify-between overflow-y-auto no-scrollbar font-sans border-r border-slate-200 md:hidden"
+              className="fixed top-0 left-0 bottom-0 w-full max-w-[320px] sm:max-w-[360px] bg-white text-slate-900 shadow-2xl z-50 flex flex-col font-sans border-r border-slate-200 md:hidden"
+              style={{
+                touchAction: "pan-y",
+                overscrollBehavior: "contain",
+              }}
+              onTouchMove={e => e.stopPropagation()}
+              onWheel={e => e.stopPropagation()}
             >
-              {/* Drawer Top Header */}
-              <div>
-                <div className="bg-gradient-to-r from-[#003875] to-[#0052B4] text-white p-4 flex items-center justify-between shadow-sm">
-                  <div className="flex items-center gap-2.5">
-                    <img
-                      src="/manju-logo.png"
-                      alt="Manju Logo"
-                      className="w-9 h-9 rounded-full bg-white/20 p-0.5 ring-1 ring-white/50"
-                    />
-                    <div>
-                      <h3 className="font-black text-sm uppercase tracking-tight">
-                        Manju Group
-                      </h3>
-                      <p className="text-[10px] text-blue-100 font-medium">
-                        Navigation &amp; Services
-                      </p>
-                    </div>
+              {/* Drawer Top Header (Fixed at top) */}
+              <div className="bg-gradient-to-r from-[#003875] to-[#0052B4] text-white p-4 flex items-center justify-between shadow-sm shrink-0 pt-[max(env(safe-area-inset-top,0px),16px)]">
+                <div className="flex items-center gap-2.5">
+                  <img
+                    src="/manju-logo.png"
+                    alt="Manju Logo"
+                    className="w-9 h-9 rounded-full bg-white/20 p-0.5 ring-1 ring-white/50"
+                  />
+                  <div>
+                    <h3 className="font-black text-sm uppercase tracking-tight">
+                      Manju Group
+                    </h3>
+                    <p className="text-[10px] text-blue-100 font-medium">
+                      Navigation &amp; Services
+                    </p>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="p-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors cursor-pointer"
-                    aria-label="Close menu"
-                  >
-                    <X size={18} />
-                  </button>
                 </div>
 
-                {/* Navigation Links */}
-                <div className="p-4 space-y-5">
-                  {/* Main Pages */}
-                  <div>
-                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block mb-2 px-2">
-                      Main Pages
+                <button
+                  type="button"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="p-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors cursor-pointer"
+                  aria-label="Close menu"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Scrollable Navigation Area (Takes full available height and scrolls smoothly) */}
+              <div
+                className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-5"
+                style={{
+                  WebkitOverflowScrolling: "touch",
+                  touchAction: "pan-y",
+                }}
+                onTouchMove={e => e.stopPropagation()}
+                onWheel={e => e.stopPropagation()}
+              >
+                {/* Main Pages */}
+                <div>
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block mb-2 px-2">
+                    Main Pages
+                  </span>
+                  <div className="space-y-1">
+                    {[
+                      { href: "/", label: "Home", icon: Sparkles },
+                      { href: "/products", label: "All Products", icon: ShoppingBag },
+                      { href: "/brands", label: "Our Brands", icon: Zap },
+                      { href: "/about", label: "About Us", icon: Info },
+                      { href: "/locations", label: "Showrooms & Branches", icon: MapPin },
+                      { href: "/contact", label: "Contact Us & Support", icon: PhoneCall },
+                    ].map(item => {
+                      const IconComp = item.icon;
+                      const isActive = location === item.href;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setIsMenuOpen(false)}
+                          className={`flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all ${
+                            isActive
+                              ? "bg-[#0052B4] text-white shadow-sm"
+                              : "text-slate-700 hover:bg-slate-100 hover:text-[#0052B4]"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <IconComp size={16} className={isActive ? "text-white" : "text-[#0052B4]"} />
+                            <span>{item.label}</span>
+                          </div>
+                          <ChevronRight size={14} className={isActive ? "text-white" : "text-slate-400"} />
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Shop by Category - Luxury Cards */}
+                <div>
+                  <div className="flex items-center justify-between mb-2.5 px-2">
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                      Explore Categories
                     </span>
-                    <div className="space-y-1">
-                      {[
-                        { href: "/", label: "Home", icon: Sparkles },
-                        { href: "/products", label: "All Products", icon: ShoppingBag },
-                        { href: "/brands", label: "Our Brands", icon: Zap },
-                        { href: "/about", label: "About Us", icon: Info },
-                        { href: "/locations", label: "Showrooms & Branches", icon: MapPin },
-                        { href: "/contact", label: "Contact Us & Support", icon: PhoneCall },
-                      ].map(item => {
-                        const IconComp = item.icon;
-                        const isActive = location === item.href;
-                        return (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={() => setIsMenuOpen(false)}
-                            className={`flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all ${
-                              isActive
-                                ? "bg-[#0052B4] text-white shadow-sm"
-                                : "text-slate-700 hover:bg-slate-100 hover:text-[#0052B4]"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5">
-                              <IconComp size={16} className={isActive ? "text-white" : "text-[#0052B4]"} />
-                              <span>{item.label}</span>
-                            </div>
-                            <ChevronRight size={14} className={isActive ? "text-white" : "text-slate-400"} />
-                          </Link>
-                        );
-                      })}
-                    </div>
+                    <span className="text-[10px] text-[#0052B4] font-bold">
+                      4 Product Lines
+                    </span>
                   </div>
 
-                  {/* Shop by Category - Luxury Cards */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2.5 px-2">
-                      <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                        Explore Categories
-                      </span>
-                      <span className="text-[10px] text-[#0052B4] font-bold">
-                        4 Product Lines
-                      </span>
-                    </div>
-
-                    <div className="space-y-2">
-                      {CATEGORY_ITEMS.map(cat => {
-                        const Icon = cat.icon;
-                        return (
-                          <Link
-                            key={cat.href}
-                            href={cat.href}
-                            onClick={() => setIsMenuOpen(false)}
-                            className="group p-3 bg-slate-50 hover:bg-blue-50/90 border border-slate-200/80 hover:border-blue-300 rounded-2xl flex items-center justify-between gap-3 transition-all duration-200 shadow-xs hover:shadow-md cursor-pointer active:scale-98"
-                          >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div
-                                className={`w-10 h-10 rounded-xl flex items-center justify-center border shrink-0 transition-transform group-hover:scale-105 ${cat.iconBg}`}
-                              >
-                                <Icon size={20} strokeWidth={2.2} />
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-xs font-black text-slate-900 group-hover:text-[#0052B4] transition-colors truncate">
-                                    {cat.label}
-                                  </span>
-                                </div>
-                                <span className="text-[10px] text-slate-500 font-medium block truncate">
-                                  {cat.desc}
+                  <div className="space-y-2">
+                    {CATEGORY_ITEMS.map(cat => {
+                      const Icon = cat.icon;
+                      return (
+                        <Link
+                          key={cat.href}
+                          href={cat.href}
+                          onClick={() => setIsMenuOpen(false)}
+                          className="group p-3 bg-slate-50 hover:bg-blue-50/90 border border-slate-200/80 hover:border-blue-300 rounded-2xl flex items-center justify-between gap-3 transition-all duration-200 shadow-xs hover:shadow-md cursor-pointer active:scale-98"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div
+                              className={`w-10 h-10 rounded-xl flex items-center justify-center border shrink-0 transition-transform group-hover:scale-105 ${cat.iconBg}`}
+                            >
+                              <Icon size={20} strokeWidth={2.2} />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-black text-slate-900 group-hover:text-[#0052B4] transition-colors truncate">
+                                  {cat.label}
                                 </span>
                               </div>
-                            </div>
-
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <span
-                                className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${cat.badgeColor}`}
-                              >
-                                {cat.badge}
+                              <span className="text-[10px] text-slate-500 font-medium block truncate">
+                                {cat.desc}
                               </span>
-                              <ChevronRight
-                                size={15}
-                                className="text-slate-400 group-hover:text-[#0052B4] group-hover:translate-x-0.5 transition-all"
-                              />
                             </div>
-                          </Link>
-                        );
-                      })}
-                    </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span
+                              className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${cat.badgeColor}`}
+                            >
+                              {cat.badge}
+                            </span>
+                            <ChevronRight
+                              size={15}
+                              className="text-slate-400 group-hover:text-[#0052B4] group-hover:translate-x-0.5 transition-all"
+                            />
+                          </div>
+                        </Link>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
 
-              {/* Drawer Bottom Actions & Hotline */}
-              <div className="p-4 bg-slate-50 border-t border-slate-200 space-y-3">
+              {/* Drawer Bottom Actions & Hotline (Fixed at bottom) */}
+              <div className="p-4 bg-slate-50 border-t border-slate-200 space-y-3 shrink-0 pb-[max(env(safe-area-inset-bottom,0px),16px)]">
                 <a
                   href="tel:+94112345678"
                   className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95"
