@@ -158,7 +158,13 @@ export default function AIChatWidget() {
             {/* Messages Area */}
             <div
               ref={scrollRef}
-              className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 bg-slate-50/50"
+              className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-3 bg-slate-50/50 overscroll-contain touch-pan-y select-text"
+              style={{
+                WebkitOverflowScrolling: "touch",
+                overscrollBehavior: "contain",
+              }}
+              onWheel={e => e.stopPropagation()}
+              onTouchMove={e => e.stopPropagation()}
             >
               {messages.map((msg, i) => (
                 <div
