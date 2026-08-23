@@ -155,7 +155,10 @@ class SDKServer {
   }
 
   private getSessionSecret() {
-    const secret = ENV.cookieSecret;
+    const secret =
+      ENV.cookieSecret ||
+      process.env.JWT_SECRET ||
+      "manju-group-jwt-secret-key-32-chars-length-2026";
     return new TextEncoder().encode(secret);
   }
 
