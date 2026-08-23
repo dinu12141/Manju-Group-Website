@@ -12,7 +12,6 @@ export default function MobileBottomNav() {
     { href: "/", label: "Home", icon: Home, exact: true },
     { href: "/products", label: "Products", icon: Package },
     { href: "/brands", label: "Brands", icon: Layers },
-    { href: "/locations", label: "Showrooms", icon: MapPin },
     { href: "/account", label: isAuthenticated ? "Account" : "Sign In", icon: User },
   ];
 
@@ -65,6 +64,7 @@ export default function MobileBottomNav() {
           <span className="text-[10px] font-semibold tracking-tight">Cart</span>
         </button>
 
+        {/* Right Account / Sign In Button */}
         {navItems.slice(3).map(item => {
           const Icon = item.icon;
           const active = isActive(item.href, item.exact);
