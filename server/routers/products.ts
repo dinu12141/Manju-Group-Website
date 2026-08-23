@@ -262,14 +262,20 @@ export const productsRouter = router({
         conditions.push(eq(products.isNew, input.isNew));
       }
       if (input.search && input.search.trim()) {
-        const term = `%${input.search.trim()}%`;
-        conditions.push(
-          or(
-            like(products.name, term),
-            like(products.shortDescription, term),
-            like(products.description, term)
-          ) as SQL
-        );
+        const rawSearch = input.search.trim();
+        const words = rawSearch.split(/\s+/).filter(Boolean);
+        const searchConditions = words.map(w => {
+          const t = `%${w}%`;
+          return or(
+            like(products.name, t),
+            like(products.shortDescription, t),
+            like(products.description, t),
+            like(products.slug, t),
+            like(products.sku, t),
+            like(products.tags, t)
+          );
+        });
+        conditions.push(and(...searchConditions) as SQL);
       }
 
       const whereClause = and(...conditions);

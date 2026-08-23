@@ -1,58 +1,109 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/_core/hooks/useAuth";
-import { useCart } from "@/contexts/CartContext";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
-  ShoppingCart,
-  User,
-  ChevronDown,
+  Menu,
+  X,
+  ChevronRight,
+  PhoneCall,
   MapPin,
   Facebook,
-  Instagram,
-  Twitter,
-  Youtube,
-  PhoneCall,
+  Sparkles,
+  Zap,
+  Tv,
+  Wind,
+  Droplets,
+  Info,
+  ShieldCheck,
+  ShoppingBag,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { STATIC_PRODUCTS } from "@/lib/staticData";
+import { cleanText } from "@/lib/data";
+
+const CATEGORY_ITEMS = [
+  { label: "Electric Bikes", href: "/products?categoryId=1", icon: Zap, color: "text-amber-400" },
+  { label: "Smart TVs", href: "/products?categoryId=2", icon: Tv, color: "text-blue-400" },
+  { label: "Air Conditioners", href: "/products?categoryId=3", icon: Wind, color: "text-cyan-400" },
+  { label: "Water Purifiers", href: "/products?categoryId=4", icon: Droplets, color: "text-teal-400" },
+];
+
+const BRAND_ITEMS = [
+  { label: "Dew Motors", href: "/brands/dew-motors", desc: "Electric Mobility" },
+  { label: "Dew Plus", href: "/brands/dew-plus", desc: "Smart 4K Televisions" },
+  { label: "DEW+ AC", href: "/brands/dew-plus-ac", desc: "Inverter Cooling" },
+  { label: "Manju Dew Super", href: "/brands/manju-dew-super", desc: "RO Water Systems" },
+];
 
 export default function Header() {
   const [location, navigate] = useLocation();
-  const { user, isAuthenticated, logout } = useAuth();
-  const { itemCount, openDrawer } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+  // Close menu on page navigation
+  useEffect(() => {
+    setIsMenuOpen(false);
+    setIsSearchFocused(false);
+  }, [location]);
+
+  // Handle outside click to close search dropdown
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target as Node)
+      ) {
+        setIsSearchFocused(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  // Real-time search suggestions with multi-word token matching
+  const searchSuggestions = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q || q.length < 1) return [];
+
+    const terms = q.split(/\s+/).filter(Boolean);
+
+    return STATIC_PRODUCTS.filter(p => {
+      const pName = (p.name || "").toLowerCase();
+      const pBrand = (p.brandName || "").toLowerCase();
+      const pDesc = (p.shortDescription || "").toLowerCase();
+      const pSku = (p.sku || "").toLowerCase();
+      const combined = `${pName} ${pBrand} ${pDesc} ${pSku}`;
+
+      // Exclude stationery/exercise books just in case
+      if (
+        pName.includes("exercise") ||
+        pName.includes("drawing book") ||
+        pName.includes("ruled")
+      ) {
+        return false;
+      }
+
+      return terms.every(t => combined.includes(t));
+    }).slice(0, 6);
+  }, [searchQuery]);
+
+  const handleSearchSubmit = (overrideQuery?: string) => {
+    const q = (overrideQuery !== undefined ? overrideQuery : searchQuery).trim();
+    if (q) {
+      setIsSearchFocused(false);
+      navigate(`/products?search=${encodeURIComponent(q)}`);
     }
-  };
-
-  const navLinks = [
-    { href: "/", label: "Home", exact: true },
-    { href: "/products", label: "Products" },
-    { href: "/brands", label: "Brands" },
-    { href: "/about", label: "About Us" },
-    { href: "/locations", label: "Showrooms" },
-    { href: "/contact", label: "Contact" },
-  ];
-
-  const isLinkActive = (href: string, exact = false) => {
-    if (exact) return location === href;
-    return location === href || location.startsWith(`${href}/`);
   };
 
   return (
     <>
       <header className="w-full flex flex-col z-50 fixed top-0 left-0 right-0 shadow-lg font-sans">
-        {/* ── Top Bar — Brand Royal Blue ──────────────────────────── */}
-        <div className="bg-gradient-to-r from-[#003875] via-[#0052B4] to-[#003B7B] text-white w-full px-3 sm:px-4 md:px-8 h-[60px] sm:h-[66px] flex items-center justify-between gap-2.5 sm:gap-4 md:gap-8 border-b border-[#004899]/60">
-          {/* Official Brand Logo */}
+        {/* ── Top Bar — Official Brand Royal Blue ──────────────────── */}
+        <div className="bg-gradient-to-r from-[#003875] via-[#0052B4] to-[#003B7B] text-white w-full px-3 sm:px-4 md:px-8 h-[60px] sm:h-[66px] flex items-center justify-between gap-3 sm:gap-4 md:gap-8 border-b border-[#004899]/60 relative">
+          
+          {/* 1. Official Brand Logo */}
           <Link
             href="/"
             className="flex-shrink-0 flex items-center gap-2 sm:gap-3 group transition-transform duration-200 active:scale-95 cursor-pointer"
@@ -80,218 +131,308 @@ export default function Header() {
             </div>
           </Link>
 
-          {/* Search Bar */}
-          <div className="flex-1 max-w-[720px] flex items-center h-[38px] sm:h-[42px] rounded-lg overflow-hidden bg-white shadow-inner border border-blue-200/40 focus-within:ring-2 focus-within:ring-blue-300 transition-all">
-            <input
-              type="text"
-              placeholder="Search appliances, e-bikes..."
-              className="flex-1 h-full px-3 sm:px-4 text-[12px] sm:text-[14px] outline-none placeholder:text-gray-400 font-medium min-w-0"
-              style={{ color: "#0f172a", backgroundColor: "#ffffff" }}
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === "Enter") {
-                  handleSearch();
-                }
-              }}
-            />
-            <button
-              onClick={handleSearch}
-              aria-label="Search"
-              className="h-full px-3 sm:px-4 md:px-5 bg-gradient-to-r from-[#0052B4] to-[#003f8a] text-white flex items-center justify-center hover:from-[#00489e] hover:to-[#00336d] transition-all shrink-0 font-medium text-xs gap-1.5 shadow-sm cursor-pointer"
-            >
-              <Search size={16} strokeWidth={2.5} className="sm:w-[18px] sm:h-[18px]" />
-              <span className="hidden md:inline font-semibold text-xs tracking-wider text-white">
-                SEARCH
-              </span>
-            </button>
-          </div>
-
-          {/* Right Actions */}
-          <div className="flex items-center gap-2 sm:gap-4 md:gap-6 text-white shrink-0">
-            {/* Language Selector */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="hidden sm:flex items-center gap-1 text-[13px] font-semibold text-blue-100 hover:text-white transition-colors px-2 py-1 rounded hover:bg-white/10 cursor-pointer">
-                  <span className="text-white font-bold">English</span>
-                  <ChevronDown size={14} className="opacity-80 text-white" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="bg-white text-gray-900 rounded-xl shadow-xl border border-gray-100 mt-2 min-w-[150px] p-1 font-medium text-sm z-50"
-              >
-                <DropdownMenuItem className="cursor-default text-sm font-bold text-[#0052B4] bg-blue-50/80 rounded-lg px-3 py-2 flex items-center justify-between">
-                  <span>English</span>
-                  <span className="text-[10px] bg-[#0052B4] text-white px-1.5 py-0.5 rounded font-extrabold">Default</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled className="text-sm opacity-50 cursor-not-allowed rounded-lg px-3 py-2 text-gray-400 flex items-center justify-between">
-                  <span>Sinhala (සිංහල)</span>
-                  <span className="text-[9px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded font-semibold">Soon</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled className="text-sm opacity-50 cursor-not-allowed rounded-lg px-3 py-2 text-gray-400 flex items-center justify-between">
-                  <span>Tamil (தமிழ்)</span>
-                  <span className="text-[9px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded font-semibold">Soon</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Cart Button */}
-            <button
-              type="button"
-              onClick={openDrawer}
-              className="relative p-1.5 sm:p-2 rounded-full hover:bg-white/10 transition-colors flex items-center justify-center text-white cursor-pointer focus-visible:outline-none"
-              title="Shopping Cart"
-            >
-              <ShoppingCart
-                size={20}
-                strokeWidth={2.2}
-                className="text-white sm:w-[22px] sm:h-[22px]"
+          {/* 2. Smart Professional Search Bar with Real-Time Dropdown */}
+          <div ref={searchContainerRef} className="flex-1 max-w-[640px] relative z-50">
+            <div className="flex items-center h-[38px] sm:h-[42px] rounded-xl overflow-hidden bg-white shadow-md border border-blue-200/50 focus-within:ring-2 focus-within:ring-blue-400 transition-all">
+              <input
+                type="text"
+                placeholder="Search electric bikes, smart TVs, ACs, water filters..."
+                className="flex-1 h-full px-3 sm:px-4 text-[12px] sm:text-[14px] outline-none placeholder:text-gray-400 font-medium min-w-0"
+                style={{ color: "#0f172a", backgroundColor: "#ffffff" }}
+                value={searchQuery}
+                onChange={e => {
+                  setSearchQuery(e.target.value);
+                  setIsSearchFocused(true);
+                }}
+                onFocus={() => setIsSearchFocused(true)}
+                onKeyDown={e => {
+                  if (e.key === "Enter") {
+                    handleSearchSubmit();
+                  }
+                  if (e.key === "Escape") {
+                    setIsSearchFocused(false);
+                  }
+                }}
               />
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 text-[10px] sm:text-[11px] font-black px-1 min-w-[18px] sm:min-w-[20px] h-[18px] sm:h-[20px] flex items-center justify-center rounded-full shadow-md animate-in zoom-in-75">
-                  {itemCount}
-                </span>
-              )}
-            </button>
 
-            {/* Store Locations Link */}
-            <Link
-              href="/locations"
-              className="hidden sm:flex items-center justify-center p-2 rounded-full hover:bg-white/10 transition-colors text-white cursor-pointer"
-              title="Branches & Showrooms"
-            >
-              <MapPin size={21} strokeWidth={2.2} className="text-white" />
-            </Link>
-
-            {/* User Profile */}
-            {isAuthenticated ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-1.5 p-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-xs border border-white/40">
-                      {user?.name?.charAt(0).toUpperCase() || "U"}
-                    </div>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-52 bg-white text-gray-900 rounded-lg shadow-xl border border-gray-100 mt-2 p-1"
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="px-2 text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Clear search"
                 >
-                  <div className="px-3 py-2 border-b border-gray-100">
-                    <p className="font-semibold text-sm text-gray-900 truncate">
-                      {user?.name}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {user?.email}
-                    </p>
-                  </div>
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/account"
-                      className="cursor-pointer text-sm px-3 py-2 hover:bg-gray-100 rounded block text-gray-800"
-                    >
-                      My Account
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={logout}
-                    className="text-red-600 text-sm cursor-pointer hover:bg-red-50 rounded px-3 py-2 font-medium"
-                  >
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Link
-                href="/account"
-                className="flex items-center gap-1 text-xs font-semibold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors border border-white/20 cursor-pointer"
+                  <X size={15} />
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => handleSearchSubmit()}
+                aria-label="Search"
+                className="h-full px-3.5 sm:px-5 bg-gradient-to-r from-[#F85606] to-[#d64700] hover:from-[#ff641a] hover:to-[#e04d00] text-white flex items-center justify-center transition-all shrink-0 font-bold text-xs gap-1.5 shadow-sm cursor-pointer"
               >
-                <User size={15} className="text-white" />
-                <span className="hidden sm:inline text-white">Sign In</span>
-              </Link>
+                <Search size={16} strokeWidth={2.5} className="sm:w-[18px] sm:h-[18px]" />
+                <span className="hidden md:inline font-bold text-xs tracking-wider text-white uppercase">
+                  Search
+                </span>
+              </button>
+            </div>
+
+            {/* Instant Live Search Results Popup */}
+            {isSearchFocused && searchQuery.trim().length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50 text-slate-900 animate-in fade-in-50 zoom-in-95 duration-150">
+                <div className="p-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                  <span className="flex items-center gap-1">
+                    <Sparkles size={12} className="text-[#F85606]" />
+                    Matching Products ({searchSuggestions.length})
+                  </span>
+                  <span className="text-[10px] text-slate-400">Press Enter to view all</span>
+                </div>
+
+                {searchSuggestions.length > 0 ? (
+                  <div className="divide-y divide-slate-100 max-h-[320px] overflow-y-auto">
+                    {searchSuggestions.map(product => (
+                      <Link
+                        key={product.id}
+                        href={`/products/${product.slug}`}
+                        onClick={() => setIsSearchFocused(false)}
+                        className="flex items-center gap-3 p-2.5 hover:bg-blue-50/80 transition-colors cursor-pointer group"
+                      >
+                        <img
+                          src={product.imageUrl || "/manju-logo.png"}
+                          alt={product.name}
+                          className="w-10 h-10 object-contain rounded-lg bg-white border border-slate-200 p-0.5 shrink-0 group-hover:scale-105 transition-transform"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] font-black uppercase text-[#0052B4] bg-blue-50 px-1.5 py-0.2 rounded shrink-0">
+                              {product.brandName || "Manju"}
+                            </span>
+                            <span className="font-bold text-xs text-slate-900 truncate">
+                              {product.name}
+                            </span>
+                          </div>
+                          <span className="text-xs font-black text-[#F85606] mt-0.5 block">
+                            Rs. {Number(product.salePrice || product.basePrice).toLocaleString()}
+                          </span>
+                        </div>
+                        <ChevronRight size={15} className="text-slate-400 group-hover:text-[#0052B4] shrink-0" />
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-5 text-center text-xs text-slate-500">
+                    No matching products found for "{searchQuery}". Try searching for <strong>E-Bike</strong>, <strong>Smart TV</strong>, <strong>AC</strong>, or <strong>Water Filter</strong>.
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => handleSearchSubmit()}
+                  className="w-full py-2.5 bg-slate-100 hover:bg-[#0052B4] hover:text-white text-slate-700 text-xs font-bold transition-colors flex items-center justify-center gap-1 border-t border-slate-200"
+                >
+                  <span>See all search results for "{searchQuery}"</span>
+                  <ChevronRight size={13} />
+                </button>
+              </div>
             )}
           </div>
-        </div>
 
-        {/* ── Sub Navigation Bar ──────────────────────────────────── */}
-        <div
-          className="bg-white w-full px-2 sm:px-4 md:px-8 h-[44px] sm:h-[48px] flex items-center justify-between border-b border-gray-200 shadow-xs relative z-40 overflow-x-auto no-scrollbar"
-          style={{ color: "#1e293b", backgroundColor: "#ffffff" }}
-        >
-          {/* Left: Social Media Links */}
-          <div className="hidden md:flex items-center gap-2.5 pr-4 border-r border-gray-200 h-5 shrink-0">
-            <a
-              href="https://www.facebook.com/ManjuEnterprisesLK"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Facebook"
-              className="p-1 text-[#0052B4] hover:text-[#003875] hover:scale-115 transition-all cursor-pointer"
-              title="Manju Enterprises LK on Facebook"
+          {/* 3. 3-Lines Hamburger Menu Button (Iri keli thuna) */}
+          <div className="flex items-center shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 sm:p-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/20 flex items-center gap-1.5 cursor-pointer shadow-md"
+              title={isMenuOpen ? "Close Menu" : "Open Navigation Menu"}
+              aria-label="Toggle Menu"
             >
-              <Facebook size={16} />
-            </a>
-            <span
-              aria-label="Instagram"
-              className="p-1 text-slate-400 cursor-default select-none"
-              title="Instagram"
-            >
-              <Instagram size={16} />
-            </span>
-            <span
-              aria-label="Twitter"
-              className="p-1 text-slate-400 cursor-default select-none"
-              title="Twitter"
-            >
-              <Twitter size={16} />
-            </span>
-            <span
-              aria-label="YouTube"
-              className="p-1 text-slate-400 cursor-default select-none"
-              title="YouTube"
-            >
-              <Youtube size={16} />
-            </span>
-          </div>
-
-          {/* Center Navigation Links — Smooth Scroll & Clean Touch targets on mobile */}
-          <nav className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-1 h-full max-w-5xl mx-auto px-1 overflow-x-auto no-scrollbar scroll-smooth">
-            {navLinks.map(({ href, label, exact }) => {
-              const active = isLinkActive(href, exact);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`shrink-0 flex items-center justify-center py-1 sm:py-1.5 px-2.5 sm:px-3.5 rounded-lg sm:rounded-xl text-[12px] sm:text-[14px] font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
-                    active
-                      ? "bg-[#0052B4]/10 text-[#0052B4] border border-[#0052B4]/25 shadow-xs"
-                      : "text-slate-700 hover:bg-slate-100 hover:text-[#0052B4]"
-                  }`}
-                >
-                  <span style={{ color: active ? "#0052B4" : "#1e293b", fontWeight: active ? 800 : 700 }}>
-                    {label}
-                  </span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Right: Hotline / Customer Helpline - Direct Click to Call */}
-          <div className="hidden lg:flex items-center gap-2 pl-4 border-l border-gray-200 h-5 shrink-0">
-            <a
-              href="tel:+94112345678"
-              className="flex items-center gap-1.5 bg-blue-50 hover:bg-[#0052B4] text-[#0052B4] hover:text-white px-3 py-1 rounded-full border border-blue-200 text-[11px] font-extrabold transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer group"
-              title="Click to call Hotline"
-            >
-              <PhoneCall size={12} className="text-[#0052B4] group-hover:text-white transition-colors" />
-              <span>Hotline: +94 11 234 5678</span>
-            </a>
+              {isMenuOpen ? (
+                <X size={22} className="text-white animate-in spin-in-90 duration-200" />
+              ) : (
+                <Menu size={22} className="text-white" strokeWidth={2.4} />
+              )}
+              <span className="hidden md:inline font-extrabold text-xs tracking-wider uppercase">
+                Menu
+              </span>
+            </button>
           </div>
         </div>
       </header>
 
+      {/* ── Slide-Out Full Navigation Menu Drawer (iri keli thuna click kalama ena drawer eka) ── */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setIsMenuOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            />
+
+            {/* Slide-in Drawer */}
+            <motion.aside
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 280 }}
+              className="fixed top-0 right-0 bottom-0 w-full max-w-[340px] sm:max-w-[380px] bg-white text-slate-900 shadow-2xl z-50 flex flex-col justify-between overflow-y-auto no-scrollbar font-sans border-l border-slate-200"
+            >
+              {/* Drawer Top Header */}
+              <div>
+                <div className="bg-gradient-to-r from-[#003875] to-[#0052B4] text-white p-4 sm:p-5 flex items-center justify-between shadow-sm">
+                  <div className="flex items-center gap-2.5">
+                    <img
+                      src="/manju-logo.png"
+                      alt="Manju Logo"
+                      className="w-9 h-9 rounded-full bg-white/20 p-0.5 ring-1 ring-white/50"
+                    />
+                    <div>
+                      <h3 className="font-black text-sm uppercase tracking-tight">
+                        Manju Group
+                      </h3>
+                      <p className="text-[10px] text-blue-100 font-medium">
+                        Navigation &amp; Services
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="p-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors cursor-pointer"
+                    aria-label="Close menu"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                {/* Navigation Links */}
+                <div className="p-4 space-y-5">
+                  {/* Main Pages */}
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block mb-2 px-2">
+                      Main Menu
+                    </span>
+                    <div className="space-y-1">
+                      {[
+                        { href: "/", label: "Home", icon: Sparkles },
+                        { href: "/products", label: "All Products", icon: ShoppingBag },
+                        { href: "/brands", label: "Our Brands", icon: Zap },
+                        { href: "/about", label: "About Us", icon: Info },
+                        { href: "/locations", label: "Showrooms & Branches", icon: MapPin },
+                        { href: "/contact", label: "Contact Us & Support", icon: PhoneCall },
+                      ].map(item => {
+                        const IconComp = item.icon;
+                        const isActive = location === item.href;
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => setIsMenuOpen(false)}
+                            className={`flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all ${
+                              isActive
+                                ? "bg-[#0052B4] text-white shadow-sm"
+                                : "text-slate-700 hover:bg-slate-100 hover:text-[#0052B4]"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <IconComp size={16} className={isActive ? "text-white" : "text-[#0052B4]"} />
+                              <span>{item.label}</span>
+                            </div>
+                            <ChevronRight size={14} className={isActive ? "text-white" : "text-slate-400"} />
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Shop by Category */}
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block mb-2 px-2">
+                      Shop By Category
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {CATEGORY_ITEMS.map(cat => {
+                        const Icon = cat.icon;
+                        return (
+                          <Link
+                            key={cat.href}
+                            href={cat.href}
+                            onClick={() => setIsMenuOpen(false)}
+                            className="p-2.5 bg-slate-50 hover:bg-blue-50 border border-slate-200/80 rounded-xl flex items-center gap-2 text-xs font-bold text-slate-800 transition-colors"
+                          >
+                            <Icon size={15} className="text-[#0052B4] shrink-0" />
+                            <span className="truncate">{cat.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Official Brands */}
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block mb-2 px-2">
+                      Our 4 Brands
+                    </span>
+                    <div className="space-y-1.5">
+                      {BRAND_ITEMS.map(b => (
+                        <Link
+                          key={b.href}
+                          href={b.href}
+                          onClick={() => setIsMenuOpen(false)}
+                          className="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200/70 rounded-xl flex items-center justify-between text-xs font-bold text-slate-800 transition-colors"
+                        >
+                          <div>
+                            <span className="text-slate-900 block">{b.label}</span>
+                            <span className="text-[10px] text-slate-400 font-medium">{b.desc}</span>
+                          </div>
+                          <ChevronRight size={13} className="text-slate-400" />
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Drawer Bottom Actions & Hotline */}
+              <div className="p-4 bg-slate-50 border-t border-slate-200 space-y-3">
+                <a
+                  href="tel:+94112345678"
+                  className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95"
+                >
+                  <PhoneCall size={14} />
+                  <span>Call Hotline: +94 11 234 5678</span>
+                </a>
+
+                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+                  <div className="flex items-center gap-1 font-semibold">
+                    <ShieldCheck size={14} className="text-blue-600" />
+                    <span>Official Manju Portal</span>
+                  </div>
+                  <a
+                    href="https://www.facebook.com/ManjuEnterprisesLK"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#0052B4] font-bold hover:underline flex items-center gap-1"
+                  >
+                    <Facebook size={13} />
+                    <span>Facebook</span>
+                  </a>
+                </div>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Spacer to prevent content from going under fixed header */}
-      <div className="h-[104px] sm:h-[114px] w-full shrink-0"></div>
+      <div className="h-[60px] sm:h-[66px] w-full shrink-0"></div>
     </>
   );
 }
