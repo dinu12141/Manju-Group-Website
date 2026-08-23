@@ -468,40 +468,28 @@ export default function Header() {
             MOBILE HEADER (< md): 2-Row Optimized Header with ☰ Menu
         ══════════════════════════════════════════════════════════════ */}
         <div className="md:hidden flex flex-col w-full text-white px-3.5 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2.5 space-y-2 bg-gradient-to-r from-[#003875] via-[#0052B4] to-[#003B7B] border-b border-[#004899]/60 shadow-md">
-          {/* Row 1: ☰ Menu Button + Logo + Right Actions */}
+          {/* Row 1: Logo on Left + Hotline Call & ☰ Menu Button on Right */}
           <div className="flex items-center justify-between gap-2 h-[42px]">
-            {/* Left: 3-Lines Hamburger Menu Button + Logo */}
-            <div className="flex items-center gap-2.5">
-              <button
-                type="button"
-                onClick={() => setIsMenuOpen(true)}
-                className="p-2 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 text-white border border-white/25 shadow-sm flex items-center justify-center cursor-pointer"
-                aria-label="Open Navigation Menu"
-                title="Navigation Menu"
+            {/* Left: Brand Logo & Title */}
+            <Link href="/" className="flex items-center gap-2 active:scale-95 transition-transform">
+              <img
+                src="/manju-logo.png"
+                alt="Manju Logo"
+                className="w-8 h-8 rounded-full object-contain bg-[#0052B4] ring-2 ring-white/90 shadow-sm"
+              />
+              <span
+                className="text-white text-[17px] font-black tracking-tight leading-none uppercase"
+                style={{ fontFamily: "'Montserrat', 'Inter', sans-serif" }}
               >
-                <Menu size={22} strokeWidth={2.5} className="text-white" />
-              </button>
+                MANJU <span className="text-[#60A5FA] font-extrabold">GROUP</span>
+              </span>
+            </Link>
 
-              <Link href="/" className="flex items-center gap-2 active:scale-95 transition-transform">
-                <img
-                  src="/manju-logo.png"
-                  alt="Manju Logo"
-                  className="w-8 h-8 rounded-full object-contain bg-[#0052B4] ring-2 ring-white/90 shadow-sm"
-                />
-                <span
-                  className="text-white text-[17px] font-black tracking-tight leading-none uppercase"
-                  style={{ fontFamily: "'Montserrat', 'Inter', sans-serif" }}
-                >
-                  MANJU <span className="text-[#60A5FA] font-extrabold">GROUP</span>
-                </span>
-              </Link>
-            </div>
-
-            {/* Right: Hotline Call + Cart Badge */}
-            <div className="flex items-center gap-1.5">
+            {/* Right: Hotline Call + 3-Lines Menu Button */}
+            <div className="flex items-center gap-2">
               <a
                 href="tel:+94112345678"
-                className="p-2 rounded-xl bg-emerald-600/90 text-white flex items-center justify-center shadow-sm active:scale-95"
+                className="p-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center shadow-sm active:scale-95 transition-colors"
                 title="Call Hotline"
               >
                 <PhoneCall size={16} />
@@ -509,16 +497,12 @@ export default function Header() {
 
               <button
                 type="button"
-                onClick={openDrawer}
-                className="relative p-2 rounded-xl bg-white/15 text-white flex items-center justify-center active:scale-95 cursor-pointer"
-                title="Cart"
+                onClick={() => setIsMenuOpen(true)}
+                className="p-2 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 text-white border border-white/25 shadow-sm flex items-center justify-center cursor-pointer transition-colors"
+                aria-label="Open Navigation Menu"
+                title="Navigation Menu"
               >
-                <ShoppingCart size={17} />
-                {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-[#F85606] text-white text-[9px] font-black min-w-[16px] h-[16px] flex items-center justify-center rounded-full">
-                    {itemCount}
-                  </span>
-                )}
+                <Menu size={20} strokeWidth={2.5} className="text-white" />
               </button>
             </div>
           </div>
