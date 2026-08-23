@@ -322,43 +322,45 @@ export default function Products() {
           </div>
 
           {/* Category Visual Filter Pills */}
-          <div className="flex items-center gap-2 mt-8 overflow-x-auto pb-2 scrollbar-none">
-            <button
-              onClick={() => setFilters(f => ({ ...f, categoryId: undefined }))}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                filters.categoryId === undefined
-                  ? "bg-[#F85606] text-white shadow-lg shadow-orange-500/30 scale-102"
-                  : "bg-white/10 hover:bg-white/20 text-white border border-white/10"
-              }`}
-            >
-              <ShoppingBag size={14} />
-              All Categories
-            </button>
+          <div className="w-full mt-6 sm:mt-8 overflow-x-auto no-scrollbar scroll-smooth">
+            <div className="flex items-center gap-2 sm:gap-2.5 pb-2 min-w-max">
+              <button
+                onClick={() => setFilters(f => ({ ...f, categoryId: undefined }))}
+                className={`shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                  filters.categoryId === undefined
+                    ? "bg-[#F85606] text-white shadow-md shadow-orange-500/25 ring-2 ring-orange-400/40 scale-102"
+                    : "bg-white/10 hover:bg-white/20 text-white border border-white/15"
+                }`}
+              >
+                <ShoppingBag size={14} className="shrink-0" />
+                <span>All Categories</span>
+              </button>
 
-            {categories.map(cat => {
-              const IconComp =
-                (cat.slug && CATEGORY_ICONS[cat.slug]) || ShoppingBag;
-              const isActive = filters.categoryId === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() =>
-                    setFilters(f => ({
-                      ...f,
-                      categoryId: isActive ? undefined : cat.id,
-                    }))
-                  }
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                    isActive
-                      ? "bg-[#F85606] text-white shadow-lg shadow-orange-500/30 scale-102"
-                      : "bg-white/10 hover:bg-white/20 text-white border border-white/10"
-                  }`}
-                >
-                  <IconComp size={14} />
-                  {cleanText(cat.name)}
-                </button>
-              );
-            })}
+              {categories.map(cat => {
+                const IconComp =
+                  (cat.slug && CATEGORY_ICONS[cat.slug]) || ShoppingBag;
+                const isActive = filters.categoryId === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() =>
+                      setFilters(f => ({
+                        ...f,
+                        categoryId: isActive ? undefined : cat.id,
+                      }))
+                    }
+                    className={`shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                      isActive
+                        ? "bg-[#F85606] text-white shadow-md shadow-orange-500/25 ring-2 ring-orange-400/40 scale-102"
+                        : "bg-white/10 hover:bg-white/20 text-white border border-white/15"
+                    }`}
+                  >
+                    <IconComp size={14} className="shrink-0" />
+                    <span>{cleanText(cat.name)}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
