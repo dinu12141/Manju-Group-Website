@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { useAdSettings } from "@/lib/adSettings";
-import { Sparkles, Zap, ArrowRight, Volume2, VolumeX, Play, Pause } from "lucide-react";
+import { Sparkles, Zap, Volume2, VolumeX, Play, Pause } from "lucide-react";
 
 export default function HeroSection() {
   const { config } = useAdSettings();
@@ -164,28 +164,18 @@ export default function HeroSection() {
             {/* Top Interactive Controls (Sound & Playback) */}
             {isVideo && (
               <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex items-center gap-2">
-                {/* Unmute / Mute Button with Status Indicator */}
+                {/* Minimalist Sound Toggle Icon Button (No Text) */}
                 <button
                   type="button"
                   onClick={toggleSound}
-                  className={`px-3 py-1.5 rounded-full backdrop-blur-md border text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer shadow-lg active:scale-95 ${
+                  className={`w-8 h-8 rounded-full backdrop-blur-md border text-white flex items-center justify-center transition-all duration-200 cursor-pointer shadow-md active:scale-95 ${
                     isMuted
-                      ? "bg-red-600/90 hover:bg-red-600 border-red-400 text-white animate-pulse"
-                      : "bg-emerald-600/90 hover:bg-emerald-600 border-emerald-400 text-white"
+                      ? "bg-red-600/80 hover:bg-red-600 border-red-400/60 text-white"
+                      : "bg-black/60 hover:bg-black/80 border-white/30 text-white"
                   }`}
-                  title={isMuted ? "Click to turn sound ON" : "Sound is ON (Click to Mute)"}
+                  title={isMuted ? "Unmute Sound" : "Mute Sound"}
                 >
-                  {isMuted ? (
-                    <>
-                      <VolumeX size={15} />
-                      <span className="text-[11px] font-extrabold uppercase">Unmute Sound</span>
-                    </>
-                  ) : (
-                    <>
-                      <Volume2 size={15} className="animate-bounce" />
-                      <span className="text-[11px] font-extrabold uppercase">Sound ON</span>
-                    </>
-                  )}
+                  {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
                 </button>
 
                 {/* Play / Pause Toggle */}
@@ -201,7 +191,7 @@ export default function HeroSection() {
             )}
 
             {/* Content Overlay */}
-            <div className="absolute bottom-4 sm:bottom-6 lg:bottom-8 left-4 sm:left-6 lg:left-8 right-4 sm:right-6 lg:right-8 text-white z-10 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <div className="absolute bottom-4 sm:bottom-6 lg:bottom-8 left-4 sm:left-6 lg:left-8 right-4 sm:right-6 lg:right-8 text-white z-10">
               <div className="max-w-xl">
                 {heroVideo.badge && (
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#0052B4]/90 border border-blue-400/50 text-blue-100 text-[10px] sm:text-xs font-black uppercase tracking-wider mb-1.5 sm:mb-2.5 backdrop-blur-md shadow-md">
@@ -216,15 +206,6 @@ export default function HeroSection() {
                   {heroVideo.subtitle}
                 </p>
               </div>
-
-              {heroVideo.linkUrl && (
-                <Link href={heroVideo.linkUrl} className="self-start sm:self-auto" onClick={e => e.stopPropagation()}>
-                  <button className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#F85606] to-[#d44700] hover:from-[#ff641a] hover:to-[#e04d00] text-white text-[11px] sm:text-xs font-black tracking-wider uppercase flex items-center gap-1.5 shadow-lg transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0">
-                    <span>Explore Products</span>
-                    <ArrowRight size={13} />
-                  </button>
-                </Link>
-              )}
             </div>
           </div>
 
