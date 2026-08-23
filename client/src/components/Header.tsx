@@ -625,7 +625,7 @@ export default function Header() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={() => setIsMenuOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 md:hidden"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] md:hidden"
             />
 
             {/* Slide-in Drawer from Left */}
@@ -634,7 +634,7 @@ export default function Header() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 280 }}
-              className="fixed top-0 left-0 bottom-0 w-full max-w-[320px] sm:max-w-[360px] bg-white text-slate-900 shadow-2xl z-50 flex flex-col font-sans border-r border-slate-200 md:hidden"
+              className="fixed top-0 left-0 bottom-0 w-full max-w-[320px] sm:max-w-[360px] bg-white text-slate-900 shadow-2xl z-[100] flex flex-col font-sans border-r border-slate-200 md:hidden"
               style={{
                 touchAction: "pan-y",
                 overscrollBehavior: "contain",
