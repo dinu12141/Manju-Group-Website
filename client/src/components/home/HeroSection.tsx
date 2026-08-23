@@ -7,7 +7,7 @@ export default function HeroSection() {
   const { config } = useAdSettings();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [timeLeft, setTimeLeft] = useState("");
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
@@ -27,7 +27,10 @@ export default function HeroSection() {
         await video.play();
         setIsPlaying(true);
       } catch (err) {
-        console.warn("Browser blocked unmuted autoplay, falling back to muted autoplay until user interaction:", err);
+        console.warn(
+          "Browser blocked unmuted autoplay, falling back to muted autoplay until user interaction:",
+          err
+        );
         // Autoplay policy fallback: mute and play
         video.muted = true;
         setIsMuted(true);
@@ -147,9 +150,12 @@ export default function HeroSection() {
                 ref={videoRef}
                 src={heroVideo.videoUrl}
                 autoPlay={heroVideo.autoPlay}
+                muted
                 loop
                 playsInline
-                preload="metadata"
+                preload="auto"
+                // @ts-expect-error fetchPriority not yet in React's DOM typings but is a valid HTML attribute
+                fetchPriority="high"
                 className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 object-cover opacity-90 transition-transform duration-700 group-hover:scale-102"
               />
             ) : (
@@ -188,7 +194,11 @@ export default function HeroSection() {
                   className="w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/30 text-white flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-95"
                   title={isPlaying ? "Pause Video" : "Play Video"}
                 >
-                  {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
+                  {isPlaying ? (
+                    <Pause size={14} />
+                  ) : (
+                    <Play size={14} className="ml-0.5" />
+                  )}
                 </button>
               </div>
             )}
@@ -263,7 +273,9 @@ export default function HeroSection() {
                     key={slide.id || idx}
                     href={slide.linkUrl || "/products"}
                     className={`absolute inset-0 transition-opacity duration-500 cursor-pointer block ${
-                      idx === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+                      idx === currentSlide
+                        ? "opacity-100 z-10"
+                        : "opacity-0 z-0 pointer-events-none"
                     }`}
                   >
                     <img
@@ -286,7 +298,9 @@ export default function HeroSection() {
                       </h3>
                       <div className="flex items-center gap-2">
                         <span className="text-amber-400 font-black text-base sm:text-lg drop-shadow-md">
-                          {slide.price.startsWith("Rs.") ? slide.price : `Rs. ${slide.price}`}
+                          {slide.price.startsWith("Rs.")
+                            ? slide.price
+                            : `Rs. ${slide.price}`}
                         </span>
                       </div>
                     </div>
@@ -299,7 +313,9 @@ export default function HeroSection() {
                     <div
                       key={idx}
                       className={`h-1.5 rounded-full transition-all duration-300 ${
-                        idx === currentSlide ? "bg-[#38BDF8] w-5 shadow-xs" : "bg-white/60 w-1.5"
+                        idx === currentSlide
+                          ? "bg-[#38BDF8] w-5 shadow-xs"
+                          : "bg-white/60 w-1.5"
                       }`}
                     ></div>
                   ))}
