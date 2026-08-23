@@ -1,14 +1,95 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { useAdSettings } from "@/lib/adSettings";
-import { Sparkles, Zap, ArrowRight } from "lucide-react";
+import { Sparkles, Zap, ArrowRight, Volume2, VolumeX, Play, Pause } from "lucide-react";
 
 export default function HeroSection() {
   const { config } = useAdSettings();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [timeLeft, setTimeLeft] = useState("");
+  const [isMuted, setIsMuted] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
+  const videoRef = useRef<HTMLVideoElement>(null);
   const { heroVideo, heroFlashSale, heroSlides } = config;
+
+  // Video Audio & Autoplay Controller
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.volume = heroVideo.volume ?? 1.0;
+
+    const tryPlay = async () => {
+      try {
+        video.muted = isMuted;
+        await video.play();
+        setIsPlaying(true);
+      } catch (err) {
+        console.warn("Browser blocked unmuted autoplay, falling back to muted autoplay until user interaction:", err);
+        // Autoplay policy fallback: mute and play
+        video.muted = true;
+        setIsMuted(true);
+        video.play().catch(() => {});
+      }
+    };
+
+    tryPlay();
+  }, [heroVideo.videoUrl, isMuted, heroVideo.volume]);
+
+  const toggleSound = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.muted || isMuted) {
+      video.muted = false;
+      video.volume = 1.0;
+      setIsMuted(false);
+      setHasUserInteracted(true);
+      if (video.paused) {
+        video.play();
+        setIsPlaying(true);
+      }
+    } else {
+      video.muted = true;
+      setIsMuted(true);
+    }
+  };
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      video.play();
+      setIsPlaying(true);
+    } else {
+      video.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const handleVideoClick = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // If currently muted on first click, unmute it immediately!
+    if (isMuted || video.muted) {
+      video.muted = false;
+      video.volume = 1.0;
+      setIsMuted(false);
+      setHasUserInteracted(true);
+      if (video.paused) {
+        video.play();
+        setIsPlaying(true);
+      }
+    } else {
+      togglePlay({ stopPropagation: () => {} } as any);
+    }
+  };
 
   // Offers Slider effect
   useEffect(() => {
@@ -47,41 +128,83 @@ export default function HeroSection() {
     return () => clearInterval(timer);
   }, []);
 
+  const isVideo =
+    heroVideo.videoUrl.endsWith(".mp4") ||
+    heroVideo.videoUrl.endsWith(".webm") ||
+    heroVideo.videoUrl.includes("/video");
+
   return (
     <section className="w-full bg-white py-3 sm:py-4 border-b border-gray-200">
       <div className="container mx-auto px-3 sm:px-4 md:px-6">
         <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 lg:h-[440px]">
           {/* Main Hero Video / Banner Ad Area */}
-          <div className="w-full lg:w-3/4 min-h-[260px] sm:min-h-[320px] lg:h-full rounded-2xl bg-gray-950 relative overflow-hidden group shadow-md border border-slate-200 flex justify-center items-center">
-            {heroVideo.videoUrl.endsWith(".mp4") || heroVideo.videoUrl.endsWith(".webm") ? (
+          <div
+            onClick={handleVideoClick}
+            className="w-full lg:w-3/4 min-h-[280px] sm:min-h-[340px] lg:h-full rounded-2xl bg-gray-950 relative overflow-hidden group shadow-md border border-slate-200 flex justify-center items-center cursor-pointer"
+          >
+            {isVideo ? (
               <video
+                ref={videoRef}
                 src={heroVideo.videoUrl}
                 autoPlay={heroVideo.autoPlay}
                 loop
-                muted
                 playsInline
-                className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 object-cover opacity-85 transition-transform duration-700 group-hover:scale-105"
-                onClick={e => {
-                  const video = e.target as HTMLVideoElement;
-                  if (video.paused) video.play();
-                  else video.pause();
-                }}
+                className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 object-cover opacity-90 transition-transform duration-700 group-hover:scale-102"
               />
             ) : (
               <img
                 src={heroVideo.videoUrl}
                 alt={heroVideo.title}
-                className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 object-cover opacity-85 transition-transform duration-700 group-hover:scale-105"
+                className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 object-cover opacity-90 transition-transform duration-700 group-hover:scale-102"
               />
             )}
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/20 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/25 pointer-events-none"></div>
+
+            {/* Top Interactive Controls (Sound & Playback) */}
+            {isVideo && (
+              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex items-center gap-2">
+                {/* Unmute / Mute Button with Status Indicator */}
+                <button
+                  type="button"
+                  onClick={toggleSound}
+                  className={`px-3 py-1.5 rounded-full backdrop-blur-md border text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer shadow-lg active:scale-95 ${
+                    isMuted
+                      ? "bg-red-600/90 hover:bg-red-600 border-red-400 text-white animate-pulse"
+                      : "bg-emerald-600/90 hover:bg-emerald-600 border-emerald-400 text-white"
+                  }`}
+                  title={isMuted ? "Click to turn sound ON" : "Sound is ON (Click to Mute)"}
+                >
+                  {isMuted ? (
+                    <>
+                      <VolumeX size={15} />
+                      <span className="text-[11px] font-extrabold uppercase">Unmute Sound</span>
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 size={15} className="animate-bounce" />
+                      <span className="text-[11px] font-extrabold uppercase">Sound ON</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Play / Pause Toggle */}
+                <button
+                  type="button"
+                  onClick={togglePlay}
+                  className="w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/30 text-white flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-95"
+                  title={isPlaying ? "Pause Video" : "Play Video"}
+                >
+                  {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
+                </button>
+              </div>
+            )}
 
             {/* Content Overlay */}
             <div className="absolute bottom-4 sm:bottom-6 lg:bottom-8 left-4 sm:left-6 lg:left-8 right-4 sm:right-6 lg:right-8 text-white z-10 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
               <div className="max-w-xl">
                 {heroVideo.badge && (
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#0052B4]/80 border border-blue-400/40 text-blue-100 text-[10px] sm:text-xs font-black uppercase tracking-wider mb-1.5 sm:mb-2.5 backdrop-blur-md">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#0052B4]/90 border border-blue-400/50 text-blue-100 text-[10px] sm:text-xs font-black uppercase tracking-wider mb-1.5 sm:mb-2.5 backdrop-blur-md shadow-md">
                     <Sparkles size={11} className="text-[#C9A84C]" />
                     <span>{heroVideo.badge}</span>
                   </div>
@@ -95,7 +218,7 @@ export default function HeroSection() {
               </div>
 
               {heroVideo.linkUrl && (
-                <Link href={heroVideo.linkUrl} className="self-start sm:self-auto">
+                <Link href={heroVideo.linkUrl} className="self-start sm:self-auto" onClick={e => e.stopPropagation()}>
                   <button className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#F85606] to-[#d44700] hover:from-[#ff641a] hover:to-[#e04d00] text-white text-[11px] sm:text-xs font-black tracking-wider uppercase flex items-center gap-1.5 shadow-lg transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0">
                     <span>Explore Products</span>
                     <ArrowRight size={13} />

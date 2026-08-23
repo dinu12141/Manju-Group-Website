@@ -37,6 +37,7 @@ import {
   X,
   Save,
   RotateCcw,
+  Volume2,
 } from "lucide-react";
 import {
   AreaChart,
@@ -1225,6 +1226,27 @@ export default function Admin() {
                           })
                         }
                         className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <Volume2 size={16} className="text-emerald-700" />
+                        <div>
+                          <span className="text-xs font-bold text-emerald-900 block">Video Audio / Sound Output</span>
+                          <span className="text-[10px] text-emerald-700">Allow visitors to hear audio and interact with sound controls</span>
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={localAdConfig.heroVideo.enableSound ?? true}
+                        onChange={e =>
+                          setLocalAdConfig({
+                            ...localAdConfig,
+                            heroVideo: { ...localAdConfig.heroVideo, enableSound: e.target.checked },
+                          })
+                        }
+                        className="w-4 h-4 text-emerald-600 rounded cursor-pointer"
                       />
                     </div>
                   </div>

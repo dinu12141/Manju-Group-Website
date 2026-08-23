@@ -7,6 +7,8 @@ export interface HeroVideoAd {
   badge: string;
   linkUrl: string;
   autoPlay: boolean;
+  enableSound?: boolean;
+  volume?: number;
 }
 
 export interface HeroFlashSaleAd {
@@ -66,6 +68,8 @@ export const DEFAULT_AD_CONFIG: HomeAdConfig = {
     badge: "Official Showcase",
     linkUrl: "/products",
     autoPlay: true,
+    enableSound: true,
+    volume: 1.0,
   },
   heroFlashSale: {
     badge: "Flash Sale",
