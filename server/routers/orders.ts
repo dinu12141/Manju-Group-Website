@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { publicProcedure, router } from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
+import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { orders, orderItems, productImages } from "../../drizzle/schema";
+import { orders, orderItems, productImages, products, productVariants } from "../../drizzle/schema";
 import { eq, desc, inArray, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
@@ -10,57 +11,30 @@ const MOCK_ORDERS: any[] = [];
 let mockOrderIdCounter = 1;
 
 export const ordersRouter = router({
+  // Finding #9 fix: require auth; no client-supplied email lookup (prevents unauthenticated order enumeration)
   list: publicProcedure
-    .input(
-      z
-        .object({
-          email: z.string().optional(),
-          phone: z.string().optional(),
-        })
-        .optional()
-    )
-    .query(async ({ ctx, input }) => {
+    .input(z.object({}).optional())
+    .query(async ({ ctx }) => {
       const db = await getDb();
       const userId = ctx.user?.id;
-      const email = input?.email || ctx.user?.email;
 
-      if (!userId && !email) {
+      if (!userId) {
         return [];
       }
 
       if (!db) {
-        return MOCK_ORDERS.filter(o =>
-          userId ? o.userId === userId : o.shippingAddress?.email === email
-        ).sort(
+        return MOCK_ORDERS.filter(o => o.userId === userId).sort(
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
       }
 
       let userOrders: any[] = [];
-      if (userId && email) {
-        userOrders = await db
-          .select()
-          .from(orders)
-          .where(
-            sql`${orders.userId} = ${userId} OR JSON_UNQUOTE(JSON_EXTRACT(${orders.shippingAddress}, '$.email')) = ${email}`
-          )
-          .orderBy(desc(orders.createdAt));
-      } else if (userId) {
-        userOrders = await db
-          .select()
-          .from(orders)
-          .where(eq(orders.userId, userId))
-          .orderBy(desc(orders.createdAt));
-      } else if (email) {
-        userOrders = await db
-          .select()
-          .from(orders)
-          .where(
-            sql`JSON_UNQUOTE(JSON_EXTRACT(${orders.shippingAddress}, '$.email')) = ${email}`
-          )
-          .orderBy(desc(orders.createdAt));
-      }
+      userOrders = await db
+        .select()
+        .from(orders)
+        .where(eq(orders.userId, userId))
+        .orderBy(desc(orders.createdAt));
 
       if (userOrders.length === 0) {
         return [];
@@ -109,12 +83,15 @@ export const ordersRouter = router({
       });
     }),
 
-  byId: publicProcedure
+  // Finding #1 fix: require auth + verify order belongs to the authenticated user
+  byId: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
       const db = await getDb();
+      const userId = ctx.user.id;
+
       if (!db) {
-        const mock = MOCK_ORDERS.find(o => o.id === input.id);
+        const mock = MOCK_ORDERS.find(o => o.id === input.id && o.userId === userId);
         return mock || null;
       }
 
@@ -125,6 +102,9 @@ export const ordersRouter = router({
         .limit(1);
 
       if (!order) return null;
+      if (order.userId !== userId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Order not found" });
+      }
 
       const items = await db
         .select()
@@ -138,21 +118,28 @@ export const ordersRouter = router({
       };
     }),
 
+  // Finding #13 fix: emailOrPhone is required and must match the order's shippingAddress
   track: publicProcedure
     .input(
       z.object({
         orderNumber: z.string(),
-        emailOrPhone: z.string().optional(),
+        emailOrPhone: z.string().min(1),
       })
     )
     .query(async ({ input }) => {
       const db = await getDb();
       const cleanNum = input.orderNumber.trim().toUpperCase();
+      const credential = input.emailOrPhone.trim().toLowerCase();
 
       if (!db) {
-        const found = MOCK_ORDERS.find(
-          o => o.orderNumber.toUpperCase() === cleanNum
-        );
+        const found = MOCK_ORDERS.find(o => {
+          if (o.orderNumber.toUpperCase() !== cleanNum) return false;
+          const addr = o.shippingAddress || {};
+          return (
+            String(addr.email || "").toLowerCase() === credential ||
+            String(addr.phone || "").replace(/\D/g, "") === credential.replace(/\D/g, "")
+          );
+        });
         return found || null;
       }
 
@@ -163,6 +150,13 @@ export const ordersRouter = router({
         .limit(1);
 
       if (!order) return null;
+
+      const addr = (order.shippingAddress || {}) as Record<string, unknown>;
+      const emailMatch = String(addr.email || "").toLowerCase() === credential;
+      const phoneMatch =
+        String(addr.phone || "").replace(/\D/g, "") === credential.replace(/\D/g, "");
+
+      if (!emailMatch && !phoneMatch) return null;
 
       const items = await db
         .select()
@@ -183,22 +177,22 @@ export const ordersRouter = router({
           z.object({
             productId: z.union([z.string(), z.number()]),
             variantId: z.union([z.string(), z.number()]).optional().nullable(),
-            productName: z.string(),
-            variantName: z.string().optional(),
-            sku: z.string().optional(),
-            quantity: z.number().min(1),
+            productName: z.string().max(300),
+            variantName: z.string().max(200).optional(),
+            sku: z.string().max(100).optional(),
+            quantity: z.number().int().min(1).max(1000),
             unitPrice: z.number(),
-            imageUrl: z.string().optional().nullable(),
+            imageUrl: z.string().max(500).optional().nullable(),
           })
-        ),
+        ).max(100),
         subtotal: z.number(),
         shippingFee: z.number().default(0),
         discount: z.number().default(0),
         total: z.number(),
-        paymentMethod: z.string(),
+        paymentMethod: z.string().max(50),
         shippingAddress: z.record(z.string(), z.unknown()),
         billingAddress: z.record(z.string(), z.unknown()).optional(),
-        notes: z.string().optional(),
+        notes: z.string().max(1000).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -241,14 +235,57 @@ export const ordersRouter = router({
         return { success: true, orderId: newMockOrder.id, orderNumber };
       }
 
+      // Finding #3 fix: look up authoritative prices from DB; never trust client-supplied prices
+      const verifiedItems = await Promise.all(
+        input.items.map(async item => {
+          const numProductId = Number(item.productId);
+          let serverUnitPrice: number | null = null;
+
+          if (!isNaN(numProductId) && numProductId > 0) {
+            if (item.variantId) {
+              const [variant] = await db
+                .select({ price: productVariants.price, salePrice: productVariants.salePrice })
+                .from(productVariants)
+                .where(eq(productVariants.id, Number(item.variantId)))
+                .limit(1);
+              if (variant) {
+                serverUnitPrice = Number(variant.salePrice) || Number(variant.price);
+              }
+            }
+            if (serverUnitPrice === null) {
+              const [product] = await db
+                .select({ basePrice: products.basePrice, salePrice: products.salePrice })
+                .from(products)
+                .where(eq(products.id, numProductId))
+                .limit(1);
+              if (product) {
+                serverUnitPrice = Number(product.salePrice) || Number(product.basePrice);
+              }
+            }
+          }
+
+          // If product not found in DB fall back to client price (covers custom/legacy items)
+          const unitPrice = serverUnitPrice ?? Number(item.unitPrice);
+          return { ...item, unitPrice };
+        })
+      );
+
+      const serverSubtotal = verifiedItems.reduce(
+        (sum, item) => sum + item.unitPrice * item.quantity,
+        0
+      );
+      const serverShippingFee = Number(input.shippingFee);
+      const serverDiscount = Number(input.discount);
+      const serverTotal = serverSubtotal + serverShippingFee - serverDiscount;
+
       await db.insert(orders).values({
         orderNumber,
         userId,
         status: "pending",
-        subtotal: String(input.subtotal),
-        shippingFee: String(input.shippingFee),
-        discount: String(input.discount),
-        total: String(input.total),
+        subtotal: String(serverSubtotal),
+        shippingFee: String(serverShippingFee),
+        discount: String(serverDiscount),
+        total: String(serverTotal),
         currency: "LKR",
         paymentMethod: input.paymentMethod,
         paymentStatus: "pending",
@@ -267,9 +304,9 @@ export const ordersRouter = router({
         throw new Error("Failed to retrieve created order");
       }
 
-      if (input.items.length > 0) {
+      if (verifiedItems.length > 0) {
         await db.insert(orderItems).values(
-          input.items.map(item => ({
+          verifiedItems.map(item => ({
             orderId: newOrder.id,
             productId: String(item.productId),
             variantId: item.variantId ? String(item.variantId) : null,

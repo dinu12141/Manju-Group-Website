@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import {
@@ -262,6 +263,7 @@ export const cartRouter = router({
       return { success: true };
     }),
 
+  // Finding #2 fix: verify cart item belongs to the caller's cart before mutating
   updateItem: publicProcedure
     .input(
       z.object({
@@ -270,17 +272,46 @@ export const cartRouter = router({
         sessionId: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const db = await getDb();
+      const userId = ctx.user?.id;
+      const sessionId = input.sessionId;
 
       if (!db) {
-        if (input.quantity <= 0) {
-          MOCK_CART_ITEMS = MOCK_CART_ITEMS.filter(i => i.id !== input.itemId);
-        } else {
-          const item = MOCK_CART_ITEMS.find(i => i.id === input.itemId);
-          if (item) item.quantity = input.quantity;
+        const item = MOCK_CART_ITEMS.find(i => i.id === input.itemId);
+        if (item) {
+          const cart = MOCK_CARTS.find(c => c.id === item.cartId);
+          if (cart && userId && cart.userId !== userId) {
+            throw new TRPCError({ code: "FORBIDDEN", message: "Cart item not found" });
+          }
+          if (cart && !userId && sessionId && cart.sessionId !== sessionId) {
+            throw new TRPCError({ code: "FORBIDDEN", message: "Cart item not found" });
+          }
+          if (input.quantity <= 0) {
+            MOCK_CART_ITEMS = MOCK_CART_ITEMS.filter(i => i.id !== input.itemId);
+          } else {
+            item.quantity = input.quantity;
+          }
         }
         return { success: true };
+      }
+
+      const [item] = await db
+        .select()
+        .from(cartItems)
+        .where(eq(cartItems.id, input.itemId))
+        .limit(1);
+
+      if (!item) return { success: true };
+
+      const [cart] = userId
+        ? await db.select().from(carts).where(eq(carts.userId, userId)).limit(1)
+        : sessionId
+          ? await db.select().from(carts).where(eq(carts.sessionId, sessionId)).limit(1)
+          : [];
+
+      if (!cart || cart.id !== item.cartId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Cart item not found" });
       }
 
       if (input.quantity <= 0) {
@@ -295,14 +326,45 @@ export const cartRouter = router({
       return { success: true };
     }),
 
+  // Finding #2 fix: verify cart item belongs to the caller's cart before deleting
   removeItem: publicProcedure
-    .input(z.object({ itemId: z.number() }))
-    .mutation(async ({ input }) => {
+    .input(z.object({ itemId: z.number(), sessionId: z.string().optional() }))
+    .mutation(async ({ ctx, input }) => {
       const db = await getDb();
+      const userId = ctx.user?.id;
+      const sessionId = input.sessionId;
 
       if (!db) {
-        MOCK_CART_ITEMS = MOCK_CART_ITEMS.filter(i => i.id !== input.itemId);
+        const item = MOCK_CART_ITEMS.find(i => i.id === input.itemId);
+        if (item) {
+          const cart = MOCK_CARTS.find(c => c.id === item.cartId);
+          if (cart && userId && cart.userId !== userId) {
+            throw new TRPCError({ code: "FORBIDDEN", message: "Cart item not found" });
+          }
+          if (cart && !userId && sessionId && cart.sessionId !== sessionId) {
+            throw new TRPCError({ code: "FORBIDDEN", message: "Cart item not found" });
+          }
+          MOCK_CART_ITEMS = MOCK_CART_ITEMS.filter(i => i.id !== input.itemId);
+        }
         return { success: true };
+      }
+
+      const [item] = await db
+        .select()
+        .from(cartItems)
+        .where(eq(cartItems.id, input.itemId))
+        .limit(1);
+
+      if (!item) return { success: true };
+
+      const [cart] = userId
+        ? await db.select().from(carts).where(eq(carts.userId, userId)).limit(1)
+        : sessionId
+          ? await db.select().from(carts).where(eq(carts.sessionId, sessionId)).limit(1)
+          : [];
+
+      if (!cart || cart.id !== item.cartId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Cart item not found" });
       }
 
       await db.delete(cartItems).where(eq(cartItems.id, input.itemId));

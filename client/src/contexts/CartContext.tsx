@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getSessionId } from "@/lib/data";
@@ -80,7 +87,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const { data: serverData, isLoading, refetch } = trpc.cart.get.useQuery(
+  const {
+    data: serverData,
+    isLoading,
+    refetch,
+  } = trpc.cart.get.useQuery(
     { sessionId: user ? undefined : sessionId },
     {
       refetchOnWindowFocus: false,
@@ -90,7 +101,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Sync server items if available and local is empty
   useEffect(() => {
-    if (serverData?.items && Array.isArray(serverData.items) && serverData.items.length > 0) {
+    if (
+      serverData?.items &&
+      Array.isArray(serverData.items) &&
+      serverData.items.length > 0
+    ) {
       if (localItems.length === 0) {
         saveLocalItems(serverData.items as CartItem[]);
       }
@@ -137,7 +152,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           variantId: variantId ?? null,
           quantity,
           unitPrice,
-          productName: productName || staticMatch?.name || `Product #${productId}`,
+          productName:
+            productName || staticMatch?.name || `Product #${productId}`,
           productSlug: staticMatch?.slug ?? "products",
           brandName: staticMatch?.brandName ?? "Manju Group",
           isInStock: true,
@@ -201,12 +217,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       toast.info("Item removed from cart");
 
       try {
-        await removeItemMutation.mutateAsync({ itemId });
+        await removeItemMutation.mutateAsync({
+          itemId,
+          sessionId: user ? undefined : sessionId,
+        });
       } catch (err) {
         console.warn("Background server remove deferred:", err);
       }
     },
-    [localItems, saveLocalItems, removeItemMutation]
+    [localItems, saveLocalItems, removeItemMutation, user, sessionId]
   );
 
   const clearCart = useCallback(async () => {

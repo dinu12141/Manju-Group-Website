@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Calendar, Tag, ArrowLeft, Newspaper, User } from "lucide-react";
@@ -147,7 +148,9 @@ export default function NewsDetail({ params }: NewsDetailProps) {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
               className="prose prose-lg prose-gray max-w-none text-gray-700 leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: post.content }}
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(post.content),
+              }}
             />
           )}
 

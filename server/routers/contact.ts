@@ -7,11 +7,11 @@ export const contactRouter = router({
   submit: publicProcedure
     .input(
       z.object({
-        name: z.string().min(2),
-        email: z.string().email(),
-        phone: z.string().optional(),
-        subject: z.string().optional(),
-        message: z.string().min(10),
+        name: z.string().min(2).max(100),
+        email: z.string().email().max(254),
+        phone: z.string().max(30).optional(),
+        subject: z.string().max(200).optional(),
+        message: z.string().min(10).max(5000),
       })
     )
     .mutation(async ({ input }) => {

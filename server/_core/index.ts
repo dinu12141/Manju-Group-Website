@@ -1,8 +1,13 @@
 import "dotenv/config";
+import { validateEnv } from "./env";
+validateEnv();
 import express from "express";
 import { createServer } from "http";
 import net from "net";
 import path from "path";
+import cors from "cors";
+import helmet from "helmet";
+import { rateLimit } from "express-rate-limit";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerGoogleOAuthRoutes } from "./googleAuth";
@@ -10,6 +15,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { ENV } from "./env";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -30,12 +36,39 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
+const aiRateLimit = rateLimit({
+  windowMs: 60_000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many AI requests, please wait a moment." },
+});
+
 async function startServer() {
   const app = express();
   const server = createServer(app);
-  // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+  // Security headers (finding #24)
+  app.use(helmet({ contentSecurityPolicy: false }));
+
+  // CORS — only allow the configured client origin (finding #23)
+  const allowedOrigins = ENV.clientOrigin
+    ? [ENV.clientOrigin, "http://localhost:3000", "http://localhost:5173"]
+    : ["http://localhost:3000", "http://localhost:5173"];
+  app.use(
+    cors({
+      origin: (origin, cb) => {
+        if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+        cb(new Error("CORS: origin not allowed"));
+      },
+      credentials: true,
+    })
+  );
+
+  // Body size capped at 1 MB — no file upload path uses this endpoint (finding #25)
+  app.use(express.json({ limit: "1mb" }));
+  app.use(express.urlencoded({ limit: "1mb", extended: true }));
+
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   registerGoogleOAuthRoutes(app);
@@ -43,6 +76,9 @@ async function startServer() {
   app.use(
     express.static(path.resolve(import.meta.dirname, "../../client/public"))
   );
+
+  // AI rate limit: 10 requests/min per IP (finding #18)
+  app.use("/api/trpc/ai.chat", aiRateLimit);
 
   // tRPC API
   app.use(

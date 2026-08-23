@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import DOMPurify from "dompurify";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -141,8 +142,16 @@ export default function ProductDetail({ params }: ProductDetailProps) {
     const cleanP = p.slug.replace(/-\d+$/, "").toLowerCase();
     const cleanS = sLower.replace(/-\d+$/, "");
     if (cleanP === cleanS) return true;
-    const nameSlug = p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    if (nameSlug === sLower || nameSlug.includes(cleanS) || cleanS.includes(nameSlug)) return true;
+    const nameSlug = p.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    if (
+      nameSlug === sLower ||
+      nameSlug.includes(cleanS) ||
+      cleanS.includes(nameSlug)
+    )
+      return true;
     return false;
   });
 
@@ -166,31 +175,40 @@ export default function ProductDetail({ params }: ProductDetailProps) {
           | null
           | undefined,
         warrantyMonths: dbProduct.warrantyMonths,
-        images: (dbProduct.images && dbProduct.images.length > 0)
-          ? dbProduct.images.map((img: { url: string }) => ({ url: img.url }))
-          : [{ url: (dbProduct as any).imageUrl || (staticFound ? staticFound.imageUrl : "/ads/ad_dew_super_ro_system_1.png") }],
+        images:
+          dbProduct.images && dbProduct.images.length > 0
+            ? dbProduct.images.map((img: { url: string }) => ({ url: img.url }))
+            : [
+                {
+                  url:
+                    (dbProduct as any).imageUrl ||
+                    (staticFound
+                      ? staticFound.imageUrl
+                      : "/ads/ad_dew_super_ro_system_1.png"),
+                },
+              ],
         sku: dbProduct.sku,
       }
     : staticFound
-    ? {
-        id: staticFound.id,
-        slug: staticFound.slug,
-        name: staticFound.name,
-        shortDescription: staticFound.shortDescription,
-        description: staticFound.description,
-        brandName: staticFound.brandName,
-        brandId: staticFound.brandId ?? 4,
-        categoryId: staticFound.categoryId ?? 4,
-        basePrice: staticFound.basePrice,
-        salePrice: staticFound.salePrice,
-        currency: staticFound.currency,
-        isInStock: staticFound.isInStock ?? true,
-        specifications: staticFound.specifications,
-        warrantyMonths: staticFound.warrantyMonths,
-        images: [{ url: staticFound.imageUrl }],
-        sku: staticFound.sku,
-      }
-    : null;
+      ? {
+          id: staticFound.id,
+          slug: staticFound.slug,
+          name: staticFound.name,
+          shortDescription: staticFound.shortDescription,
+          description: staticFound.description,
+          brandName: staticFound.brandName,
+          brandId: staticFound.brandId ?? 4,
+          categoryId: staticFound.categoryId ?? 4,
+          basePrice: staticFound.basePrice,
+          salePrice: staticFound.salePrice,
+          currency: staticFound.currency,
+          isInStock: staticFound.isInStock ?? true,
+          specifications: staticFound.specifications,
+          warrantyMonths: staticFound.warrantyMonths,
+          images: [{ url: staticFound.imageUrl }],
+          sku: staticFound.sku,
+        }
+      : null;
 
   if (!item) {
     return (
@@ -719,7 +737,9 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                   {item.description ? (
                     <div
                       className="prose prose-sm max-w-none leading-relaxed text-white/90 prose-headings:text-white prose-strong:text-white font-medium"
-                      dangerouslySetInnerHTML={{ __html: item.description }}
+                      dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(item.description),
+                      }}
                     />
                   ) : item.shortDescription ? (
                     <p className="text-white/90 leading-relaxed font-medium">

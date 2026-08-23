@@ -1,3 +1,8 @@
+const REQUIRED_VARS: Array<[keyof typeof ENV, string]> = [
+  ["cookieSecret", "JWT_SECRET"],
+  ["databaseUrl", "DATABASE_URL"],
+];
+
 export const ENV = {
   appId: process.env.VITE_APP_ID ?? "",
   cookieSecret: process.env.JWT_SECRET ?? "",
@@ -9,4 +14,16 @@ export const ENV = {
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
   googleClientId: process.env.GOOGLE_CLIENT_ID ?? "",
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+  clientOrigin: process.env.CLIENT_ORIGIN ?? "",
 };
+
+export function validateEnv(): void {
+  const missing = REQUIRED_VARS.filter(([key]) => !ENV[key]);
+  if (missing.length > 0) {
+    const names = missing.map(([, envVar]) => envVar).join(", ");
+    throw new Error(
+      `[startup] Missing required environment variable(s): ${names}. ` +
+        `Copy .env.example to .env and fill in all required values.`,
+    );
+  }
+}

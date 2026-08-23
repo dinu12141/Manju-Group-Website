@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { publicProcedure, router } from "../_core/trpc";
+import { publicProcedure, adminProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import {
   products,
@@ -17,7 +17,7 @@ import { STATIC_PRODUCTS, STATIC_BRANDS } from "../../client/src/lib/staticData"
 
 export const adminRouter = router({
   // Dashboard stats
-  stats: publicProcedure.query(async () => {
+  stats: adminProcedure.query(async () => {
     try {
       const db = await getDb();
       if (!db) {
@@ -121,7 +121,7 @@ export const adminRouter = router({
 
   // Recent orders
   recentOrders: publicProcedure
-    .input(z.object({ limit: z.number().default(10) }))
+    .input(z.object({ limit: z.number().int().min(1).max(100).default(10) }))
     .query(async ({ input }) => {
       try {
         const db = await getDb();
@@ -139,7 +139,7 @@ export const adminRouter = router({
   // All orders
   orders: publicProcedure
     .input(
-      z.object({ page: z.number().default(1), limit: z.number().default(20) })
+      z.object({ page: z.number().int().min(1).default(1), limit: z.number().int().min(1).max(100).default(20) })
     )
     .query(async ({ input }) => {
       try {
@@ -195,8 +195,8 @@ export const adminRouter = router({
   products: publicProcedure
     .input(
       z.object({
-        page: z.number().default(1),
-        limit: z.number().default(20),
+        page: z.number().int().min(1).default(1),
+        limit: z.number().int().min(1).max(100).default(20),
         search: z.string().optional(),
       })
     )
@@ -386,7 +386,7 @@ export const adminRouter = router({
   // Customers
   customers: publicProcedure
     .input(
-      z.object({ page: z.number().default(1), limit: z.number().default(20) })
+      z.object({ page: z.number().int().min(1).default(1), limit: z.number().int().min(1).max(100).default(20) })
     )
     .query(async ({ input }) => {
       return { items: [], total: 0 };
