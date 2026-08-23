@@ -18,9 +18,18 @@ import {
   ShieldCheck,
   ShoppingBag,
   ShoppingCart,
+  User,
+  ChevronDown,
 } from "lucide-react";
 import { STATIC_PRODUCTS } from "@/lib/staticData";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/_core/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const CATEGORY_ITEMS = [
   {
@@ -63,13 +72,14 @@ const CATEGORY_ITEMS = [
 
 export default function Header() {
   const [location, navigate] = useLocation();
+  const { user, isAuthenticated, logout } = useAuth();
   const { itemCount, openDrawer } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // Close menu on page navigation
+  // Close mobile drawer on navigation
   useEffect(() => {
     setIsMenuOpen(false);
     setIsSearchFocused(false);
@@ -89,6 +99,20 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
+  const navLinks = [
+    { href: "/", label: "Home", exact: true },
+    { href: "/products", label: "Products" },
+    { href: "/brands", label: "Brands" },
+    { href: "/about", label: "About Us" },
+    { href: "/locations", label: "Showrooms" },
+    { href: "/contact", label: "Contact" },
+  ];
+
+  const isLinkActive = (href: string, exact = false) => {
+    if (exact) return location === href;
+    return location === href || location.startsWith(`${href}/`);
+  };
+
   // Real-time search suggestions with multi-word token matching
   const searchSuggestions = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -103,7 +127,6 @@ export default function Header() {
       const pSku = (p.sku || "").toLowerCase();
       const combined = `${pName} ${pBrand} ${pDesc} ${pSku}`;
 
-      // Exclude stationery
       if (
         pName.includes("exercise") ||
         pName.includes("drawing book") ||
@@ -126,170 +149,273 @@ export default function Header() {
 
   return (
     <>
-      <header className="w-full flex flex-col z-50 fixed top-0 left-0 right-0 shadow-lg font-sans bg-gradient-to-r from-[#003875] via-[#0052B4] to-[#003B7B] border-b border-[#004899]/60">
-        {/* ── DESKTOP HEADER (md:flex) ──────────────────────────── */}
-        <div className="hidden md:flex text-white w-full px-4 md:px-8 h-[66px] items-center justify-between gap-6 relative">
-          {/* Logo */}
-          <Link
-            href="/"
-            className="flex-shrink-0 flex items-center gap-3 group transition-transform duration-200 active:scale-95 cursor-pointer"
-          >
-            <div className="relative">
-              <img
-                src="/manju-logo.png"
-                alt="Manju Group Official Logo"
-                className="h-11 w-11 md:h-12 md:w-12 rounded-full object-contain bg-[#0052B4] ring-2 ring-white/90 shadow-md group-hover:ring-white transition-all duration-300"
-              />
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1">
-                <span
-                  className="text-white text-[20px] md:text-[23px] font-black tracking-tight leading-none uppercase drop-shadow-sm"
-                  style={{ fontFamily: "'Montserrat', 'Inter', sans-serif" }}
-                >
-                  MANJU <span className="text-[#60A5FA] font-extrabold">GROUP</span>
+      <header className="w-full flex flex-col z-50 fixed top-0 left-0 right-0 shadow-lg font-sans">
+        
+        {/* ══════════════════════════════════════════════════════════════
+            DESKTOP HEADER (md & up): Original 2-Tier Layout
+        ══════════════════════════════════════════════════════════════ */}
+        <div className="hidden md:flex flex-col w-full">
+          {/* 1. Desktop Top Bar — Royal Blue */}
+          <div className="bg-gradient-to-r from-[#003875] via-[#0052B4] to-[#003B7B] text-white w-full px-4 md:px-8 h-[66px] flex items-center justify-between gap-4 md:gap-8 border-b border-[#004899]/60">
+            {/* Brand Logo */}
+            <Link
+              href="/"
+              className="flex-shrink-0 flex items-center gap-3 group transition-transform duration-200 active:scale-95 cursor-pointer"
+            >
+              <div className="relative">
+                <img
+                  src="/manju-logo.png"
+                  alt="Manju Group Official Logo"
+                  className="h-11 w-11 md:h-12 md:w-12 rounded-full object-contain bg-[#0052B4] ring-2 ring-white/90 shadow-md group-hover:ring-white transition-all duration-300"
+                />
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1">
+                  <span
+                    className="text-white text-[20px] md:text-[23px] font-black tracking-tight leading-none uppercase drop-shadow-sm"
+                    style={{ fontFamily: "'Montserrat', 'Inter', sans-serif" }}
+                  >
+                    MANJU <span className="text-[#60A5FA] font-extrabold">GROUP</span>
+                  </span>
+                </div>
+                <span className="text-[10px] md:text-[11px] text-blue-100/90 font-medium tracking-[0.14em] uppercase mt-0.5">
+                  Excellence &amp; Trust
                 </span>
               </div>
-              <span className="text-[10px] md:text-[11px] text-blue-100/90 font-medium tracking-[0.14em] uppercase mt-0.5">
-                Excellence &amp; Trust
-              </span>
-            </div>
-          </Link>
+            </Link>
 
-          {/* Desktop Search Bar */}
-          <div ref={searchContainerRef} className="flex-1 max-w-[620px] relative z-50">
-            <div className="flex items-center h-[42px] rounded-xl overflow-hidden bg-white shadow-md border border-blue-200/50 focus-within:ring-2 focus-within:ring-blue-400 transition-all">
-              <input
-                type="text"
-                placeholder="Search electric bikes, smart TVs, ACs, water filters..."
-                className="flex-1 h-full px-4 text-[14px] outline-none placeholder:text-gray-400 font-medium min-w-0 text-slate-900 bg-white"
-                value={searchQuery}
-                onChange={e => {
-                  setSearchQuery(e.target.value);
-                  setIsSearchFocused(true);
-                }}
-                onFocus={() => setIsSearchFocused(true)}
-                onKeyDown={e => {
-                  if (e.key === "Enter") handleSearchSubmit();
-                  if (e.key === "Escape") setIsSearchFocused(false);
-                }}
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="px-2 text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <X size={15} />
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => handleSearchSubmit()}
-                className="h-full px-5 bg-gradient-to-r from-[#F85606] to-[#d64700] hover:from-[#ff641a] hover:to-[#e04d00] text-white flex items-center justify-center transition-all shrink-0 font-bold text-xs gap-1.5 shadow-sm cursor-pointer"
-              >
-                <Search size={16} strokeWidth={2.5} />
-                <span className="font-bold text-xs tracking-wider uppercase">Search</span>
-              </button>
-            </div>
-
-            {/* Live Search Results Popup */}
-            {isSearchFocused && searchQuery.trim().length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50 text-slate-900 animate-in fade-in-50 zoom-in-95 duration-150">
-                <div className="p-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
-                  <span className="flex items-center gap-1">
-                    <Sparkles size={12} className="text-[#F85606]" />
-                    Matching Products ({searchSuggestions.length})
-                  </span>
-                  <span className="text-[10px] text-slate-400">Press Enter to view all</span>
-                </div>
-                {searchSuggestions.length > 0 ? (
-                  <div className="divide-y divide-slate-100 max-h-[320px] overflow-y-auto">
-                    {searchSuggestions.map(product => (
-                      <Link
-                        key={product.id}
-                        href={`/products/${product.slug}`}
-                        onClick={() => setIsSearchFocused(false)}
-                        className="flex items-center gap-3 p-2.5 hover:bg-blue-50/80 transition-colors cursor-pointer group"
-                      >
-                        <img
-                          src={product.imageUrl || "/manju-logo.png"}
-                          alt={product.name}
-                          className="w-10 h-10 object-contain rounded-lg bg-white border border-slate-200 p-0.5 shrink-0 group-hover:scale-105 transition-transform"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[9px] font-black uppercase text-[#0052B4] bg-blue-50 px-1.5 py-0.2 rounded shrink-0">
-                              {product.brandName || "Manju"}
-                            </span>
-                            <span className="font-bold text-xs text-slate-900 truncate">
-                              {product.name}
-                            </span>
-                          </div>
-                          <span className="text-xs font-black text-[#F85606] mt-0.5 block">
-                            Rs. {Number(product.salePrice || product.basePrice).toLocaleString()}
-                          </span>
-                        </div>
-                        <ChevronRight size={15} className="text-slate-400 group-hover:text-[#0052B4] shrink-0" />
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-5 text-center text-xs text-slate-500">
-                    No matching products found for "{searchQuery}".
-                  </div>
+            {/* Desktop Smart Search Bar */}
+            <div ref={searchContainerRef} className="flex-1 max-w-[680px] relative z-50">
+              <div className="flex items-center h-[42px] rounded-xl overflow-hidden bg-white shadow-inner border border-blue-200/40 focus-within:ring-2 focus-within:ring-blue-300 transition-all">
+                <input
+                  type="text"
+                  placeholder="Search electric bikes, smart TVs, ACs, water filters..."
+                  className="flex-1 h-full px-4 text-[14px] outline-none placeholder:text-gray-400 font-medium text-slate-900 bg-white min-w-0"
+                  value={searchQuery}
+                  onChange={e => {
+                    setSearchQuery(e.target.value);
+                    setIsSearchFocused(true);
+                  }}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onKeyDown={e => {
+                    if (e.key === "Enter") handleSearchSubmit();
+                    if (e.key === "Escape") setIsSearchFocused(false);
+                  }}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="px-2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X size={15} />
+                  </button>
                 )}
                 <button
                   type="button"
                   onClick={() => handleSearchSubmit()}
-                  className="w-full py-2.5 bg-slate-100 hover:bg-[#0052B4] hover:text-white text-slate-700 text-xs font-bold transition-colors flex items-center justify-center gap-1 border-t border-slate-200"
+                  className="h-full px-5 bg-gradient-to-r from-[#F85606] to-[#d64700] hover:from-[#ff641a] hover:to-[#e04d00] text-white flex items-center justify-center transition-all shrink-0 font-bold text-xs gap-1.5 shadow-sm cursor-pointer"
                 >
-                  <span>See all search results for "{searchQuery}"</span>
-                  <ChevronRight size={13} />
+                  <Search size={16} strokeWidth={2.5} />
+                  <span className="font-bold text-xs tracking-wider uppercase text-white">
+                    SEARCH
+                  </span>
                 </button>
               </div>
-            )}
+
+              {/* Desktop Live Search Results Popup */}
+              {isSearchFocused && searchQuery.trim().length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50 text-slate-900 animate-in fade-in-50 zoom-in-95 duration-150">
+                  <div className="p-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <Sparkles size={12} className="text-[#F85606]" />
+                      Matching Products ({searchSuggestions.length})
+                    </span>
+                    <span className="text-[10px] text-slate-400">Press Enter to view all</span>
+                  </div>
+                  {searchSuggestions.length > 0 ? (
+                    <div className="divide-y divide-slate-100 max-h-[320px] overflow-y-auto">
+                      {searchSuggestions.map(product => (
+                        <Link
+                          key={product.id}
+                          href={`/products/${product.slug}`}
+                          onClick={() => setIsSearchFocused(false)}
+                          className="flex items-center gap-3 p-2.5 hover:bg-blue-50/80 transition-colors cursor-pointer group"
+                        >
+                          <img
+                            src={product.imageUrl || "/manju-logo.png"}
+                            alt={product.name}
+                            className="w-10 h-10 object-contain rounded-lg bg-white border border-slate-200 p-0.5 shrink-0 group-hover:scale-105 transition-transform"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[9px] font-black uppercase text-[#0052B4] bg-blue-50 px-1.5 py-0.2 rounded shrink-0">
+                                {product.brandName || "Manju"}
+                              </span>
+                              <span className="font-bold text-xs text-slate-900 truncate">
+                                {product.name}
+                              </span>
+                            </div>
+                            <span className="text-xs font-black text-[#F85606] mt-0.5 block">
+                              Rs. {Number(product.salePrice || product.basePrice).toLocaleString()}
+                            </span>
+                          </div>
+                          <ChevronRight size={15} className="text-slate-400 group-hover:text-[#0052B4] shrink-0" />
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-5 text-center text-xs text-slate-500">
+                      No matching products found for "{searchQuery}".
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleSearchSubmit()}
+                    className="w-full py-2.5 bg-slate-100 hover:bg-[#0052B4] hover:text-white text-slate-700 text-xs font-bold transition-colors flex items-center justify-center gap-1 border-t border-slate-200"
+                  >
+                    <span>See all search results for "{searchQuery}"</span>
+                    <ChevronRight size={13} />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Desktop Right Actions */}
+            <div className="flex items-center gap-4 text-white shrink-0">
+              {/* Language Selector */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-1 text-[13px] font-semibold text-blue-100 hover:text-white transition-colors px-2 py-1 rounded hover:bg-white/10 cursor-pointer">
+                    <span className="text-white font-bold">English</span>
+                    <ChevronDown size={14} className="opacity-80 text-white" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="bg-white text-gray-900 rounded-xl shadow-xl border border-gray-100 mt-2 min-w-[150px] p-1 font-medium text-sm z-50"
+                >
+                  <DropdownMenuItem className="cursor-default text-sm font-bold text-[#0052B4] bg-blue-50/80 rounded-lg px-3 py-2 flex items-center justify-between">
+                    <span>English</span>
+                    <span className="text-[10px] bg-[#0052B4] text-white px-1.5 py-0.5 rounded font-extrabold">Default</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled className="text-sm opacity-50 cursor-not-allowed rounded-lg px-3 py-2 text-gray-400 flex items-center justify-between">
+                    <span>Sinhala (සිංහල)</span>
+                    <span className="text-[9px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded font-semibold">Soon</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Cart Button */}
+              <button
+                type="button"
+                onClick={openDrawer}
+                className="relative p-2 rounded-full hover:bg-white/10 transition-colors flex items-center justify-center text-white cursor-pointer focus-visible:outline-none"
+                title="Shopping Cart"
+              >
+                <ShoppingCart size={22} className="text-white" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 text-[11px] font-black px-1 min-w-[20px] h-[20px] flex items-center justify-center rounded-full shadow-md">
+                    {itemCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Store Locations */}
+              <Link
+                href="/locations"
+                className="hidden lg:flex items-center gap-1.5 text-[13px] font-bold text-white hover:text-blue-100 transition-colors py-1 px-2.5 rounded-lg hover:bg-white/10"
+              >
+                <MapPin size={15} className="text-blue-200" />
+                <span>Showrooms</span>
+              </Link>
+
+              {/* Account / User Menu */}
+              {isAuthenticated ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 hover:bg-white/10 transition-colors p-1.5 rounded-lg text-left cursor-pointer">
+                      <div className="w-8 h-8 rounded-full bg-white text-[#0052B4] flex items-center justify-center font-bold text-xs shadow-sm">
+                        {user?.name?.[0]?.toUpperCase() || <User size={16} />}
+                      </div>
+                      <span className="text-xs font-bold text-white max-w-[90px] truncate hidden xl:inline">
+                        {user?.name?.split(" ")[0]}
+                      </span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-white text-gray-900 rounded-xl shadow-xl p-1.5 min-w-[170px] z-50">
+                    <DropdownMenuItem asChild>
+                      <Link href="/account" className="font-bold text-xs text-slate-800 py-2 cursor-pointer">
+                        My Account
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/my-orders" className="font-bold text-xs text-slate-800 py-2 cursor-pointer">
+                        My Orders
+                      </Link>
+                    </DropdownMenuItem>
+                    {user?.role === "admin" && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="font-bold text-xs text-blue-600 py-2 cursor-pointer">
+                          Admin Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onClick={() => logout()} className="text-xs font-bold text-red-600 py-2 cursor-pointer">
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link
+                  href="/login"
+                  className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white text-xs font-extrabold px-3.5 py-2 rounded-xl transition-all border border-white/20 shadow-xs active:scale-95"
+                >
+                  <User size={15} />
+                  <span>Sign In</span>
+                </Link>
+              )}
+            </div>
           </div>
 
-          {/* Desktop Right Actions */}
-          <div className="flex items-center gap-3 shrink-0">
-            <a
-              href="tel:+94112345678"
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors"
-            >
-              <PhoneCall size={14} className="text-emerald-400" />
-              <span>+94 11 234 5678</span>
-            </a>
+          {/* 2. Desktop Bottom Sub-Navigation Bar — Crisp White with Clean Links */}
+          <div className="bg-white border-b border-gray-200/90 text-gray-700 w-full px-4 md:px-8 h-[48px] flex items-center justify-between shadow-xs">
+            <nav className="flex items-center gap-2 lg:gap-4 h-full">
+              {navLinks.map(({ href, label, exact }) => {
+                const active = isLinkActive(href, exact);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`flex items-center justify-center py-1.5 px-3.5 rounded-xl text-[13px] lg:text-[14px] font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
+                      active
+                        ? "bg-[#0052B4]/10 text-[#0052B4] border border-[#0052B4]/20 shadow-2xs"
+                        : "text-slate-700 hover:bg-slate-100 hover:text-[#0052B4]"
+                    }`}
+                  >
+                    <span>{label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
 
-            <button
-              type="button"
-              onClick={openDrawer}
-              className="relative p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
-              title="Cart"
-            >
-              <ShoppingCart size={20} />
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#F85606] text-white text-[10px] font-black px-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full shadow-md">
-                  {itemCount}
-                </span>
-              )}
-            </button>
-
-            {/* Desktop 3-Lines Menu Button */}
-            <button
-              type="button"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 transition-all text-white border border-white/20 flex items-center gap-2 cursor-pointer shadow-sm"
-              title="Open Navigation Menu"
-            >
-              <Menu size={20} strokeWidth={2.4} />
-              <span className="font-extrabold text-xs tracking-wider uppercase">Menu</span>
-            </button>
+            {/* Desktop Hotline Direct Link */}
+            <div className="flex items-center gap-2">
+              <a
+                href="tel:+94112345678"
+                className="flex items-center gap-1.5 bg-blue-50 hover:bg-[#0052B4] text-[#0052B4] hover:text-white px-3.5 py-1.5 rounded-full border border-blue-200 text-xs font-extrabold transition-all duration-200 active:scale-95"
+              >
+                <PhoneCall size={13} />
+                <span>Hotline: +94 11 234 5678</span>
+              </a>
+            </div>
           </div>
         </div>
 
-        {/* ── MOBILE HEADER (< md) ────────────────────────────────── */}
-        <div className="md:hidden flex flex-col w-full text-white px-3 py-2 space-y-2">
+        {/* ══════════════════════════════════════════════════════════════
+            MOBILE HEADER (< md): 2-Row Optimized Header with ☰ Menu
+        ══════════════════════════════════════════════════════════════ */}
+        <div className="md:hidden flex flex-col w-full text-white px-3 py-2 space-y-2 bg-gradient-to-r from-[#003875] via-[#0052B4] to-[#003B7B] border-b border-[#004899]/60">
           {/* Row 1: ☰ Menu Button + Logo + Right Actions */}
           <div className="flex items-center justify-between gap-2 h-[42px]">
             {/* Left: 3-Lines Hamburger Menu Button + Logo */}
@@ -345,7 +471,7 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Row 2: Full-Width Search Input with Dropdown */}
+          {/* Row 2: Full-Width Mobile Search Input with Dropdown */}
           <div ref={searchContainerRef} className="w-full relative z-40">
             <div className="flex items-center h-[38px] rounded-xl overflow-hidden bg-white shadow-md border border-blue-200/50">
               <input
@@ -436,7 +562,7 @@ export default function Header() {
         </div>
       </header>
 
-      {/* ── Slide-Out Full Navigation Menu Drawer ────────────────── */}
+      {/* ── Mobile Slide-Out Full Navigation Menu Drawer ─────────── */}
       <AnimatePresence>
         {isMenuOpen && (
           <>
@@ -447,7 +573,7 @@ export default function Header() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={() => setIsMenuOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 md:hidden"
             />
 
             {/* Slide-in Drawer from Left */}
@@ -456,7 +582,7 @@ export default function Header() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 280 }}
-              className="fixed top-0 left-0 bottom-0 w-full max-w-[320px] sm:max-w-[360px] bg-white text-slate-900 shadow-2xl z-50 flex flex-col justify-between overflow-y-auto no-scrollbar font-sans border-r border-slate-200"
+              className="fixed top-0 left-0 bottom-0 w-full max-w-[320px] sm:max-w-[360px] bg-white text-slate-900 shadow-2xl z-50 flex flex-col justify-between overflow-y-auto no-scrollbar font-sans border-r border-slate-200 md:hidden"
             >
               {/* Drawer Top Header */}
               <div>
@@ -527,7 +653,7 @@ export default function Header() {
                     </div>
                   </div>
 
-                  {/* Shop by Category - Professional Dedicated Cards */}
+                  {/* Shop by Category - Luxury Cards */}
                   <div>
                     <div className="flex items-center justify-between mb-2.5 px-2">
                       <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
@@ -616,8 +742,8 @@ export default function Header() {
         )}
       </AnimatePresence>
 
-      {/* Spacer to prevent content from slipping under fixed header */}
-      <div className="h-[96px] md:h-[66px] w-full shrink-0"></div>
+      {/* Spacer to prevent page content from going under fixed header */}
+      <div className="h-[96px] md:h-[114px] w-full shrink-0"></div>
     </>
   );
 }
