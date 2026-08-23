@@ -417,17 +417,17 @@ export default function Header() {
               </span>
             </div>
 
-            {/* Center: Navigation Links */}
-            <nav className="flex items-center gap-2 lg:gap-4 h-full flex-1 px-4">
+            {/* Center: Navigation Links — Perfectly Balanced & Evenly Distributed */}
+            <nav className="flex items-center justify-evenly flex-1 max-w-4xl mx-auto px-2 lg:px-6 h-full">
               {navLinks.map(({ href, label, exact }) => {
                 const active = isLinkActive(href, exact);
                 return (
                   <Link
                     key={href}
                     href={href}
-                    className={`flex items-center justify-center py-1.5 px-3.5 rounded-xl text-[13px] lg:text-[14px] font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
+                    className={`flex items-center justify-center py-1.5 px-3.5 lg:px-5 rounded-xl text-[13px] lg:text-[14px] font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
                       active
-                        ? "bg-[#0052B4]/10 text-[#0052B4] border border-[#0052B4]/20 shadow-2xs"
+                        ? "bg-[#0052B4]/10 text-[#0052B4] border border-[#0052B4]/20 shadow-2xs font-extrabold"
                         : "text-slate-700 hover:bg-slate-100 hover:text-[#0052B4]"
                     }`}
                   >
@@ -438,7 +438,7 @@ export default function Header() {
             </nav>
 
             {/* Right: Desktop Hotline Direct Link */}
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 pl-4 border-l border-gray-200 h-5 shrink-0">
               <a
                 href="tel:+94112345678"
                 className="flex items-center gap-1.5 bg-blue-50 hover:bg-[#0052B4] text-[#0052B4] hover:text-white px-3.5 py-1.5 rounded-full border border-blue-200 text-xs font-extrabold transition-all duration-200 active:scale-95"
