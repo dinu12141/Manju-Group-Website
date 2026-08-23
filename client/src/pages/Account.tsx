@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
   User,
@@ -29,16 +30,31 @@ import EmptyState from "@/components/EmptyState";
 type Tab = "overview" | "orders" | "wishlist" | "settings";
 
 export default function Account() {
+  const [location, navigate] = useLocation();
   const { user, isAuthenticated, loading, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const { items: wishlistItems, toggleWishlist } = useWishlist();
   const { addItem } = useCart();
 
+  const isAuthRoute =
+    location === "/login" ||
+    location === "/signin" ||
+    location === "/register" ||
+    location === "/signup";
+
   const { data: orders } = trpc.orders.list.useQuery(undefined, {
     enabled: isAuthenticated,
   });
 
-  if (loading) {
+  // If user is already authenticated and visits /login or /signin, redirect to /account
+  useEffect(() => {
+    if (isAuthenticated && isAuthRoute) {
+      navigate("/account");
+    }
+  }, [isAuthenticated, isAuthRoute, navigate]);
+
+  // Show loading skeleton only on /account when fetching user data
+  if (loading && !isAuthRoute && isAuthenticated === false && user !== null) {
     return (
       <MainLayout>
         <div className="container py-10">
