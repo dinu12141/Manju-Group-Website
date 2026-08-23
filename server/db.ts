@@ -19,10 +19,7 @@ export async function getDb() {
         dbUrl = `${dbUrl}${separator}ssl={"rejectUnauthorized":true}`;
       }
 
-      const poolConnection = mysql.createPool({
-        uri: dbUrl,
-      });
-      const maybeDb = drizzle(poolConnection);
+      const maybeDb = drizzle(dbUrl);
       _db = maybeDb;
     } catch (error: any) {
       console.warn("[Database] Failed to connect:", error.message || error);
