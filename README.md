@@ -4,7 +4,8 @@ This is the codebase for the Manju Group Website.
 
 ## Admin Dashboard Access
 
-The Admin panel at `/admin` requires signing in with the same account used for `/account`
-(Supabase auth). Every account that successfully signs in is granted the `admin` role and
-can access admin-only data and actions, including all customer orders and contact details —
-there is currently no restriction to a specific set of staff accounts.
+The Admin panel at `/admin` is gated by a shared passcode (see the `ADMIN_PASSCODE`
+environment variable — set it in `.env` for local development and in your deployment
+platform's environment variables for production; it is never committed to the repo).
+Entering the correct passcode issues a short-lived signed token that authorizes all
+`admin.*` API calls; there is no per-account login required for admin access.

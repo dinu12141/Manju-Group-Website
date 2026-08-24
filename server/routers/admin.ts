@@ -14,8 +14,20 @@ import {
 import { nanoid } from "nanoid";
 import { eq, desc, asc, sql, and, like, or, inArray } from "drizzle-orm";
 import { STATIC_PRODUCTS, STATIC_BRANDS } from "../../client/src/lib/staticData";
+import { verifyAdminPasscode, issueAdminToken } from "../_core/adminPasscode";
 
 export const adminRouter = router({
+  // Admin panel login via shared passcode — returns a short-lived signed
+  // token the client attaches as X-Admin-Token on subsequent admin.* calls.
+  verifyPasscode: publicProcedure
+    .input(z.object({ passcode: z.string().min(1).max(200) }))
+    .mutation(async ({ input }) => {
+      if (!verifyAdminPasscode(input.passcode)) {
+        throw new Error("Invalid passcode");
+      }
+      return { token: issueAdminToken() };
+    }),
+
   // Dashboard stats
   stats: adminProcedure.query(async () => {
     try {

@@ -4,11 +4,13 @@ import { supabase } from "../supabase";
 import { getDb } from "../db";
 import { users } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { verifyAdminToken } from "./adminPasscode";
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
   res: CreateExpressContextOptions["res"];
   user: User | null;
+  isAdminByPasscode: boolean;
 };
 
 export async function createContext(
@@ -33,27 +35,15 @@ export async function createContext(
             .limit(1);
 
           if (result.length === 0) {
-            // Auto-create user. Every authenticated account is granted admin
-            // access, per explicit owner instruction.
+            // Auto-create user as a regular customer account.
             await db.insert(users).values({
               openId: data.user.id,
               email: data.user.email,
               name: data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "User",
               loginMethod: "supabase",
-              role: "admin",
+              role: "user",
               lastSignedIn: new Date(),
             });
-
-            result = await db
-              .select()
-              .from(users)
-              .where(eq(users.openId, data.user.id))
-              .limit(1);
-          } else if (result[0].role !== "admin") {
-            await db
-              .update(users)
-              .set({ role: "admin" })
-              .where(eq(users.openId, data.user.id));
 
             result = await db
               .select()
@@ -82,7 +72,7 @@ export async function createContext(
             passwordHash: null,
             resetToken: null,
             resetTokenExpiry: null,
-            role: "admin",
+            role: "user",
             avatarUrl: data.user.user_metadata?.avatar_url || null,
             createdAt: new Date(data.user.created_at || Date.now()),
             updatedAt: new Date(),
@@ -96,9 +86,16 @@ export async function createContext(
     user = null;
   }
 
+  const adminTokenHeader = opts.req.headers["x-admin-token"];
+  const adminToken = Array.isArray(adminTokenHeader)
+    ? adminTokenHeader[0]
+    : adminTokenHeader;
+  const isAdminByPasscode = verifyAdminToken(adminToken);
+
   return {
     req: opts.req,
     res: opts.res,
     user,
+    isAdminByPasscode,
   };
 }

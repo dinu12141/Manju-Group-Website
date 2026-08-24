@@ -26,7 +26,10 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 
   if (!isUnauthorized) return;
 
-  if (window.location.pathname !== "/login" && window.location.pathname !== "/account") {
+  if (
+    window.location.pathname !== "/login" &&
+    window.location.pathname !== "/account"
+  ) {
     window.location.href = "/login";
   }
 };
@@ -70,15 +73,20 @@ const trpcClient = trpc.createClient({
       url: `${getApiBaseUrl()}/api/trpc`,
       transformer: superjson,
       headers() {
+        const headers: Record<string, string> = {};
         try {
           const token = localStorage.getItem("supabase.auth.token");
           if (token) {
-            return { Authorization: `Bearer ${token}` };
+            headers.Authorization = `Bearer ${token}`;
+          }
+          const adminToken = localStorage.getItem("manju_admin_token");
+          if (adminToken) {
+            headers["X-Admin-Token"] = adminToken;
           }
         } catch {
           // localStorage unavailable
         }
-        return {};
+        return headers;
       },
       fetch(input, init) {
         return globalThis.fetch(input, {

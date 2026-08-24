@@ -23,7 +23,6 @@ import {
   Download,
   Printer,
   Search,
-  Lock,
   ArrowUpRight,
   ShieldCheck,
   ExternalLink,
@@ -65,8 +64,6 @@ import {
 import { toast } from "sonner";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
-import { useAuth } from "@/_core/hooks/useAuth";
-import AuthForm from "@/components/AuthForm";
 
 type AdminTab =
   | "dashboard"
@@ -258,8 +255,50 @@ const BRAND_COLORS: Record<string, string> = {
 };
 
 export default function Admin() {
-  const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
-  const isAdmin = isAuthenticated && user?.role === "admin";
+  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
+    try {
+      return !!localStorage.getItem("manju_admin_token");
+    } catch {
+      return false;
+    }
+  });
+  const [passcode, setPasscode] = useState("");
+  const [authError, setAuthError] = useState(false);
+
+  const verifyPasscodeMutation = trpc.admin.verifyPasscode.useMutation();
+
+  const handleLogin = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setAuthError(false);
+    verifyPasscodeMutation.mutate(
+      { passcode },
+      {
+        onSuccess: data => {
+          try {
+            localStorage.setItem("manju_admin_token", data.token);
+          } catch {
+            // localStorage unavailable
+          }
+          setIsAdmin(true);
+          toast.success("Welcome to Manju Group Enterprise Command Center");
+        },
+        onError: () => {
+          setAuthError(true);
+          toast.error("Invalid Admin Passcode");
+        },
+      }
+    );
+  };
+
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem("manju_admin_token");
+    } catch {
+      // localStorage unavailable
+    }
+    setIsAdmin(false);
+    toast.info("Logged out from Admin Command Center");
+  };
 
   const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
   const [productsList, setProductsList] = useState(STATIC_PRODUCTS);
@@ -438,19 +477,8 @@ export default function Admin() {
   // Server already applies status filtering for ordersList
   const filteredOrders = ordersList;
 
-  // ── AUTH GATE: LOADING STATE ────────────────────────────────────────────
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#001433] via-[#00224D] to-[#0A2E5C] flex items-center justify-center p-4">
-        <div className="text-white/70 text-sm font-semibold animate-pulse">
-          Verifying admin access…
-        </div>
-      </div>
-    );
-  }
-
-  // ── AUTH GATE: NOT LOGGED IN — REUSE ACCOUNT LOGIN FORM ─────────────────
-  if (!isAuthenticated) {
+  // ── AUTH GATE: PASSCODE LOGIN ────────────────────────────────────────────
+  if (!isAdmin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#001433] via-[#00224D] to-[#0A2E5C] flex items-center justify-center p-4">
         <motion.div
@@ -473,49 +501,45 @@ export default function Admin() {
               Enterprise Command Center
             </p>
             <p className="text-xs text-slate-500 mt-3">
-              Sign in with your Manju Group account to access the admin
-              dashboard.
+              Enter the admin passcode to access the dashboard.
             </p>
           </div>
 
-          <AuthForm />
+          <form onSubmit={handleLogin} className="space-y-3">
+            <input
+              type="password"
+              value={passcode}
+              onChange={e => {
+                setPasscode(e.target.value);
+                setAuthError(false);
+              }}
+              placeholder="Admin passcode"
+              autoFocus
+              className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 ${
+                authError
+                  ? "border-red-300 focus:ring-red-200"
+                  : "border-slate-200 focus:ring-[#0052B4]/30"
+              }`}
+            />
+            {authError && (
+              <p className="text-xs text-red-600 font-semibold">
+                Invalid passcode. Please try again.
+              </p>
+            )}
+            <button
+              type="submit"
+              disabled={verifyPasscodeMutation.isPending}
+              className="w-full py-3 rounded-xl bg-[#0052B4] hover:bg-blue-700 text-white text-sm font-bold shadow-md disabled:opacity-60 cursor-pointer"
+            >
+              {verifyPasscodeMutation.isPending
+                ? "Verifying…"
+                : "Access Dashboard"}
+            </button>
+          </form>
 
           <div className="mt-6 pt-4 border-t border-slate-100 text-center">
             <Link href="/">
               <span className="text-xs text-slate-500 hover:text-[#0052B4] transition-colors cursor-pointer inline-flex items-center gap-1">
-                ← Return to Public Website
-              </span>
-            </Link>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // ── AUTH GATE: LOGGED IN BUT NOT ADMIN ──────────────────────────────────
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#001433] via-[#00224D] to-[#0A2E5C] flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="w-full max-w-md bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 text-white shadow-2xl text-center"
-        >
-          <div className="w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-400/60 flex items-center justify-center mx-auto mb-4">
-            <Lock size={26} className="text-red-300" />
-          </div>
-          <h1 className="text-xl font-black font-display tracking-tight text-white">
-            Access Denied
-          </h1>
-          <p className="text-sm text-blue-100/80 mt-2">
-            Signed in as{" "}
-            <span className="font-bold text-white">{user?.email}</span>, but
-            this account does not have admin privileges for the Enterprise
-            Command Center.
-          </p>
-          <div className="mt-6">
-            <Link href="/">
-              <span className="text-xs text-blue-200/70 hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1">
                 ← Return to Public Website
               </span>
             </Link>
@@ -584,10 +608,7 @@ export default function Admin() {
             </Link>
 
             <button
-              onClick={() => {
-                logout();
-                toast.info("Logged out from Admin Command Center");
-              }}
+              onClick={handleLogout}
               className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 text-xs font-bold transition-all cursor-pointer"
             >
               Exit
