@@ -15,36 +15,7 @@ import { useCart } from "@/contexts/CartContext";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { formatPrice } from "@/lib/data";
-
-const FALLBACK_IMAGES: Record<string, string> = {
-  bike: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=400&q=75",
-  scooter:
-    "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=400&q=75",
-  electric:
-    "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=400&q=75",
-  tv: "https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=400&q=75",
-  "smart tv":
-    "https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=400&q=75",
-  ac: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=400&q=75",
-  air: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=400&q=75",
-  water:
-    "https://images.unsplash.com/photo-1548186277-8eb4d5e2fc0f?auto=format&fit=crop&w=400&q=75",
-  filter:
-    "https://images.unsplash.com/photo-1548186277-8eb4d5e2fc0f?auto=format&fit=crop&w=400&q=75",
-};
-
-function getProductImage(
-  imageUrl: string | null | undefined,
-  name: string | null | undefined
-): string {
-  if (imageUrl) return imageUrl;
-  const nameLower = (name || "").toLowerCase();
-  for (const [keyword, url] of Object.entries(FALLBACK_IMAGES)) {
-    if (nameLower.includes(keyword)) return url;
-  }
-  return "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=400&q=75";
-}
+import { formatPrice, getProductImage } from "@/lib/data";
 
 export default function Cart() {
   const [, navigate] = useLocation();
@@ -153,8 +124,9 @@ export default function Cart() {
                             className="w-full h-full object-cover"
                             onError={e => {
                               (e.target as HTMLImageElement).src =
-                                "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=400&q=75";
+                                "/manju-logo-circle.webp";
                             }}
+
                           />
                         </div>
                       </Link>

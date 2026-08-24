@@ -482,13 +482,13 @@ export default function Account() {
                                   <img
                                     src={
                                       item.imageUrl ||
-                                      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=80&q=75"
+                                      "/manju-logo-circle.webp"
                                     }
                                     alt={item.productName || ""}
                                     className="w-full h-full object-cover"
                                     onError={e => {
                                       (e.target as HTMLImageElement).src =
-                                        "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=80&q=75";
+                                        "/manju-logo-circle.webp";
                                     }}
                                   />
                                 </div>
@@ -572,7 +572,7 @@ export default function Account() {
                                   className="w-full h-full object-contain"
                                   onError={e => {
                                     (e.target as HTMLImageElement).src =
-                                      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=400&q=75";
+                                      "/manju-logo-circle.webp";
                                   }}
                                 />
                               ) : (

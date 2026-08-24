@@ -66,7 +66,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/ads/ad_dew_super_ro_system_1.webp",
+    imageUrl: "/ro_water_purifier.webp",
     specifications:
       '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 100 liters per day","Sub Category":"RO Water Filter","Installment Plan":"Down Payment - Rs.14900\\nMonthly premium - Rs.6000 X 11 (Months)\\n                                    Rs.4000 X 01 (Month)","Installment Price":"Rs. 84,900"}',
     description:
@@ -90,7 +90,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/ads/ad_dew_super_ro_system_2.webp",
+    imageUrl: "/ro_water_purifier.webp",
     specifications:
       '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 100 liters per day","Sub Category":"RO+ Water Filter","Installment Plan":"Down Payment - Rs.14900\\nMonthly premium - Rs.6250 X 12 (Months)","Installment Price":"Rs. 89,900"}',
     description:
@@ -114,7 +114,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/ads/ad_dew_super_ro_system_1.webp",
+    imageUrl: "/ro_water_purifier.webp",
     specifications:
       '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 75 liters per day","Sub Category":"Hot & Normal Water Filter","Installment Plan":"Down Payment - Rs.19900\\nMonthly premium - Rs.6250 X 12 (Months)","Installment Price":"Rs. 94,900"}',
     description:
@@ -138,7 +138,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: true,
     isNew: false,
-    imageUrl: "/ads/ad_dew_super_ro_system_2.webp",
+    imageUrl: "/ro_water_purifier.webp",
     specifications:
       '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 75 liters per day","Sub Category":"Hot,Cool & Normal Water Filter","Installment Plan":"Down Payment - Rs.22900\\nMonthly premium - Rs.6250 X 12 (Months)","Installment Price":"Rs. 97,900"}',
     description:
@@ -162,7 +162,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/ads/ad_dew_super_ro_system_1.webp",
+    imageUrl: "/ro_water_purifier.webp",
     specifications:
       '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 500 liters per day","Sub Category":"Commercial Water Filter","Installment Plan":"Down Payment - Rs.90000\\nMonthly premium - Rs.17500 X 06 (Months)","Installment Price":"Rs. 195,000"}',
     description:
@@ -186,7 +186,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/ads/ad_dew_super_ro_system_2.webp",
+    imageUrl: "/ro_water_purifier.webp",
     specifications:
       '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 2500 liters per day","Sub Category":"Commercial Water Filter","Installment Plan":"Down Payment - Rs.170000\\nMonthly premium - Rs.30000 X 06 (Months)","Installment Price":"Rs. 350,000"}',
     description:
@@ -210,7 +210,7 @@ export const STATIC_PRODUCTS = [
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
-    imageUrl: "/ads/ad_dew_super_ro_system_1.webp",
+    imageUrl: "/ro_water_purifier.webp",
     specifications:
       '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 3000 liters per day","Sub Category":"Commercial Water Filter","Installment Plan":"Down Payment - Rs.225000\\nMonthly premium - Rs.37500 X 06 (Months)","Installment Price":"Rs. 450,000"}',
     description:

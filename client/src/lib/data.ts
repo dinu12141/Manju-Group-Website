@@ -111,9 +111,16 @@ export function cleanText(str: string | null | undefined): string {
 
 export function getProductImage(
   imageUrl: string | null | undefined,
-  name: string
+  name: string | null | undefined
 ): string {
-  if (imageUrl && !imageUrl.includes("manjugroup.lk")) {
+  if (
+    imageUrl &&
+    !imageUrl.includes("manjugroup.lk") &&
+    !imageUrl.includes("unsplash.com")
+  ) {
+    return imageUrl;
+  }
+  if (imageUrl && imageUrl.startsWith("/")) {
     return imageUrl;
   }
   const nameLower = (name || "").toLowerCase();
@@ -222,4 +229,3 @@ export function getProductImage(
   }
   return "/scooter_red.webp";
 }
-

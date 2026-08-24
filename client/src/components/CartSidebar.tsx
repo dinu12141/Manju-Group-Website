@@ -15,39 +15,7 @@ import {
 import { useCart } from "@/contexts/CartContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { formatPrice } from "@/lib/data";
-
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=400&q=75";
-
-const FALLBACK_MAP: Record<string, string> = {
-  bike: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=400&q=75",
-  scooter:
-    "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=400&q=75",
-  electric:
-    "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=400&q=75",
-  tv: "https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=400&q=75",
-  "smart tv":
-    "https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=400&q=75",
-  ac: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=400&q=75",
-  air: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=400&q=75",
-  water:
-    "https://images.unsplash.com/photo-1548186277-8eb4d5e2fc0f?auto=format&fit=crop&w=400&q=75",
-  filter:
-    "https://images.unsplash.com/photo-1548186277-8eb4d5e2fc0f?auto=format&fit=crop&w=400&q=75",
-};
-
-function getProductImage(
-  imageUrl: string | null | undefined,
-  name: string | null | undefined
-): string {
-  if (imageUrl) return imageUrl;
-  const lower = (name || "").toLowerCase();
-  for (const [kw, url] of Object.entries(FALLBACK_MAP)) {
-    if (lower.includes(kw)) return url;
-  }
-  return FALLBACK_IMAGE;
-}
+import { formatPrice, getProductImage } from "@/lib/data";
 
 const FREE_SHIPPING_THRESHOLD = 10000;
 const SHIPPING_FEE = 500;
@@ -270,7 +238,7 @@ export default function CartSidebar({ open, onClose }: CartSidebarProps) {
                               className="w-full h-full object-cover"
                               onError={e => {
                                 (e.target as HTMLImageElement).src =
-                                  FALLBACK_IMAGE;
+                                  "/manju-logo-circle.webp";
                               }}
                             />
                           </div>
