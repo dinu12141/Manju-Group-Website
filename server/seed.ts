@@ -1,5 +1,6 @@
 import "dotenv/config";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import {
   brands,
   categories,
@@ -20,7 +21,8 @@ async function seed() {
   }
 
   console.log("🌱 Connecting to database...");
-  const db = drizzle(dbUrl);
+  const client = postgres(dbUrl);
+  const db = drizzle(client);
 
   // ─── Clear existing data ─────────────────────────────────────────────
   console.log("🗑️  Clearing existing data...");

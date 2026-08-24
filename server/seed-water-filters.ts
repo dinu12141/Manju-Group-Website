@@ -1,5 +1,6 @@
 import "dotenv/config";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import { eq } from "drizzle-orm";
 import { products, productImages } from "../drizzle/schema";
 
@@ -143,7 +144,8 @@ async function main() {
     process.exit(1);
   }
 
-  const db = drizzle(dbUrl);
+  const client = postgres(dbUrl);
+  const db = drizzle(client);
 
   for (const p of WATER_FILTER_PRODUCTS) {
     const [existing] = await db
@@ -174,9 +176,9 @@ async function main() {
       isNew: false,
       warrantyMonths: p.warrantyMonths,
       specifications: p.specifications,
-    });
+    }).returning({ id: products.id });
 
-    const insertedId = (result as any).insertId as number;
+    const insertedId = result.id;
 
     await db.insert(productImages).values({
       productId: insertedId,
