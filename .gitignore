@@ -6,7 +6,7 @@
 dist/
 build/
 *.dist
-api/index.mjs
+api/_serverless-bundle.mjs
 
 # Environment variables
 .env
