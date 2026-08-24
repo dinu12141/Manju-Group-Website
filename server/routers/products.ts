@@ -368,32 +368,67 @@ export const productsRouter = router({
         productId: z.union([z.number(), z.string()]),
         brandId: z.union([z.number(), z.string()]).optional(),
         categoryId: z.union([z.number(), z.string()]).optional(),
-        limit: z.number().int().min(1).max(100).default(4),
+        limit: z.number().int().min(1).max(100).default(8),
       })
     )
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) return [];
 
+      const currentId = Number(input.productId) || 0;
+      const catId = input.categoryId ? Number(input.categoryId) : undefined;
+      const bId = input.brandId ? Number(input.brandId) : undefined;
+      const targetLimit = input.limit ?? 8;
+
       const conditions: SQL[] = [
         eq(products.isActive, true),
-        sql`${products.id} != ${Number(input.productId)}`,
       ];
-
-      if (input.categoryId) {
-        conditions.push(eq(products.categoryId, Number(input.categoryId)));
-      } else if (input.brandId) {
-        conditions.push(eq(products.brandId, Number(input.brandId)));
+      if (currentId > 0) {
+        conditions.push(ne(products.id, currentId));
       }
 
-      const rows = await db
+      if (catId && catId > 0) {
+        conditions.push(eq(products.categoryId, catId));
+      } else if (bId && bId > 0) {
+        conditions.push(eq(products.brandId, bId));
+      }
+
+      let rows = await db
         .select({ product: products, brand: brands, category: categories })
         .from(products)
         .leftJoin(brands, eq(products.brandId, brands.id))
         .leftJoin(categories, eq(products.categoryId, categories.id))
         .where(and(...conditions))
-        .orderBy(desc(products.createdAt))
-        .limit(input.limit);
+        .orderBy(desc(products.isFeatured), desc(products.isBestSeller), desc(products.createdAt))
+        .limit(targetLimit);
+
+      // If category/brand matching returned fewer than desired items, supplement with other top products!
+      if (rows.length < targetLimit) {
+        const pickedIds = new Set<number>([currentId, ...rows.map(r => r.product.id)]);
+        const remainingLimit = targetLimit - rows.length;
+
+        const fallbackRows = await db
+          .select({ product: products, brand: brands, category: categories })
+          .from(products)
+          .leftJoin(brands, eq(products.brandId, brands.id))
+          .leftJoin(categories, eq(products.categoryId, categories.id))
+          .where(
+            and(
+              eq(products.isActive, true),
+              ne(products.id, currentId)
+            )
+          )
+          .orderBy(desc(products.isFeatured), desc(products.isBestSeller), desc(products.createdAt))
+          .limit(remainingLimit * 2);
+
+        for (const fRow of fallbackRows) {
+          if (!pickedIds.has(fRow.product.id)) {
+            rows.push(fRow);
+            pickedIds.add(fRow.product.id);
+            if (rows.length >= targetLimit) break;
+          }
+        }
+      }
 
       return hydrateRows(db, rows);
     }),

@@ -21,6 +21,10 @@ import {
   Sparkles,
   CheckCircle2,
   Share2,
+  Flame,
+  Layers,
+  ArrowRight,
+  ShoppingBag,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useCart } from "@/contexts/CartContext";
@@ -44,6 +48,7 @@ type NormalizedProduct = {
   brandName?: string | null;
   brandId: number;
   categoryId: number;
+  category?: string | null;
   basePrice: string | number;
   salePrice?: string | number | null;
   currency?: string | null;
@@ -91,6 +96,7 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
 }
 
 type TabKey = "description" | "specifications" | "reviews";
+type SuggestionFilter = "similar" | "brand" | "all";
 
 export default function ProductDetail({ params }: ProductDetailProps) {
   const { slug } = params;
@@ -108,19 +114,11 @@ export default function ProductDetail({ params }: ProductDetailProps) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("description");
   const [descExpanded, setDescExpanded] = useState(false);
+  const [suggestionFilter, setSuggestionFilter] = useState<SuggestionFilter>("similar");
 
   const { data: dbProduct, isLoading } = trpc.products.bySlug.useQuery({
     slug,
   });
-
-  const { data: relatedDb } = trpc.products.related.useQuery(
-    {
-      productId: dbProduct?.id ?? 0,
-      brandId: dbProduct?.brandId ?? 0,
-      categoryId: dbProduct?.categoryId ?? 0,
-    },
-    { enabled: !!dbProduct?.id }
-  );
 
   // Resilient Static Product Fallback for production stability
   const staticFound = useMemo(() => {
@@ -147,28 +145,9 @@ export default function ProductDetail({ params }: ProductDetailProps) {
     });
   }, [slug]);
 
-  if (isLoading) {
-    return (
-      <MainLayout>
-        <div className="container mx-auto px-4 py-8 md:py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            <Skeleton className="aspect-[4/3] rounded-3xl bg-slate-200" />
-            <div className="space-y-4">
-              <Skeleton className="h-6 w-1/4 bg-slate-200" />
-              <Skeleton className="h-10 w-3/4 bg-slate-200" />
-              <Skeleton className="h-6 w-1/2 bg-slate-200" />
-              <Skeleton className="h-20 w-full bg-slate-200 rounded-2xl" />
-              <Skeleton className="h-24 w-full bg-slate-200 rounded-2xl" />
-              <Skeleton className="h-12 w-full bg-slate-200 rounded-xl" />
-            </div>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  const item: NormalizedProduct | null = dbProduct
-    ? {
+  const item: NormalizedProduct | null = useMemo(() => {
+    if (dbProduct) {
+      return {
         id: dbProduct.id,
         slug: dbProduct.slug,
         name: dbProduct.name,
@@ -177,6 +156,7 @@ export default function ProductDetail({ params }: ProductDetailProps) {
         brandName: dbProduct.brandName,
         brandId: dbProduct.brandId ?? 0,
         categoryId: dbProduct.categoryId ?? 0,
+        category: (dbProduct as any).categoryName || null,
         basePrice: dbProduct.basePrice,
         salePrice: dbProduct.salePrice,
         currency: dbProduct.currency,
@@ -199,31 +179,153 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                 },
               ],
         sku: dbProduct.sku,
-      }
-    : staticFound
-      ? {
-          id: staticFound.id,
-          slug: staticFound.slug,
-          name: staticFound.name,
-          shortDescription: staticFound.shortDescription,
-          description: staticFound.description,
-          brandName: staticFound.brandName,
-          brandId: staticFound.brandId ?? 4,
-          categoryId: staticFound.categoryId ?? 4,
-          basePrice: staticFound.basePrice,
-          salePrice: staticFound.salePrice,
-          currency: staticFound.currency,
-          isInStock: staticFound.isInStock ?? true,
-          specifications: staticFound.specifications,
-          warrantyMonths: staticFound.warrantyMonths,
-          images: [
-            {
-              url: getProductImage(staticFound.imageUrl, staticFound.name),
-            },
-          ],
-          sku: staticFound.sku,
+      };
+    }
+    if (staticFound) {
+      return {
+        id: staticFound.id,
+        slug: staticFound.slug,
+        name: staticFound.name,
+        shortDescription: staticFound.shortDescription,
+        description: staticFound.description,
+        brandName: staticFound.brandName,
+        brandId: staticFound.brandId ?? 4,
+        categoryId: staticFound.categoryId ?? 4,
+        category: staticFound.category || null,
+        basePrice: staticFound.basePrice,
+        salePrice: staticFound.salePrice,
+        currency: staticFound.currency,
+        isInStock: staticFound.isInStock ?? true,
+        specifications: staticFound.specifications,
+        warrantyMonths: staticFound.warrantyMonths,
+        images: [
+          {
+            url: getProductImage(staticFound.imageUrl, staticFound.name),
+          },
+        ],
+        sku: staticFound.sku,
+      };
+    }
+    return null;
+  }, [dbProduct, staticFound]);
+
+  // Query Backend Related Products
+  const { data: relatedDb } = trpc.products.related.useQuery(
+    {
+      productId: item?.id ?? 0,
+      brandId: item?.brandId ?? 0,
+      categoryId: item?.categoryId ?? 0,
+      limit: 12,
+    },
+    { enabled: !!item?.id }
+  );
+
+  // Resilient Static Related Products (Always guarantees Daraz-style suggestions)
+  const staticRelated = useMemo(() => {
+    if (!item) return [];
+    const currentId = item.id;
+    const currentSlug = item.slug.toLowerCase();
+
+    // Priority 1: Same category
+    const sameCategory = STATIC_PRODUCTS.filter(
+      p => p.id !== currentId && p.slug.toLowerCase() !== currentSlug && p.categoryId === item.categoryId
+    );
+
+    // Priority 2: Same brand
+    const sameBrand = STATIC_PRODUCTS.filter(
+      p => p.id !== currentId && p.slug.toLowerCase() !== currentSlug && p.brandId === item.brandId && !sameCategory.some(sc => sc.id === p.id)
+    );
+
+    // Priority 3: Other top products across categories (Bikes, TVs, ACs, Filters)
+    const others = STATIC_PRODUCTS.filter(
+      p => p.id !== currentId && p.slug.toLowerCase() !== currentSlug && !sameCategory.some(sc => sc.id === p.id) && !sameBrand.some(sb => sb.id === p.id)
+    );
+
+    return [...sameCategory, ...sameBrand, ...others];
+  }, [item]);
+
+  // Merged High-Confidence Recommendations Pool
+  const allSuggestions = useMemo(() => {
+    const map = new Map<string | number, any>();
+
+    // 1. Add DB items
+    if (relatedDb && relatedDb.length > 0) {
+      for (const prod of relatedDb) {
+        if (prod.id !== item?.id && prod.slug !== item?.slug) {
+          map.set(prod.id, {
+            id: prod.id,
+            slug: prod.slug,
+            name: prod.name,
+            brandName: prod.brandName ?? "",
+            basePrice: prod.basePrice,
+            salePrice: prod.salePrice,
+            currency: prod.currency ?? "LKR",
+            isInStock: prod.isInStock,
+            categoryId: prod.categoryId,
+            brandId: prod.brandId,
+            imageUrl: getProductImage(prod.imageUrl || (prod.images?.[0]?.url), prod.name),
+          });
         }
-      : null;
+      }
+    }
+
+    // 2. Add static fallback items
+    for (const sp of staticRelated) {
+      if (!map.has(sp.id) && sp.id !== item?.id && sp.slug !== item?.slug) {
+        map.set(sp.id, {
+          id: sp.id,
+          slug: sp.slug,
+          name: sp.name,
+          brandName: sp.brandName ?? "",
+          basePrice: sp.basePrice,
+          salePrice: sp.salePrice,
+          currency: sp.currency ?? "LKR",
+          isInStock: sp.isInStock ?? true,
+          categoryId: sp.categoryId,
+          brandId: sp.brandId,
+          imageUrl: getProductImage(sp.imageUrl, sp.name),
+        });
+      }
+    }
+
+    return Array.from(map.values());
+  }, [relatedDb, staticRelated, item]);
+
+  // Filtered Suggestions based on user-selected pill
+  const displayedSuggestions = useMemo(() => {
+    if (!item) return [];
+    if (suggestionFilter === "brand") {
+      const brandItems = allSuggestions.filter(
+        p => p.brandId === item.brandId || (item.brandName && p.brandName?.toLowerCase() === item.brandName.toLowerCase())
+      );
+      if (brandItems.length >= 2) return brandItems.slice(0, 8);
+    }
+    if (suggestionFilter === "similar") {
+      const catItems = allSuggestions.filter(p => p.categoryId === item.categoryId);
+      if (catItems.length >= 2) return catItems.slice(0, 8);
+    }
+    return allSuggestions.slice(0, 8);
+  }, [allSuggestions, suggestionFilter, item]);
+
+  if (isLoading && !item) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-8 md:py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <Skeleton className="aspect-[4/3] rounded-3xl bg-slate-200" />
+            <div className="space-y-4">
+              <Skeleton className="h-6 w-1/4 bg-slate-200" />
+              <Skeleton className="h-10 w-3/4 bg-slate-200" />
+              <Skeleton className="h-6 w-1/2 bg-slate-200" />
+              <Skeleton className="h-20 w-full bg-slate-200 rounded-2xl" />
+              <Skeleton className="h-24 w-full bg-slate-200 rounded-2xl" />
+              <Skeleton className="h-12 w-full bg-slate-200 rounded-xl" />
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (!item) {
     return (
@@ -274,10 +376,7 @@ export default function ProductDetail({ params }: ProductDetailProps) {
 
   // Remove duplicates while keeping order
   const images = Array.from(new Set(rawImages));
-
-  const thumbnails =
-    images.length === 1 ? [images[0]] : images.slice(0, 5);
-
+  const thumbnails = images.length === 1 ? [images[0]] : images.slice(0, 5);
   const mainImageUrl = images[selectedImage] || images[0] || fallbackImage;
 
   const specs: Record<string, unknown> | null = item.specifications
@@ -285,8 +384,6 @@ export default function ProductDetail({ params }: ProductDetailProps) {
       ? JSON.parse(item.specifications)
       : (item.specifications as Record<string, unknown>)
     : null;
-
-  const relatedProducts = relatedDb ?? [];
 
   const handleAddToCart = async () => {
     await addItem(
@@ -370,7 +467,7 @@ export default function ProductDetail({ params }: ProductDetailProps) {
         <div className="container mx-auto px-4 py-8 md:py-12">
           {/* Main Product Hero Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mb-16">
-            {/* LEFT: Image gallery (5 Cols) */}
+            {/* LEFT: Image gallery (6 Cols) */}
             <div className="lg:col-span-6 flex flex-col">
               {/* Main Image Container */}
               <div className="relative aspect-[4/3] rounded-3xl overflow-hidden mb-4 bg-white border border-slate-200/90 shadow-sm flex items-center justify-center p-3 sm:p-6 group">
@@ -479,7 +576,7 @@ export default function ProductDetail({ params }: ProductDetailProps) {
               )}
             </div>
 
-            {/* RIGHT: Product Info & Actions (7 Cols) */}
+            {/* RIGHT: Product Info & Actions (6 Cols) */}
             <div className="lg:col-span-6 flex flex-col justify-between">
               <div>
                 {/* Brand & SKU */}
@@ -687,7 +784,7 @@ export default function ProductDetail({ params }: ProductDetailProps) {
             </div>
           </div>
 
-          {/* Tab Navigation Section */}
+          {/* Tab Navigation Section (Description / Specifications / Reviews) */}
           <div className="mb-16">
             <div className="flex gap-2 mb-6 border-b border-slate-200 pb-2 overflow-x-auto scrollbar-none">
               {tabs.map(tab => (
@@ -781,38 +878,71 @@ export default function ProductDetail({ params }: ProductDetailProps) {
             </div>
           </div>
 
-          {/* Related Products Carousel / Grid */}
-          {relatedProducts.length > 0 && (
-            <div className="pt-10 border-t border-slate-200">
-              <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
-                <div>
-                  <p className="text-xs font-extrabold uppercase tracking-widest text-blue-600 mb-1">
-                    Complete Your Setup
-                  </p>
-                  <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                    Related Products
-                  </h2>
+          {/* ========================================================================= */}
+          {/* DARAZ-STYLE RECOMMENDED & SIMILAR PRODUCTS SECTION */}
+          {/* ========================================================================= */}
+          <div className="pt-8 border-t border-slate-200/90">
+            {/* Header & Filter Pills */}
+            <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-200/70 text-[#F85606] text-xs font-black uppercase tracking-wider mb-2">
+                  <Flame size={14} className="fill-[#F85606]" /> Recommended For You
                 </div>
-                <Link
-                  href="/products"
-                  className="text-xs font-bold text-[#0F2D5E] hover:text-blue-600 transition-colors flex items-center gap-1"
-                >
-                  View All Products →
-                </Link>
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                  Similar Items & Recommendations
+                </h2>
+                <p className="text-slate-500 text-xs sm:text-sm font-medium mt-1">
+                  Customers who viewed this item also looked at these popular products
+                </p>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
-                {(
-                  relatedProducts.slice(0, 4) as React.ComponentProps<
-                    typeof ProductCard
-                  >[]
-                ).map((related, i) => (
+              {/* Filter Pills (Daraz Style) */}
+              <div className="flex items-center gap-1.5 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200 self-start md:self-auto overflow-x-auto max-w-full">
+                <button
+                  onClick={() => setSuggestionFilter("similar")}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    suggestionFilter === "similar"
+                      ? "bg-white text-[#0F2D5E] shadow-sm font-black"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  Similar Category
+                </button>
+                {item.brandName && (
+                  <button
+                    onClick={() => setSuggestionFilter("brand")}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                      suggestionFilter === "brand"
+                        ? "bg-white text-[#0F2D5E] shadow-sm font-black"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    More from {cleanText(item.brandName)}
+                  </button>
+                )}
+                <button
+                  onClick={() => setSuggestionFilter("all")}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    suggestionFilter === "all"
+                      ? "bg-white text-[#0F2D5E] shadow-sm font-black"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  All Recommendations
+                </button>
+              </div>
+            </div>
+
+            {/* Recommendations Grid (8 items) */}
+            {displayedSuggestions.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                {displayedSuggestions.map((related, i) => (
                   <motion.div
-                    key={related.id}
+                    key={related.id + "-" + i}
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{
-                      delay: i * 0.06,
+                      delay: i * 0.05,
                       duration: 0.35,
                       ease: "easeOut",
                     }}
@@ -826,19 +956,49 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                       salePrice={related.salePrice}
                       currency={related.currency ?? "LKR"}
                       isInStock={related.isInStock}
-                      imageUrl={
-                        related.imageUrl ||
-                        ((related as any).images &&
-                        (related as any).images.length > 0
-                          ? (related as any).images[0].url
-                          : undefined)
-                      }
+                      imageUrl={related.imageUrl}
                     />
                   </motion.div>
                 ))}
               </div>
+            ) : (
+              <div className="text-center py-12 bg-white rounded-3xl border border-slate-200">
+                <ShoppingBag size={40} className="mx-auto text-slate-300 mb-3" />
+                <p className="text-slate-600 font-bold text-sm">
+                  Explore our complete collection
+                </p>
+                <Link
+                  href="/products"
+                  className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#0F2D5E] text-white text-xs font-bold"
+                >
+                  Browse Store →
+                </Link>
+              </div>
+            )}
+
+            {/* Bottom View All Link Banner */}
+            <div className="mt-10 p-6 rounded-3xl bg-gradient-to-r from-[#0F2D5E] to-[#1a4a8a] text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md shadow-blue-900/15">
+              <div className="flex items-center gap-3.5 text-center sm:text-left">
+                <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-white shrink-0">
+                  <Layers size={24} />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-base text-white">
+                    Looking for more products?
+                  </h4>
+                  <p className="text-xs text-white/70">
+                    Discover 100% genuine Sri Lankan warranty products across all Manju Group brands.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/products"
+                className="px-6 py-3 rounded-xl bg-[#F85606] hover:bg-[#e04c04] text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-102 shrink-0"
+              >
+                Browse All Categories <ArrowRight size={14} />
+              </Link>
             </div>
-          )}
+          </div>
         </div>
       </motion.div>
     </MainLayout>
