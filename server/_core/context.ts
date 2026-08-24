@@ -49,9 +49,32 @@ export async function createContext(
               .limit(1);
           }
           
-          if (result.length > 0) {
+          if (result && result.length > 0) {
             user = result[0];
           }
+        }
+
+        // Fallback user object from Supabase if DB record was not found or DB was slow
+        if (!user && data.user) {
+          user = {
+            id: 0,
+            openId: data.user.id,
+            name:
+              data.user.user_metadata?.full_name ||
+              data.user.email?.split("@")[0] ||
+              "User",
+            email: data.user.email || null,
+            phone: data.user.phone || null,
+            loginMethod: "supabase",
+            passwordHash: null,
+            resetToken: null,
+            resetTokenExpiry: null,
+            role: "user",
+            avatarUrl: data.user.user_metadata?.avatar_url || null,
+            createdAt: new Date(data.user.created_at || Date.now()),
+            updatedAt: new Date(),
+            lastSignedIn: new Date(),
+          };
         }
       }
     }

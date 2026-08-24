@@ -38,18 +38,25 @@ export const wishlistRouter = router({
 
       let rawItems: Array<{ id: number; productId: string }> = [];
 
-      if (!db || !userId) {
+      try {
+        if (!db || !userId) {
+          rawItems = MOCK_WISHLISTS.filter(w =>
+            userId ? w.userId === userId : w.sessionId === sessionId
+          );
+        } else {
+          rawItems = await db
+            .select({
+              id: wishlists.id,
+              productId: wishlists.productId,
+            })
+            .from(wishlists)
+            .where(eq(wishlists.userId, userId));
+        }
+      } catch (err) {
+        console.warn("DB wishlist lookup failed, using memory fallback:", err);
         rawItems = MOCK_WISHLISTS.filter(w =>
           userId ? w.userId === userId : w.sessionId === sessionId
         );
-      } else {
-        rawItems = await db
-          .select({
-            id: wishlists.id,
-            productId: wishlists.productId,
-          })
-          .from(wishlists)
-          .where(eq(wishlists.userId, userId));
       }
 
       if (rawItems.length === 0) return [];

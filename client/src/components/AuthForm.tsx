@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -78,6 +79,7 @@ function GoogleIcon() {
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function AuthForm() {
+  const [, navigate] = useLocation();
   const [mode, setMode] = useState<"signin" | "signup" | "forgot_password" | "reset_password">("signin");
   const { refresh } = useAuth();
   const utils = trpc.useUtils();
@@ -104,11 +106,12 @@ export default function AuthForm() {
   });
 
   const onAuthSuccess = async (session: any) => {
-    // Store token globally or let Supabase manage it
-    // Trpc client should send Authorization: Bearer session.access_token
-    localStorage.setItem("supabase.auth.token", session.access_token);
+    if (session?.access_token) {
+      localStorage.setItem("supabase.auth.token", session.access_token);
+    }
     await utils.auth.me.invalidate();
     await refresh();
+    navigate("/account");
   };
 
   useEffect(() => {
