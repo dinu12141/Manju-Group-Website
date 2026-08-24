@@ -12,7 +12,7 @@ import {
   contactMessages,
 } from "../../drizzle/schema";
 import { nanoid } from "nanoid";
-import { eq, desc, asc, sql, and, like, or } from "drizzle-orm";
+import { eq, desc, asc, sql, and, like, or, inArray } from "drizzle-orm";
 import { STATIC_PRODUCTS, STATIC_BRANDS } from "../../client/src/lib/staticData";
 
 export const adminRouter = router({
@@ -108,7 +108,7 @@ export const adminRouter = router({
   }),
 
   // ERP Sync Trigger
-  erpSync: publicProcedure.mutation(async () => {
+  erpSync: adminProcedure.mutation(async () => {
     return {
       success: true,
       syncedAt: new Date().toISOString(),
@@ -120,7 +120,7 @@ export const adminRouter = router({
   }),
 
   // Recent orders
-  recentOrders: publicProcedure
+  recentOrders: adminProcedure
     .input(z.object({ limit: z.number().int().min(1).max(100).default(10) }))
     .query(async ({ input }) => {
       try {
@@ -137,7 +137,7 @@ export const adminRouter = router({
     }),
 
   // All orders
-  orders: publicProcedure
+  orders: adminProcedure
     .input(
       z.object({ page: z.number().int().min(1).default(1), limit: z.number().int().min(1).max(100).default(20) })
     )
@@ -162,7 +162,7 @@ export const adminRouter = router({
     }),
 
   // Update order status
-  updateOrderStatus: publicProcedure
+  updateOrderStatus: adminProcedure
     .input(
       z.object({
         orderId: z.number(),
@@ -191,8 +191,232 @@ export const adminRouter = router({
       }
     }),
 
+  // Real paginated orders list (Orders & Fulfillment admin screen)
+  ordersList: adminProcedure
+    .input(
+      z.object({
+        page: z.number().int().min(1).default(1),
+        limit: z.number().int().min(1).max(100).default(20),
+        status: z
+          .enum(["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "refunded"])
+          .optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) return { items: [], total: 0 };
+
+        const offset = (input.page - 1) * input.limit;
+        const whereClause = input.status ? eq(orders.status, input.status) : undefined;
+
+        const [orderRows, countResult] = await Promise.all([
+          db
+            .select({
+              id: orders.id,
+              orderNumber: orders.orderNumber,
+              status: orders.status,
+              paymentMethod: orders.paymentMethod,
+              paymentStatus: orders.paymentStatus,
+              subtotal: orders.subtotal,
+              shippingFee: orders.shippingFee,
+              discount: orders.discount,
+              total: orders.total,
+              currency: orders.currency,
+              shippingAddress: orders.shippingAddress,
+              createdAt: orders.createdAt,
+              updatedAt: orders.updatedAt,
+            })
+            .from(orders)
+            .where(whereClause)
+            .orderBy(desc(orders.createdAt))
+            .limit(input.limit)
+            .offset(offset),
+          db
+            .select({ count: sql<number>`count(*)` })
+            .from(orders)
+            .where(whereClause),
+        ]);
+
+        const orderIds = orderRows.map(o => o.id);
+        let itemsByOrder: Record<number, { productName: string; variantName: string | null; sku: string | null; quantity: number; unitPrice: string; subtotal: string; imageUrl: string | null }[]> = {};
+
+        if (orderIds.length > 0) {
+          const items = await db
+            .select({
+              orderId: orderItems.orderId,
+              productId: orderItems.productId,
+              productName: orderItems.productName,
+              variantName: orderItems.variantName,
+              sku: orderItems.sku,
+              quantity: orderItems.quantity,
+              unitPrice: orderItems.unitPrice,
+              subtotal: orderItems.subtotal,
+            })
+            .from(orderItems)
+            .where(inArray(orderItems.orderId, orderIds));
+
+          const productIds = Array.from(
+            new Set(items.map(i => Number(i.productId)).filter(id => !isNaN(id) && id > 0))
+          );
+
+          let imageMap: Record<number, string> = {};
+          if (productIds.length > 0) {
+            const pImages = await db
+              .select()
+              .from(productImages)
+              .where(inArray(productImages.productId, productIds));
+            for (const img of pImages) {
+              if (!imageMap[img.productId]) {
+                imageMap[img.productId] = img.url;
+              }
+            }
+          }
+
+          for (const item of items) {
+            if (!itemsByOrder[item.orderId]) itemsByOrder[item.orderId] = [];
+            itemsByOrder[item.orderId].push({
+              productName: item.productName,
+              variantName: item.variantName,
+              sku: item.sku,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              subtotal: item.subtotal,
+              imageUrl: imageMap[Number(item.productId)] || null,
+            });
+          }
+        }
+
+        const enrichedItems = orderRows.map(order => ({
+          ...order,
+          items: itemsByOrder[order.id] || [],
+          itemCount: (itemsByOrder[order.id] || []).reduce((sum, i) => sum + i.quantity, 0),
+        }));
+
+        return { items: enrichedItems, total: Number(countResult[0]?.count ?? 0) };
+      } catch (e) {
+        console.error("Failed to fetch admin orders list:", e);
+        return { items: [], total: 0 };
+      }
+    }),
+
+  // Customer directory — aggregated from real order shippingAddress data (mostly guest checkout)
+  customerDirectory: adminProcedure
+    .input(
+      z.object({
+        page: z.number().int().min(1).default(1),
+        limit: z.number().int().min(1).max(100).default(20),
+        search: z.string().optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) return { items: [], total: 0 };
+
+        const allOrders = await db
+          .select({
+            id: orders.id,
+            orderNumber: orders.orderNumber,
+            status: orders.status,
+            total: orders.total,
+            shippingAddress: orders.shippingAddress,
+            createdAt: orders.createdAt,
+          })
+          .from(orders)
+          .orderBy(desc(orders.createdAt));
+
+        type CustomerAgg = {
+          key: string;
+          name: string;
+          phone: string;
+          email: string;
+          address: string;
+          city: string;
+          totalOrders: number;
+          totalSpent: number;
+          lastOrderDate: Date;
+          orderHistory: { orderNumber: string; date: Date; total: number; status: string }[];
+        };
+
+        const customerMap = new Map<string, CustomerAgg>();
+
+        for (const order of allOrders) {
+          const addr = (order.shippingAddress || {}) as Record<string, unknown>;
+          const rawPhone = String(addr.phone || "").replace(/\D/g, "");
+          const rawEmail = String(addr.email || "").trim().toLowerCase();
+          const key = rawPhone || rawEmail;
+
+          if (!key) continue; // no way to identify this customer, skip
+
+          const firstName = String(addr.firstName || "").trim();
+          const lastName = String(addr.lastName || "").trim();
+          const name = `${firstName} ${lastName}`.trim() || "Unknown";
+          const addressLine = [addr.addressLine1, addr.addressLine2].filter(Boolean).join(", ");
+          const city = String(addr.city || "");
+          const orderTotal = Number(order.total) || 0;
+
+          const existing = customerMap.get(key);
+          if (existing) {
+            existing.totalOrders += 1;
+            existing.totalSpent += orderTotal;
+            existing.orderHistory.push({
+              orderNumber: order.orderNumber,
+              date: order.createdAt,
+              total: orderTotal,
+              status: order.status,
+            });
+            // orders are already sorted desc by createdAt, so first-seen order is most recent
+          } else {
+            customerMap.set(key, {
+              key,
+              name,
+              phone: String(addr.phone || ""),
+              email: String(addr.email || ""),
+              address: addressLine,
+              city,
+              totalOrders: 1,
+              totalSpent: orderTotal,
+              lastOrderDate: order.createdAt,
+              orderHistory: [
+                {
+                  orderNumber: order.orderNumber,
+                  date: order.createdAt,
+                  total: orderTotal,
+                  status: order.status,
+                },
+              ],
+            });
+          }
+        }
+
+        let allCustomers = Array.from(customerMap.values()).sort(
+          (a, b) => new Date(b.lastOrderDate).getTime() - new Date(a.lastOrderDate).getTime()
+        );
+
+        if (input.search) {
+          const q = input.search.trim().toLowerCase();
+          allCustomers = allCustomers.filter(
+            c =>
+              c.name.toLowerCase().includes(q) ||
+              c.phone.toLowerCase().includes(q) ||
+              c.email.toLowerCase().includes(q)
+          );
+        }
+
+        const total = allCustomers.length;
+        const offset = (input.page - 1) * input.limit;
+        const items = allCustomers.slice(offset, offset + input.limit);
+
+        return { items, total };
+      } catch (e) {
+        console.error("Failed to build customer directory:", e);
+        return { items: [], total: 0 };
+      }
+    }),
+
   // Products management
-  products: publicProcedure
+  products: adminProcedure
     .input(
       z.object({
         page: z.number().int().min(1).default(1),
@@ -288,7 +512,7 @@ export const adminRouter = router({
     }),
 
   // Toggle product active
-  toggleProductActive: publicProcedure
+  toggleProductActive: adminProcedure
     .input(z.object({ productId: z.number(), isActive: z.boolean() }))
     .mutation(async ({ input }) => {
       try {
@@ -318,14 +542,14 @@ export const adminRouter = router({
     ];
   }),
 
-  productById: publicProcedure
+  productById: adminProcedure
     .input(z.object({ productId: z.number() }))
     .query(async ({ input }) => {
       const p = STATIC_PRODUCTS.find(p => p.id === input.productId);
       return p ?? null;
     }),
 
-  createProduct: publicProcedure
+  createProduct: adminProcedure
     .input(
       z.object({
         name: z.string().min(1),
@@ -347,7 +571,7 @@ export const adminRouter = router({
       return { success: true, slug: `${input.sku.toLowerCase()}-${Date.now()}` };
     }),
 
-  updateProduct: publicProcedure
+  updateProduct: adminProcedure
     .input(
       z.object({
         productId: z.number(),
@@ -370,21 +594,21 @@ export const adminRouter = router({
       return { success: true };
     }),
 
-  deleteProduct: publicProcedure
+  deleteProduct: adminProcedure
     .input(z.object({ productId: z.number() }))
     .mutation(async ({ input }) => {
       return { success: true };
     }),
 
   // Order detail
-  orderById: publicProcedure
+  orderById: adminProcedure
     .input(z.object({ orderId: z.number() }))
     .query(async ({ input }) => {
       return null;
     }),
 
   // Customers
-  customers: publicProcedure
+  customers: adminProcedure
     .input(
       z.object({ page: z.number().int().min(1).default(1), limit: z.number().int().min(1).max(100).default(20) })
     )
@@ -420,18 +644,18 @@ export const adminRouter = router({
     }),
 
   // Contact messages
-  contactMessages: publicProcedure.query(async () => {
+  contactMessages: adminProcedure.query(async () => {
     return [];
   }),
 
-  markMessageRead: publicProcedure
+  markMessageRead: adminProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
       return { success: true };
     }),
 
   // Revenue chart data (last 7 days)
-  revenueChart: publicProcedure.query(async () => {
+  revenueChart: adminProcedure.query(async () => {
     return [
       { date: "2026-08-17", revenue: 2100000, count: 5 },
       { date: "2026-08-18", revenue: 2800000, count: 7 },

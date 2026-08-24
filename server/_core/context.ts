@@ -4,6 +4,7 @@ import { supabase } from "../supabase";
 import { getDb } from "../db";
 import { users } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { ENV } from "./env";
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
@@ -32,6 +33,10 @@ export async function createContext(
             .where(eq(users.openId, data.user.id))
             .limit(1);
             
+          const isOwner =
+            !!ENV.ownerEmail &&
+            (data.user.email || "").toLowerCase() === ENV.ownerEmail;
+
           if (result.length === 0) {
             // Auto-create user
             await db.insert(users).values({
@@ -39,16 +44,29 @@ export async function createContext(
               email: data.user.email,
               name: data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "User",
               loginMethod: "supabase",
+              role: isOwner ? "admin" : "user",
               lastSignedIn: new Date(),
             });
-            
+
+            result = await db
+              .select()
+              .from(users)
+              .where(eq(users.openId, data.user.id))
+              .limit(1);
+          } else if (isOwner && result[0].role !== "admin") {
+            // Self-heal: grant admin to the owner account even if it was created before this check existed.
+            await db
+              .update(users)
+              .set({ role: "admin" })
+              .where(eq(users.openId, data.user.id));
+
             result = await db
               .select()
               .from(users)
               .where(eq(users.openId, data.user.id))
               .limit(1);
           }
-          
+
           if (result && result.length > 0) {
             user = result[0];
           }
@@ -69,7 +87,11 @@ export async function createContext(
             passwordHash: null,
             resetToken: null,
             resetTokenExpiry: null,
-            role: "user",
+            role:
+              !!ENV.ownerEmail &&
+              (data.user.email || "").toLowerCase() === ENV.ownerEmail
+                ? "admin"
+                : "user",
             avatarUrl: data.user.user_metadata?.avatar_url || null,
             createdAt: new Date(data.user.created_at || Date.now()),
             updatedAt: new Date(),
