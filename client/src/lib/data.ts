@@ -108,3 +108,118 @@ export function cleanText(str: string | null | undefined): string {
     .replace(/<[^>]*>/g, "")
     .trim();
 }
+
+export function getProductImage(
+  imageUrl: string | null | undefined,
+  name: string
+): string {
+  if (imageUrl && !imageUrl.includes("manjugroup.lk")) {
+    return imageUrl;
+  }
+  const nameLower = (name || "").toLowerCase();
+  if (
+    nameLower.includes("32") &&
+    (nameLower.includes("tv") || nameLower.includes("smart"))
+  ) {
+    return "/dew_plus_32_tv.webp";
+  }
+  if (
+    nameLower.includes("43") &&
+    (nameLower.includes("tv") || nameLower.includes("smart"))
+  ) {
+    return "/dew_plus_43_tv.webp";
+  }
+  if (
+    nameLower.includes("55") &&
+    (nameLower.includes("tv") || nameLower.includes("smart"))
+  ) {
+    return "/dew_plus_55_tv.webp";
+  }
+  if (
+    nameLower.includes("65") &&
+    (nameLower.includes("tv") || nameLower.includes("smart"))
+  ) {
+    return "/dew_plus_65_tv.webp";
+  }
+  if (
+    nameLower.includes("75") &&
+    (nameLower.includes("tv") || nameLower.includes("smart"))
+  ) {
+    return "/dew_plus_75_tv.webp";
+  }
+  if (
+    nameLower.includes("98") &&
+    (nameLower.includes("tv") || nameLower.includes("smart"))
+  ) {
+    return "/dew_plus_98_tv.webp";
+  }
+  if (
+    nameLower.includes("1.5") ||
+    (nameLower.includes("1_5") &&
+      (nameLower.includes("ac") || nameLower.includes("air")))
+  ) {
+    return "/dew_plus_ac_1_5ton.webp";
+  }
+  if (
+    nameLower.includes("2") &&
+    (nameLower.includes("ac") || nameLower.includes("air"))
+  ) {
+    return "/dew_plus_ac_2ton.webp";
+  }
+  if (
+    nameLower.includes("ac") ||
+    nameLower.includes("air conditioner") ||
+    nameLower.includes("inverter")
+  ) {
+    return "/dew_plus_ac_1ton.webp";
+  }
+  if (nameLower.includes("commercial") && nameLower.includes("3000")) {
+    return "/dew_super_commercial_3000l.webp";
+  }
+  if (nameLower.includes("commercial") && nameLower.includes("2500")) {
+    return "/dew_super_commercial_2500l.webp";
+  }
+  if (nameLower.includes("commercial") && nameLower.includes("500")) {
+    return "/dew_super_commercial_500l.webp";
+  }
+  if (
+    nameLower.includes("cool") ||
+    (nameLower.includes("hot") &&
+      (nameLower.includes("cold") || nameLower.includes("cool")))
+  ) {
+    return "/dew_super_hot_cold_dispenser.webp";
+  }
+  if (nameLower.includes("hot") && nameLower.includes("normal")) {
+    return "/dew_super_hot_normal.webp";
+  }
+  if (nameLower.includes("ro+") || nameLower.includes("ro +")) {
+    return "/dew_super_ro_plus.webp";
+  }
+  if (
+    nameLower.includes("water") ||
+    nameLower.includes("filter") ||
+    nameLower.includes("purifier") ||
+    nameLower.includes("dispenser") ||
+    nameLower.includes("ro")
+  ) {
+    return "/ro_water_purifier.webp";
+  }
+  if (
+    nameLower.includes("scooter") ||
+    nameLower.includes("em003") ||
+    nameLower.includes("silver") ||
+    nameLower.includes("yw06")
+  ) {
+    return "/scooter_silver.webp";
+  }
+  if (
+    nameLower.includes("bike") ||
+    nameLower.includes("motor") ||
+    nameLower.includes("electric") ||
+    nameLower.includes("em005")
+  ) {
+    return "/scooter_red.webp";
+  }
+  return "/scooter_red.webp";
+}
+
