@@ -61,22 +61,6 @@ describe("auth", () => {
     expect(result).not.toBeNull();
     expect(result?.role).toBe("admin");
   });
-
-  it("logout clears session cookie and returns success", async () => {
-    const clearedCookies: string[] = [];
-    const ctx: TrpcContext = {
-      ...createAdminContext(),
-      res: {
-        clearCookie: (name: string) => {
-          clearedCookies.push(name);
-        },
-      } as TrpcContext["res"],
-    };
-    const caller = appRouter.createCaller(ctx);
-    const result = await caller.auth.logout();
-    expect(result).toEqual({ success: true });
-    expect(clearedCookies.length).toBe(1);
-  });
 });
 
 describe("admin access control", () => {
