@@ -22,7 +22,7 @@ const Locations = lazy(() => import("./pages/Locations"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const News = lazy(() => import("./pages/News"));
 const NewsDetail = lazy(() => import("./pages/NewsDetail"));
-const Account = lazy(() => import("./pages/Account"));
+import Account from "./pages/Account";
 const Admin = lazy(() => import("./pages/Admin"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
