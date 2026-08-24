@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Route, Switch } from "wouter";
@@ -75,6 +75,28 @@ function Router() {
 }
 
 function App() {
+  // Automatically remove trailing hash (#) or OAuth fragments from browser address bar
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash) {
+      // Delay slightly so Supabase auth listener can extract the tokens if needed
+      const timer = setTimeout(() => {
+        if (
+          window.location.hash.includes("access_token") ||
+          window.location.hash.includes("error") ||
+          window.location.hash === "#" ||
+          window.location.hash.length <= 1
+        ) {
+          window.history.replaceState(
+            null,
+            "",
+            window.location.pathname + window.location.search
+          );
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">
