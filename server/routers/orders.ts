@@ -235,91 +235,99 @@ export const ordersRouter = router({
         return { success: true, orderId: newMockOrder.id, orderNumber };
       }
 
-      // Finding #3 fix: look up authoritative prices from DB; never trust client-supplied prices
-      const verifiedItems = await Promise.all(
-        input.items.map(async item => {
-          const numProductId = Number(item.productId);
-          let serverUnitPrice: number | null = null;
+      try {
+        // Finding #3 fix: look up authoritative prices from DB; never trust client-supplied prices
+        const verifiedItems = await Promise.all(
+          input.items.map(async item => {
+            const numProductId = Number(item.productId);
+            let serverUnitPrice: number | null = null;
 
-          if (!isNaN(numProductId) && numProductId > 0) {
-            if (item.variantId) {
-              const [variant] = await db
-                .select({ price: productVariants.price, salePrice: productVariants.salePrice })
-                .from(productVariants)
-                .where(eq(productVariants.id, Number(item.variantId)))
-                .limit(1);
-              if (variant) {
-                serverUnitPrice = Number(variant.salePrice) || Number(variant.price);
+            if (!isNaN(numProductId) && numProductId > 0) {
+              if (item.variantId) {
+                const [variant] = await db
+                  .select({ price: productVariants.price, salePrice: productVariants.salePrice })
+                  .from(productVariants)
+                  .where(eq(productVariants.id, Number(item.variantId)))
+                  .limit(1);
+                if (variant) {
+                  serverUnitPrice = Number(variant.salePrice) || Number(variant.price);
+                }
+              }
+              if (serverUnitPrice === null) {
+                const [product] = await db
+                  .select({ basePrice: products.basePrice, salePrice: products.salePrice })
+                  .from(products)
+                  .where(eq(products.id, numProductId))
+                  .limit(1);
+                if (product) {
+                  serverUnitPrice = Number(product.salePrice) || Number(product.basePrice);
+                }
               }
             }
-            if (serverUnitPrice === null) {
-              const [product] = await db
-                .select({ basePrice: products.basePrice, salePrice: products.salePrice })
-                .from(products)
-                .where(eq(products.id, numProductId))
-                .limit(1);
-              if (product) {
-                serverUnitPrice = Number(product.salePrice) || Number(product.basePrice);
-              }
-            }
-          }
 
-          // If product not found in DB fall back to client price (covers custom/legacy items)
-          const unitPrice = serverUnitPrice ?? Number(item.unitPrice);
-          return { ...item, unitPrice };
-        })
-      );
-
-      const serverSubtotal = verifiedItems.reduce(
-        (sum, item) => sum + item.unitPrice * item.quantity,
-        0
-      );
-      const serverShippingFee = Number(input.shippingFee);
-      const serverDiscount = Number(input.discount);
-      const serverTotal = serverSubtotal + serverShippingFee - serverDiscount;
-
-      await db.insert(orders).values({
-        orderNumber,
-        userId,
-        status: "pending",
-        subtotal: String(serverSubtotal),
-        shippingFee: String(serverShippingFee),
-        discount: String(serverDiscount),
-        total: String(serverTotal),
-        currency: "LKR",
-        paymentMethod: input.paymentMethod,
-        paymentStatus: "pending",
-        shippingAddress: input.shippingAddress,
-        billingAddress: input.billingAddress || input.shippingAddress,
-        notes: input.notes || null,
-      });
-
-      const [newOrder] = await db
-        .select()
-        .from(orders)
-        .where(eq(orders.orderNumber, orderNumber))
-        .limit(1);
-
-      if (!newOrder) {
-        throw new Error("Failed to retrieve created order");
-      }
-
-      if (verifiedItems.length > 0) {
-        await db.insert(orderItems).values(
-          verifiedItems.map(item => ({
-            orderId: newOrder.id,
-            productId: String(item.productId),
-            variantId: item.variantId ? String(item.variantId) : null,
-            productName: item.productName,
-            variantName: item.variantName || null,
-            sku: item.sku || null,
-            quantity: item.quantity,
-            unitPrice: String(item.unitPrice),
-            subtotal: String(item.unitPrice * item.quantity),
-          }))
+            // If product not found in DB fall back to client price (covers custom/legacy items)
+            const unitPrice = serverUnitPrice ?? Number(item.unitPrice);
+            return { ...item, unitPrice };
+          })
         );
-      }
 
-      return { success: true, orderId: newOrder.id, orderNumber };
+        const serverSubtotal = verifiedItems.reduce(
+          (sum, item) => sum + item.unitPrice * item.quantity,
+          0
+        );
+        const serverShippingFee = Number(input.shippingFee);
+        const serverDiscount = Number(input.discount);
+        const serverTotal = serverSubtotal + serverShippingFee - serverDiscount;
+
+        await db.insert(orders).values({
+          orderNumber,
+          userId,
+          status: "pending",
+          subtotal: String(serverSubtotal),
+          shippingFee: String(serverShippingFee),
+          discount: String(serverDiscount),
+          total: String(serverTotal),
+          currency: "LKR",
+          paymentMethod: input.paymentMethod,
+          paymentStatus: "pending",
+          shippingAddress: input.shippingAddress,
+          billingAddress: input.billingAddress || input.shippingAddress,
+          notes: input.notes || null,
+        });
+
+        const [newOrder] = await db
+          .select()
+          .from(orders)
+          .where(eq(orders.orderNumber, orderNumber))
+          .limit(1);
+
+        if (!newOrder) {
+          throw new Error("Failed to retrieve created order");
+        }
+
+        if (verifiedItems.length > 0) {
+          await db.insert(orderItems).values(
+            verifiedItems.map(item => ({
+              orderId: newOrder.id,
+              productId: String(item.productId),
+              variantId: item.variantId ? String(item.variantId) : null,
+              productName: item.productName,
+              variantName: item.variantName || null,
+              sku: item.sku || null,
+              quantity: item.quantity,
+              unitPrice: String(item.unitPrice),
+              subtotal: String(item.unitPrice * item.quantity),
+            }))
+          );
+        }
+
+        return { success: true, orderId: newOrder.id, orderNumber };
+      } catch (err: any) {
+        console.error("[Orders] Create failed:", err?.message || err);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to place order. Please try again.",
+        });
+      }
     }),
 });

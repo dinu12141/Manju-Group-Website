@@ -7,23 +7,49 @@ import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 let _client: postgres.Sql | null = null;
+let _connectAttempts = 0;
+const MAX_CONNECT_RETRIES = 3;
+
+function resetConnection() {
+  _db = null;
+  if (_client) {
+    try { _client.end({ timeout: 2 }); } catch { /* ignore */ }
+  }
+  _client = null;
+}
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
-    try {
-      _client = postgres(process.env.DATABASE_URL, {
-        ssl: "require",
-        prepare: false,
-        max: 1,
-        idle_timeout: 20,
-        connect_timeout: 10,
-      });
-      _db = drizzle(_client);
-    } catch (error: any) {
-      console.warn("[Database] Failed to connect:", error.message || error);
-      _db = null;
-    }
+  if (_db) return _db;
+
+  if (!process.env.DATABASE_URL) return null;
+
+  if (_connectAttempts >= MAX_CONNECT_RETRIES) {
+    // Reset after 30 seconds to allow retry
+    setTimeout(() => { _connectAttempts = 0; }, 30_000);
+    return null;
+  }
+
+  try {
+    _connectAttempts++;
+    _client = postgres(process.env.DATABASE_URL, {
+      ssl: "require",
+      prepare: false,
+      max: 3,
+      idle_timeout: 20,
+      connect_timeout: 15,
+      max_lifetime: 60 * 5,
+      onclose: () => {
+        console.warn("[Database] Connection closed, will reconnect on next request");
+        resetConnection();
+      },
+    });
+    _db = drizzle(_client);
+    _connectAttempts = 0; // reset on success
+    console.log("[Database] Connected successfully");
+  } catch (error: any) {
+    console.warn("[Database] Failed to connect:", error.message || error);
+    resetConnection();
   }
   return _db;
 }

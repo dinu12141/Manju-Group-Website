@@ -92,8 +92,21 @@ async function startServer() {
     createExpressMiddleware({
       router: appRouter,
       createContext,
+      onError: ({ error, path }) => {
+        console.error(`[tRPC Error] ${path}:`, error.message);
+      },
     })
   );
+
+  // Global error handler — always return JSON, never plain text
+  app.use((err: any, _req: any, res: any, next: any) => {
+    if (res.headersSent) return next(err);
+    console.error("[Server Error]", err?.message || err);
+    res.status(500).json({
+      error: { message: "Internal server error" },
+    });
+  });
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
