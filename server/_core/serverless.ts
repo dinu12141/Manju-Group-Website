@@ -14,7 +14,7 @@ export * as _cookie from "cookie";
 export * as _trpc from "@trpc/server";
 
 import "dotenv/config";
-import { validateEnv } from "../server/_core/env";
+import { validateEnv } from "./env";
 try {
   validateEnv();
 } catch (e) {
@@ -24,9 +24,9 @@ try {
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { appRouter } from "../server/routers/index";
-import { createContext } from "../server/_core/context";
-import { registerStorageProxy } from "../server/_core/storageProxy";
+import { appRouter } from "../routers/index";
+import { createContext } from "./context";
+import { registerStorageProxy } from "./storageProxy";
 
 const app = express();
 
