@@ -71,17 +71,12 @@ const trpcClient = trpc.createClient({
       transformer: superjson,
       headers() {
         try {
-          const raw = sessionStorage.getItem("session-cookie");
-          if (raw) {
-            const prefix = `${COOKIE_NAME}=`;
-            const pair = raw.split(";").find(s => s.trim().startsWith(prefix));
-            const token = pair?.trim().slice(prefix.length);
-            if (token) {
-              return { Authorization: `Bearer ${token}` };
-            }
+          const token = localStorage.getItem("supabase.auth.token");
+          if (token) {
+            return { Authorization: `Bearer ${token}` };
           }
         } catch {
-          // sessionStorage unavailable
+          // localStorage unavailable
         }
         return {};
       },

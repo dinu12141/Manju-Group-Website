@@ -4,9 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, Lock, Mail, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
-import { TRPCClientError } from "@trpc/client";
-import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { supabase } from "@/lib/supabase";
+import { trpc } from "@/lib/trpc";
 
 // ─── Schemas ────────────────────────────────────────────────────────────────
 
@@ -79,9 +79,9 @@ function GoogleIcon() {
 
 export default function AuthForm() {
   const [mode, setMode] = useState<"signin" | "signup" | "forgot_password" | "reset_password">("signin");
-  const [resetToken, setResetToken] = useState<string | null>(null);
   const { refresh } = useAuth();
   const utils = trpc.useUtils();
+  const [isLoading, setIsLoading] = useState(false);
 
   const signInForm = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
@@ -103,131 +103,122 @@ export default function AuthForm() {
     defaultValues: { password: "", confirmPassword: "" },
   });
 
-  const onAuthSuccess = async () => {
+  const onAuthSuccess = async (session: any) => {
+    // Store token globally or let Supabase manage it
+    // Trpc client should send Authorization: Bearer session.access_token
+    localStorage.setItem("supabase.auth.token", session.access_token);
     await utils.auth.me.invalidate();
     await refresh();
   };
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    
-    // Check for password reset token
-    const token = params.get("reset_token");
-    if (token) {
-      setResetToken(token);
-      setMode("reset_password");
-      params.delete("reset_token");
-      const query = params.toString();
-      window.history.replaceState({}, "", window.location.pathname + (query ? `?${query}` : ""));
-      return;
-    }
+    // Listen for auth state changes (e.g. from password reset email link)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setMode("reset_password");
+      }
+      if (session) {
+        localStorage.setItem("supabase.auth.token", session.access_token);
+      }
+    });
 
-    const error = params.get("error");
-    if (!error) return;
-
-    if (error === "google_not_configured") {
-      toast.error("Google Sign-In isn't configured yet on this server.");
-    } else if (error === "google_auth_failed") {
-      const reason = params.get("reason");
-      toast.error(
-        reason ? `Google Sign-In failed: ${reason}` : "Google Sign-In failed."
-      );
-    }
-
-    params.delete("error");
-    params.delete("reason");
-    const query = params.toString();
-    window.history.replaceState(
-      {},
-      "",
-      window.location.pathname + (query ? `?${query}` : "")
-    );
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const getErrorMessage = (error: unknown, fallback: string) => {
-    if (error instanceof TRPCClientError && error.message) {
-      return error.message;
+  const handleGoogleSignIn = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/account`,
+        }
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      toast.error(error.message || "Google Sign-In failed");
     }
-    return fallback;
   };
 
-  const loginMutation = trpc.auth.login.useMutation({
-    onSuccess: async () => {
-      toast.success("Signed in successfully");
-      await onAuthSuccess();
-    },
-    onError: error => {
-      toast.error(getErrorMessage(error, "Invalid email or password"));
-    },
-  });
-
-  const registerMutation = trpc.auth.register.useMutation({
-    onSuccess: async () => {
-      toast.success("Account created successfully");
-      await onAuthSuccess();
-    },
-    onError: error => {
-      toast.error(getErrorMessage(error, "Failed to create account"));
-    },
-  });
-
-  const requestPasswordResetMutation = trpc.auth.requestPasswordReset.useMutation({
-    onSuccess: (data) => {
-      toast.success("Password reset link generated!");
-      if (data.link) {
-        // Automatically set mode to reset_password for testing/demo purposes
-        // In production, this would be sent to email
-        toast.info(
-          <div className="flex flex-col gap-2">
-            <span>Click here to reset your password:</span>
-            <a href={data.link} className="underline text-blue-500 break-all">{window.location.origin}{data.link}</a>
-          </div>, 
-          { duration: 15000 }
-        );
+  const handleSignIn = signInForm.handleSubmit(async (values) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+      if (error) throw error;
+      if (data.session) {
+        toast.success("Signed in successfully");
+        await onAuthSuccess(data.session);
       }
+    } catch (error: any) {
+      toast.error(error.message || "Invalid email or password");
+    } finally {
+      setIsLoading(false);
+    }
+  });
+
+  const handleCreateAccount = createAccountForm.handleSubmit(async (values) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          data: {
+            full_name: values.name,
+          }
+        }
+      });
+      if (error) throw error;
+      
+      if (data.session) {
+        toast.success("Account created successfully");
+        await onAuthSuccess(data.session);
+      } else {
+        // Sometimes email confirmation is required depending on Supabase settings
+        toast.success("Account created! Please check your email to confirm.");
+        setMode("signin");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to create account");
+    } finally {
+      setIsLoading(false);
+    }
+  });
+
+  const handleRequestPasswordReset = forgotPasswordForm.handleSubmit(async (values) => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+        redirectTo: `${window.location.origin}/account?reset=true`,
+      });
+      if (error) throw error;
+      toast.success("Password reset link sent to your email");
       setMode("signin");
-    },
-    onError: error => {
-      toast.error(getErrorMessage(error, "Failed to request password reset"));
+    } catch (error: any) {
+      toast.error(error.message || "Failed to request password reset");
+    } finally {
+      setIsLoading(false);
     }
   });
 
-  const resetPasswordMutation = trpc.auth.resetPassword.useMutation({
-    onSuccess: () => {
-      toast.success("Password has been reset successfully! Please log in.");
+  const handleResetPassword = resetPasswordForm.handleSubmit(async (values) => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: values.password
+      });
+      if (error) throw error;
+      toast.success("Password has been reset successfully!");
       setMode("signin");
-      setResetToken(null);
-    },
-    onError: error => {
-      toast.error(getErrorMessage(error, "Failed to reset password"));
+    } catch (error: any) {
+      toast.error(error.message || "Failed to reset password");
+    } finally {
+      setIsLoading(false);
     }
-  });
-
-  const handleSignIn = signInForm.handleSubmit(values => {
-    loginMutation.mutate(values);
-  });
-
-  const handleCreateAccount = createAccountForm.handleSubmit(values => {
-    registerMutation.mutate({
-      name: values.name,
-      email: values.email,
-      password: values.password,
-    });
-  });
-
-  const handleRequestPasswordReset = forgotPasswordForm.handleSubmit(values => {
-    requestPasswordResetMutation.mutate(values);
-  });
-
-  const handleResetPassword = resetPasswordForm.handleSubmit(values => {
-    if (!resetToken) {
-      toast.error("No reset token found");
-      return;
-    }
-    resetPasswordMutation.mutate({
-      token: resetToken,
-      password: values.password,
-    });
   });
 
   return (
@@ -256,13 +247,14 @@ export default function AuthForm() {
       {(mode === "signin" || mode === "signup") && (
         <>
           {/* Google Sign-In */}
-          <a
-            href={`/api/oauth/google/start?redirect=/account`}
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
             className="w-full h-12 rounded-xl font-semibold text-gray-700 flex items-center justify-center gap-2.5 border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
           >
             <GoogleIcon />
             Continue with Google
-          </a>
+          </button>
 
           {/* Divider */}
           <div className="flex items-center gap-3 my-6">
@@ -331,19 +323,19 @@ export default function AuthForm() {
 
           <button
             type="submit"
-            disabled={loginMutation.isPending}
+            disabled={isLoading}
             className="w-full h-12 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
             style={{ backgroundColor: "#F85606" }}
             onMouseEnter={e => {
-              if (!loginMutation.isPending)
+              if (!isLoading)
                 e.currentTarget.style.backgroundColor = "#e04d00";
             }}
             onMouseLeave={e => {
-              if (!loginMutation.isPending)
+              if (!isLoading)
                 e.currentTarget.style.backgroundColor = "#F85606";
             }}
           >
-            {loginMutation.isPending ? (
+            {isLoading ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
                 Signing in...
@@ -361,7 +353,7 @@ export default function AuthForm() {
               className="font-semibold hover:underline"
               style={{ color: "#0F2D5E" }}
             >
-              Sign up
+               Sign up
             </button>
           </p>
         </form>
@@ -465,19 +457,19 @@ export default function AuthForm() {
 
           <button
             type="submit"
-            disabled={registerMutation.isPending}
+            disabled={isLoading}
             className="w-full h-12 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
             style={{ backgroundColor: "#F85606" }}
             onMouseEnter={e => {
-              if (!registerMutation.isPending)
+              if (!isLoading)
                 e.currentTarget.style.backgroundColor = "#e04d00";
             }}
             onMouseLeave={e => {
-              if (!registerMutation.isPending)
+              if (!isLoading)
                 e.currentTarget.style.backgroundColor = "#F85606";
             }}
           >
-            {registerMutation.isPending ? (
+            {isLoading ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
                 Creating account...
@@ -495,7 +487,7 @@ export default function AuthForm() {
               className="font-semibold hover:underline"
               style={{ color: "#0F2D5E" }}
             >
-              Sign in
+               Sign in
             </button>
           </p>
         </form>
@@ -526,19 +518,19 @@ export default function AuthForm() {
 
           <button
             type="submit"
-            disabled={requestPasswordResetMutation.isPending}
+            disabled={isLoading}
             className="w-full h-12 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
             style={{ backgroundColor: "#0F2D5E" }}
             onMouseEnter={e => {
-              if (!requestPasswordResetMutation.isPending)
+              if (!isLoading)
                 e.currentTarget.style.backgroundColor = "#0a2046";
             }}
             onMouseLeave={e => {
-              if (!requestPasswordResetMutation.isPending)
+              if (!isLoading)
                 e.currentTarget.style.backgroundColor = "#0F2D5E";
             }}
           >
-            {requestPasswordResetMutation.isPending ? (
+            {isLoading ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
                 Sending link...
@@ -556,7 +548,7 @@ export default function AuthForm() {
               className="font-semibold hover:underline"
               style={{ color: "#0F2D5E" }}
             >
-              Back to sign in
+               Back to sign in
             </button>
           </p>
         </form>
@@ -614,19 +606,19 @@ export default function AuthForm() {
 
           <button
             type="submit"
-            disabled={resetPasswordMutation.isPending}
+            disabled={isLoading}
             className="w-full h-12 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
             style={{ backgroundColor: "#0F2D5E" }}
             onMouseEnter={e => {
-              if (!resetPasswordMutation.isPending)
+              if (!isLoading)
                 e.currentTarget.style.backgroundColor = "#0a2046";
             }}
             onMouseLeave={e => {
-              if (!resetPasswordMutation.isPending)
+              if (!isLoading)
                 e.currentTarget.style.backgroundColor = "#0F2D5E";
             }}
           >
-            {resetPasswordMutation.isPending ? (
+            {isLoading ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
                 Resetting...
