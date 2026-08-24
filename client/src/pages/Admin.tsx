@@ -38,6 +38,7 @@ import {
   Save,
   RotateCcw,
   Volume2,
+  Users,
 } from "lucide-react";
 import {
   AreaChart,
@@ -62,11 +63,13 @@ import {
 } from "@/lib/adSettings";
 import { toast } from "sonner";
 import { Link } from "wouter";
+import { trpc } from "@/lib/trpc";
 
 type AdminTab =
   | "dashboard"
   | "products"
   | "orders"
+  | "users"
   | "ads"
   | "showrooms"
   | "inquiries"
@@ -322,6 +325,8 @@ export default function Admin() {
   const [orderFilter, setOrderFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [brandFilter, setBrandFilter] = useState("all");
+
+  const { data: usersData, isLoading: isLoadingUsers } = trpc.admin.customers.useQuery({ page: 1, limit: 100 });
 
   // Ad Settings Hook
   const { config: liveAdConfig, updateConfig: saveAdConfig, resetConfig: resetAdConfig } = useAdSettings();
@@ -596,6 +601,7 @@ export default function Admin() {
               { id: "dashboard", label: "Executive Dashboard", icon: LayoutDashboard },
               { id: "products", label: "Products & Inventory", icon: Package, badge: productsList.length },
               { id: "orders", label: "Orders & Fulfillment", icon: ShoppingCart, badge: ordersList.length },
+              { id: "users", label: "Users & Customers", icon: Users, badge: usersData?.total || 0 },
               { id: "ads", label: "Banner & Video Ads", icon: Megaphone, badge: "Hero+Home" },
               { id: "showrooms", label: "Showroom Network", icon: MapPin, badge: SHOWROOMS_DATA.length },
               { id: "inquiries", label: "Inquiries & Leads CRM", icon: Mail, badge: INQUIRIES_DATA.length },
@@ -1587,7 +1593,90 @@ export default function Admin() {
             </div>
           )}
 
-          {/* TAB 5: SHOWROOM NETWORK */}
+          {/* TAB: USERS */}
+          {activeTab === "users" && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                    <Users size={20} className="text-[#0052B4]" />
+                    Registered Users & Customers
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Manage all registered accounts, viewing their login methods and roles.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto min-h-[400px]">
+                  <table className="w-full text-sm text-left">
+                    <thead className="bg-slate-50 text-slate-600 uppercase font-black text-xs border-b border-slate-200">
+                      <tr>
+                        <th className="p-4">Customer</th>
+                        <th className="p-4">Login Method</th>
+                        <th className="p-4">Role</th>
+                        <th className="p-4">Joined Date</th>
+                        <th className="p-4">Last Active</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium">
+                      {isLoadingUsers ? (
+                        <tr>
+                          <td colSpan={5} className="p-12 text-center text-slate-500">
+                            Loading users...
+                          </td>
+                        </tr>
+                      ) : usersData?.items && usersData.items.length > 0 ? (
+                        usersData.items.map(user => (
+                          <tr key={user.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="p-4">
+                              <div className="flex flex-col">
+                                <span className="text-slate-900 font-bold">{user.name || "Unknown"}</span>
+                                <span className="text-xs text-slate-500">{user.email || "No email"}</span>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                user.loginMethod === 'google' 
+                                  ? 'bg-red-50 text-red-600 border border-red-200' 
+                                  : 'bg-blue-50 text-blue-600 border border-blue-200'
+                              }`}>
+                                {user.loginMethod === 'google' ? 'Google' : 'Email'}
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                user.role === 'admin' 
+                                  ? 'bg-purple-50 text-purple-600 border border-purple-200' 
+                                  : 'bg-slate-100 text-slate-600 border border-slate-200'
+                              }`}>
+                                {user.role === 'admin' ? 'Admin' : 'User'}
+                              </span>
+                            </td>
+                            <td className="p-4 text-slate-600">
+                              {new Date(user.createdAt).toLocaleDateString()}
+                            </td>
+                            <td className="p-4 text-slate-600">
+                              {user.lastSignedIn ? new Date(user.lastSignedIn).toLocaleDateString() : 'N/A'}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="p-12 text-center text-slate-500">
+                            No users found in the database.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: SHOWROOMS */}
           {activeTab === "showrooms" && (
             <div className="space-y-4">
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">

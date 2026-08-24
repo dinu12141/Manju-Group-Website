@@ -128,3 +128,43 @@ export async function getUserByEmail(email: string) {
 }
 
 // TODO: add feature queries here as your schema grows.
+
+export async function getUserByResetToken(token: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.resetToken, token))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateUserResetToken(userId: number, token: string | null, expiry: Date | null) {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(users)
+    .set({
+      resetToken: token,
+      resetTokenExpiry: expiry,
+    })
+    .where(eq(users.id, userId));
+}
+
+export async function updateUserPassword(userId: number, passwordHash: string) {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(users)
+    .set({
+      passwordHash,
+      resetToken: null,
+      resetTokenExpiry: null,
+    })
+    .where(eq(users.id, userId));
+}

@@ -389,7 +389,34 @@ export const adminRouter = router({
       z.object({ page: z.number().int().min(1).default(1), limit: z.number().int().min(1).max(100).default(20) })
     )
     .query(async ({ input }) => {
-      return { items: [], total: 0 };
+      try {
+        const db = await getDb();
+        if (!db) return { items: [], total: 0 };
+        const offset = (input.page - 1) * input.limit;
+        
+        const [items, countResult] = await Promise.all([
+          db
+            .select({
+              id: users.id,
+              name: users.name,
+              email: users.email,
+              loginMethod: users.loginMethod,
+              role: users.role,
+              createdAt: users.createdAt,
+              lastSignedIn: users.lastSignedIn,
+            })
+            .from(users)
+            .orderBy(desc(users.createdAt))
+            .limit(input.limit)
+            .offset(offset),
+          db.select({ count: sql<number>`count(*)` }).from(users),
+        ]);
+        
+        return { items, total: Number(countResult[0]?.count ?? 0) };
+      } catch (e) {
+        console.error("Failed to fetch customers:", e);
+        return { items: [], total: 0 };
+      }
     }),
 
   // Contact messages

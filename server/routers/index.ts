@@ -204,6 +204,51 @@ export const appRouter = router({
 
         return { success: true } as const;
       }),
+    requestPasswordReset: publicProcedure
+      .input(
+        z.object({
+          email: z.string().email(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const user = await db.getUserByEmail(input.email);
+        if (!user) {
+          // Return success even if user not found to prevent email enumeration
+          return { success: true, link: null } as const;
+        }
+
+        const token = nanoid(32);
+        const expiry = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
+
+        await db.updateUserResetToken(user.id, token, expiry);
+
+        // For development/testing: return the link directly.
+        // In production, this should send an email.
+        const resetLink = `/account?reset_token=${token}`;
+        return { success: true, link: resetLink } as const;
+      }),
+    resetPassword: publicProcedure
+      .input(
+        z.object({
+          token: z.string().min(1),
+          password: z.string().min(8),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const user = await db.getUserByResetToken(input.token);
+        
+        if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid or expired reset token",
+          });
+        }
+
+        const passwordHash = await bcrypt.hash(input.password, 10);
+        await db.updateUserPassword(user.id, passwordHash);
+
+        return { success: true } as const;
+      }),
   }),
   products: productsRouter,
   brands: brandsRouter,

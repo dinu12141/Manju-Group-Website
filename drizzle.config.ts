@@ -10,7 +10,7 @@ const isCloud = !connectionString.includes("localhost") && !connectionString.inc
 export default defineConfig({
   schema: "./drizzle/schema.ts",
   out: "./drizzle",
-  dialect: "mysql",
+  dialect: "postgresql",
   dbCredentials: {
     url: connectionString,
     ssl: isCloud ? { rejectUnauthorized: true } : undefined,

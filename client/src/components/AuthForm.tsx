@@ -27,8 +27,22 @@ const createAccountSchema = z
     path: ["confirmPassword"],
   });
 
+const forgotPasswordSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Enter a valid email"),
+});
+
+const resetPasswordSchema = z.object({
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string().min(1, "Please re-type your password"),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
 type SignInValues = z.infer<typeof signInSchema>;
 type CreateAccountValues = z.infer<typeof createAccountSchema>;
+type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
+type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
 function fieldClass(hasError: boolean) {
   return `w-full h-11 pl-10 pr-4 rounded-xl border text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors ${
@@ -64,7 +78,8 @@ function GoogleIcon() {
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function AuthForm() {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot_password" | "reset_password">("signin");
+  const [resetToken, setResetToken] = useState<string | null>(null);
   const { refresh } = useAuth();
   const utils = trpc.useUtils();
 
@@ -78,6 +93,16 @@ export default function AuthForm() {
     defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
   });
 
+  const forgotPasswordForm = useForm<ForgotPasswordValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: "" },
+  });
+
+  const resetPasswordForm = useForm<ResetPasswordValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: { password: "", confirmPassword: "" },
+  });
+
   const onAuthSuccess = async () => {
     await utils.auth.me.invalidate();
     await refresh();
@@ -85,6 +110,18 @@ export default function AuthForm() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    
+    // Check for password reset token
+    const token = params.get("reset_token");
+    if (token) {
+      setResetToken(token);
+      setMode("reset_password");
+      params.delete("reset_token");
+      const query = params.toString();
+      window.history.replaceState({}, "", window.location.pathname + (query ? `?${query}` : ""));
+      return;
+    }
+
     const error = params.get("error");
     if (!error) return;
 
@@ -134,6 +171,38 @@ export default function AuthForm() {
     },
   });
 
+  const requestPasswordResetMutation = trpc.auth.requestPasswordReset.useMutation({
+    onSuccess: (data) => {
+      toast.success("Password reset link generated!");
+      if (data.link) {
+        // Automatically set mode to reset_password for testing/demo purposes
+        // In production, this would be sent to email
+        toast.info(
+          <div className="flex flex-col gap-2">
+            <span>Click here to reset your password:</span>
+            <a href={data.link} className="underline text-blue-500 break-all">{window.location.origin}{data.link}</a>
+          </div>, 
+          { duration: 15000 }
+        );
+      }
+      setMode("signin");
+    },
+    onError: error => {
+      toast.error(getErrorMessage(error, "Failed to request password reset"));
+    }
+  });
+
+  const resetPasswordMutation = trpc.auth.resetPassword.useMutation({
+    onSuccess: () => {
+      toast.success("Password has been reset successfully! Please log in.");
+      setMode("signin");
+      setResetToken(null);
+    },
+    onError: error => {
+      toast.error(getErrorMessage(error, "Failed to reset password"));
+    }
+  });
+
   const handleSignIn = signInForm.handleSubmit(values => {
     loginMutation.mutate(values);
   });
@@ -146,38 +215,65 @@ export default function AuthForm() {
     });
   });
 
+  const handleRequestPasswordReset = forgotPasswordForm.handleSubmit(values => {
+    requestPasswordResetMutation.mutate(values);
+  });
+
+  const handleResetPassword = resetPasswordForm.handleSubmit(values => {
+    if (!resetToken) {
+      toast.error("No reset token found");
+      return;
+    }
+    resetPasswordMutation.mutate({
+      token: resetToken,
+      password: values.password,
+    });
+  });
+
   return (
     <div className="w-full max-w-sm">
       <div className="mb-8">
         <h1 className="text-2xl font-bold font-display text-gray-900 mb-2">
           {mode === "signin"
             ? "Sign In to Your Account"
-            : "Create Your Account"}
+            : mode === "signup"
+            ? "Create Your Account"
+            : mode === "forgot_password"
+            ? "Forgot Password?"
+            : "Reset Your Password"}
         </h1>
         <p className="text-gray-500 text-sm">
           {mode === "signin"
             ? "Access your order history, wishlist, and profile."
-            : "Join Manju Group to track orders and save favorites."}
+            : mode === "signup"
+            ? "Join Manju Group to track orders and save favorites."
+            : mode === "forgot_password"
+            ? "Enter your email address and we'll send you a link to reset your password."
+            : "Enter your new password below."}
         </p>
       </div>
 
-      {/* Google Sign-In */}
-      <a
-        href={`/api/oauth/google/start?redirect=/account`}
-        className="w-full h-12 rounded-xl font-semibold text-gray-700 flex items-center justify-center gap-2.5 border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
-      >
-        <GoogleIcon />
-        Continue with Google
-      </a>
+      {(mode === "signin" || mode === "signup") && (
+        <>
+          {/* Google Sign-In */}
+          <a
+            href={`/api/oauth/google/start?redirect=/account`}
+            className="w-full h-12 rounded-xl font-semibold text-gray-700 flex items-center justify-center gap-2.5 border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+          >
+            <GoogleIcon />
+            Continue with Google
+          </a>
 
-      {/* Divider */}
-      <div className="flex items-center gap-3 my-6">
-        <div className="h-px flex-1 bg-gray-200" />
-        <span className="text-xs text-gray-400 uppercase tracking-wide">
-          or continue with email
-        </span>
-        <div className="h-px flex-1 bg-gray-200" />
-      </div>
+          {/* Divider */}
+          <div className="flex items-center gap-3 my-6">
+            <div className="h-px flex-1 bg-gray-200" />
+            <span className="text-xs text-gray-400 uppercase tracking-wide">
+              or continue with email
+            </span>
+            <div className="h-px flex-1 bg-gray-200" />
+          </div>
+        </>
+      )}
 
       {mode === "signin" ? (
         <form onSubmit={handleSignIn} className="space-y-4">
@@ -221,6 +317,16 @@ export default function AuthForm() {
                 {signInForm.formState.errors.password.message}
               </p>
             )}
+            <div className="mt-2 text-right">
+              <button
+                type="button"
+                onClick={() => setMode("forgot_password")}
+                className="text-sm font-semibold hover:underline"
+                style={{ color: "#0F2D5E" }}
+              >
+                Forgot password?
+              </button>
+            </div>
           </div>
 
           <button
@@ -259,7 +365,7 @@ export default function AuthForm() {
             </button>
           </p>
         </form>
-      ) : (
+      ) : mode === "signup" ? (
         <form onSubmit={handleCreateAccount} className="space-y-4">
           <div>
             <div className="relative">
@@ -392,6 +498,143 @@ export default function AuthForm() {
               Sign in
             </button>
           </p>
+        </form>
+      ) : mode === "forgot_password" ? (
+        <form onSubmit={handleRequestPasswordReset} className="space-y-4">
+          <div>
+            <div className="relative">
+              <Mail
+                size={16}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+              />
+              <input
+                type="email"
+                placeholder="Email address"
+                autoComplete="email"
+                className={fieldClass(
+                  !!forgotPasswordForm.formState.errors.email
+                )}
+                {...forgotPasswordForm.register("email")}
+              />
+            </div>
+            {forgotPasswordForm.formState.errors.email && (
+              <p className="text-xs text-red-500 mt-1.5">
+                {forgotPasswordForm.formState.errors.email.message}
+              </p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={requestPasswordResetMutation.isPending}
+            className="w-full h-12 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
+            style={{ backgroundColor: "#0F2D5E" }}
+            onMouseEnter={e => {
+              if (!requestPasswordResetMutation.isPending)
+                e.currentTarget.style.backgroundColor = "#0a2046";
+            }}
+            onMouseLeave={e => {
+              if (!requestPasswordResetMutation.isPending)
+                e.currentTarget.style.backgroundColor = "#0F2D5E";
+            }}
+          >
+            {requestPasswordResetMutation.isPending ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Sending link...
+              </>
+            ) : (
+              "Send Reset Link"
+            )}
+          </button>
+
+          <p className="text-center text-sm text-gray-500 mt-4">
+            Remember your password?{" "}
+            <button
+              type="button"
+              onClick={() => setMode("signin")}
+              className="font-semibold hover:underline"
+              style={{ color: "#0F2D5E" }}
+            >
+              Back to sign in
+            </button>
+          </p>
+        </form>
+      ) : (
+        <form onSubmit={handleResetPassword} className="space-y-4">
+          <div>
+            <div className="relative">
+              <Lock
+                size={16}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+              />
+              <input
+                type="password"
+                placeholder="New password"
+                autoComplete="new-password"
+                className={fieldClass(
+                  !!resetPasswordForm.formState.errors.password
+                )}
+                {...resetPasswordForm.register("password")}
+              />
+            </div>
+            {resetPasswordForm.formState.errors.password ? (
+              <p className="text-xs text-red-500 mt-1.5">
+                {resetPasswordForm.formState.errors.password.message}
+              </p>
+            ) : (
+              <p className="text-xs text-gray-400 mt-1.5">
+                Must be at least 8 characters.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <div className="relative">
+              <Lock
+                size={16}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+              />
+              <input
+                type="password"
+                placeholder="Re-type new password"
+                autoComplete="new-password"
+                className={fieldClass(
+                  !!resetPasswordForm.formState.errors.confirmPassword
+                )}
+                {...resetPasswordForm.register("confirmPassword")}
+              />
+            </div>
+            {resetPasswordForm.formState.errors.confirmPassword && (
+              <p className="text-xs text-red-500 mt-1.5">
+                {resetPasswordForm.formState.errors.confirmPassword.message}
+              </p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={resetPasswordMutation.isPending}
+            className="w-full h-12 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
+            style={{ backgroundColor: "#0F2D5E" }}
+            onMouseEnter={e => {
+              if (!resetPasswordMutation.isPending)
+                e.currentTarget.style.backgroundColor = "#0a2046";
+            }}
+            onMouseLeave={e => {
+              if (!resetPasswordMutation.isPending)
+                e.currentTarget.style.backgroundColor = "#0F2D5E";
+            }}
+          >
+            {resetPasswordMutation.isPending ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Resetting...
+              </>
+            ) : (
+              "Reset Password"
+            )}
+          </button>
         </form>
       )}
 
