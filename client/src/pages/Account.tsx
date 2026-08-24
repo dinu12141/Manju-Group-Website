@@ -225,7 +225,7 @@ export default function Account() {
                   className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all ${
                     activeTab === tab.id
                       ? "bg-[#0F2D5E] text-white shadow-sm font-bold"
-                      : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                      : "text-[#333333] hover:bg-slate-100 hover:text-[#0a0a0a]"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -237,7 +237,7 @@ export default function Account() {
                         className={`text-xs rounded-full px-2 py-0.5 font-bold ${
                           activeTab === tab.id
                             ? "bg-[#C9A84C] text-[#0F2D5E]"
-                            : "bg-slate-200 text-slate-800"
+                            : "bg-slate-200 text-[#1a1a1a]"
                         }`}
                       >
                         {tab.count}
@@ -248,7 +248,7 @@ export default function Account() {
                       className={
                         activeTab === tab.id
                           ? "text-white/70"
-                          : "text-slate-400"
+                          : "text-[#888888]"
                       }
                     />
                   </div>
@@ -277,10 +277,10 @@ export default function Account() {
                 className="space-y-6"
               >
                 <div className="mb-2">
-                  <h2 className="text-2xl font-black font-display text-slate-900 tracking-tight">
+                  <h2 className="text-2xl font-black font-display text-[#0F2D5E] tracking-tight">
                     Account Overview
                   </h2>
-                  <p className="text-slate-500 text-xs font-medium mt-0.5">
+                  <p className="text-[#555555] text-xs font-medium mt-0.5">
                     Welcome back to your Manju Group member dashboard
                   </p>
                 </div>
@@ -323,10 +323,10 @@ export default function Account() {
                         {stat.icon}
                       </div>
                       <div>
-                        <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">
+                        <div className="text-xs text-[#555555] font-bold uppercase tracking-wider">
                           {stat.label}
                         </div>
-                        <div className="text-xl font-extrabold text-slate-900 mt-0.5">
+                        <div className="text-xl font-extrabold text-[#0a0a0a] mt-0.5">
                           {stat.value}
                         </div>
                       </div>
@@ -337,7 +337,7 @@ export default function Account() {
                 {orders && orders.length > 0 && (
                   <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-extrabold text-slate-900 text-base">
+                      <h3 className="font-extrabold text-[#0F2D5E] text-base">
                         Recent Orders
                       </h3>
                       <button
@@ -354,10 +354,10 @@ export default function Account() {
                           className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100/80 transition-colors"
                         >
                           <div>
-                            <div className="text-sm font-bold text-slate-900">
+                            <div className="text-sm font-bold text-[#0a0a0a]">
                               #{order.orderNumber}
                             </div>
-                            <div className="text-xs text-slate-500 font-medium mt-0.5">
+                            <div className="text-xs text-[#555555] font-medium mt-0.5">
                               {new Date(order.createdAt).toLocaleDateString(
                                 "en-US",
                                 {
@@ -398,10 +398,10 @@ export default function Account() {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <div className="flex items-center justify-between mb-5">
                   <div>
-                    <h2 className="text-2xl font-black font-display text-slate-900 tracking-tight">
+                    <h2 className="text-2xl font-black font-display text-[#0F2D5E] tracking-tight">
                       My Orders ({orders?.length || 0})
                     </h2>
-                    <p className="text-slate-500 text-xs font-medium mt-0.5">
+                    <p className="text-[#555555] text-xs font-medium mt-0.5">
                       Track your purchases and view order history
                     </p>
                   </div>
@@ -426,7 +426,7 @@ export default function Account() {
                         <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-extrabold text-slate-900 text-sm">
+                              <span className="font-extrabold text-[#0a0a0a] text-sm">
                                 #{order.orderNumber}
                               </span>
                               <span
@@ -443,7 +443,7 @@ export default function Account() {
                                 {order.status}
                               </span>
                             </div>
-                            <p className="text-xs text-slate-600 font-semibold mt-0.5">
+                            <p className="text-xs text-[#444444] font-semibold mt-0.5">
                               Placed on{" "}
                               {new Date(order.createdAt).toLocaleDateString(
                                 "en-US",
@@ -462,7 +462,7 @@ export default function Account() {
                                 Number(order.totalAmount || order.total)
                               )}
                             </div>
-                            <span className="text-[11px] text-slate-500 font-semibold uppercase">
+                            <span className="text-[11px] text-[#555555] font-semibold uppercase">
                               {order.paymentMethod === "bank"
                                 ? "Bank Transfer"
                                 : "Cash on Delivery"}
@@ -493,15 +493,15 @@ export default function Account() {
                                   />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-bold text-slate-900 line-clamp-1">
+                                  <p className="text-xs font-bold text-[#0a0a0a] line-clamp-1">
                                     {item.productName}
                                   </p>
-                                  <p className="text-xs text-slate-600 font-medium">
+                                  <p className="text-xs text-[#444444] font-medium">
                                     Qty: {item.quantity} ×{" "}
                                     {formatPrice(Number(item.unitPrice))}
                                   </p>
                                 </div>
-                                <div className="text-xs font-black text-slate-900 flex-shrink-0">
+                                <div className="text-xs font-black text-[#0a0a0a] flex-shrink-0">
                                   {formatPrice(
                                     Number(item.unitPrice) * item.quantity
                                   )}
@@ -538,10 +538,10 @@ export default function Account() {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <div className="flex items-center justify-between mb-5">
                   <div>
-                    <h2 className="text-2xl font-black font-display text-slate-900 tracking-tight">
+                    <h2 className="text-2xl font-black font-display text-[#0F2D5E] tracking-tight">
                       My Wishlist ({wishlistItems?.length || 0})
                     </h2>
-                    <p className="text-slate-500 text-xs font-medium mt-0.5">
+                    <p className="text-[#555555] text-xs font-medium mt-0.5">
                       Products you've saved for future purchase
                     </p>
                   </div>
@@ -576,7 +576,7 @@ export default function Account() {
                                   }}
                                 />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                <div className="w-full h-full flex items-center justify-center text-[#888888]">
                                   <Package size={32} />
                                 </div>
                               )}
@@ -603,7 +603,7 @@ export default function Account() {
                               {item.brandName}
                             </span>
                             <Link href={`/products/${item.productSlug}`}>
-                              <h3 className="text-xs font-bold text-slate-900 line-clamp-2 hover:text-[#0F2D5E] transition-colors cursor-pointer">
+                              <h3 className="text-xs font-bold text-[#0a0a0a] line-clamp-2 hover:text-[#0F2D5E] transition-colors cursor-pointer">
                                 {item.productName}
                               </h3>
                             </Link>
@@ -658,10 +658,10 @@ export default function Account() {
             {activeTab === "settings" && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <div className="mb-5">
-                  <h2 className="text-2xl font-black font-display text-slate-900 tracking-tight">
+                  <h2 className="text-2xl font-black font-display text-[#0F2D5E] tracking-tight">
                     Account Settings
                   </h2>
-                  <p className="text-slate-500 text-xs font-medium mt-0.5">
+                  <p className="text-[#555555] text-xs font-medium mt-0.5">
                     Your personal profile information
                   </p>
                 </div>
@@ -685,10 +685,10 @@ export default function Account() {
                       key={label}
                       className="pb-3 border-b border-slate-100 last:border-0 last:pb-0"
                     >
-                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                      <div className="text-xs font-bold text-[#555555] uppercase tracking-wider mb-1">
                         {label}
                       </div>
-                      <div className="text-sm font-extrabold text-slate-900 capitalize">
+                      <div className="text-sm font-extrabold text-[#0a0a0a] capitalize">
                         {value || "—"}
                       </div>
                     </div>
