@@ -23,6 +23,7 @@ const FAQ = lazy(() => import("./pages/FAQ"));
 const News = lazy(() => import("./pages/News"));
 const NewsDetail = lazy(() => import("./pages/NewsDetail"));
 import Account from "./pages/Account";
+const OrderDetail = lazy(() => import("./pages/OrderDetail"));
 const Admin = lazy(() => import("./pages/Admin"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -65,6 +66,9 @@ function Router() {
           <Route path="/register" component={Account} />
           <Route path="/signup" component={Account} />
           <Route path="/my-orders" component={Account} />
+          <Route path="/account/orders/:id">
+            {params => <OrderDetail params={params as { id: string }} />}
+          </Route>
           <Route path="/admin" component={Admin} />
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />

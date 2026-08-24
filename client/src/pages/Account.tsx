@@ -22,7 +22,7 @@ import MainLayout from "@/components/MainLayout";
 import AuthForm from "@/components/AuthForm";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatPrice } from "@/lib/data";
+import { formatPrice, getProductImage } from "@/lib/data";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import EmptyState from "@/components/EmptyState";
@@ -409,7 +409,7 @@ export default function Account() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 border-white/25 rounded-xl px-4 h-9 flex items-center gap-1.5"
+                      className="text-xs font-bold text-[#0F2D5E] bg-white hover:bg-slate-50 border-slate-300 rounded-xl px-4 h-9 flex items-center gap-1.5"
                     >
                       + Shop More
                     </Button>
@@ -418,99 +418,98 @@ export default function Account() {
                 {orders && orders.length > 0 ? (
                   <div className="space-y-4">
                     {orders.map((order: any) => (
-                      <div
-                        key={order.id}
-                        className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4"
-                      >
-                        {/* Header */}
-                        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-extrabold text-[#0a0a0a] text-sm">
-                                #{order.orderNumber}
-                              </span>
-                              <span
-                                className={`text-xs px-2.5 py-0.5 rounded-full font-bold capitalize ${
-                                  order.status === "delivered"
-                                    ? "bg-emerald-100 text-emerald-800"
-                                    : order.status === "shipped"
-                                      ? "bg-purple-100 text-purple-800"
-                                      : order.status === "processing"
-                                        ? "bg-blue-100 text-blue-800"
-                                        : "bg-amber-100 text-amber-900"
-                                }`}
-                              >
-                                {order.status}
-                              </span>
-                            </div>
-                            <p className="text-xs text-[#444444] font-semibold mt-0.5">
-                              Placed on{" "}
-                              {new Date(order.createdAt).toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                }
-                              )}
-                            </p>
-                          </div>
-
-                          <div className="text-right">
-                            <div className="text-base font-black text-[#F85606]">
-                              {formatPrice(
-                                Number(order.totalAmount || order.total)
-                              )}
-                            </div>
-                            <span className="text-[11px] text-[#555555] font-semibold uppercase">
-                              {order.paymentMethod === "bank"
-                                ? "Bank Transfer"
-                                : "Cash on Delivery"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Items list */}
-                        {order.items && order.items.length > 0 && (
-                          <div className="space-y-2.5 pt-1">
-                            {order.items.map((item: any) => (
-                              <div
-                                key={item.id}
-                                className="flex items-center gap-3 py-1.5"
-                              >
-                                <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-200 flex-shrink-0 bg-slate-50">
-                                  <img
-                                    src={
-                                      item.imageUrl ||
-                                      "/manju-logo-circle.webp"
-                                    }
-                                    alt={item.productName || ""}
-                                    className="w-full h-full object-cover"
-                                    onError={e => {
-                                      (e.target as HTMLImageElement).src =
-                                        "/manju-logo-circle.webp";
-                                    }}
-                                  />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-bold text-[#0a0a0a] line-clamp-1">
-                                    {item.productName}
-                                  </p>
-                                  <p className="text-xs text-[#444444] font-medium">
-                                    Qty: {item.quantity} ×{" "}
-                                    {formatPrice(Number(item.unitPrice))}
-                                  </p>
-                                </div>
-                                <div className="text-xs font-black text-[#0a0a0a] flex-shrink-0">
-                                  {formatPrice(
-                                    Number(item.unitPrice) * item.quantity
-                                  )}
-                                </div>
+                      <Link key={order.id} href={`/account/orders/${order.id}`}>
+                        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4 cursor-pointer hover:shadow-md hover:border-slate-300 transition-all">
+                          {/* Header */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-extrabold text-[#0a0a0a] text-sm">
+                                  #{order.orderNumber}
+                                </span>
+                                <span
+                                  className={`text-xs px-2.5 py-0.5 rounded-full font-bold capitalize ${
+                                    order.status === "delivered"
+                                      ? "bg-emerald-100 text-emerald-800"
+                                      : order.status === "shipped"
+                                        ? "bg-purple-100 text-purple-800"
+                                        : order.status === "processing"
+                                          ? "bg-blue-100 text-blue-800"
+                                          : "bg-amber-100 text-amber-900"
+                                  }`}
+                                >
+                                  {order.status}
+                                </span>
                               </div>
-                            ))}
+                              <p className="text-xs text-[#444444] font-semibold mt-0.5">
+                                Placed on{" "}
+                                {new Date(order.createdAt).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  }
+                                )}
+                              </p>
+                            </div>
+
+                            <div className="text-right">
+                              <div className="text-base font-black text-[#F85606]">
+                                {formatPrice(
+                                  Number(order.totalAmount || order.total)
+                                )}
+                              </div>
+                              <span className="text-[11px] text-[#555555] font-semibold uppercase">
+                                {order.paymentMethod === "bank"
+                                  ? "Bank Transfer"
+                                  : "Cash on Delivery"}
+                              </span>
+                            </div>
                           </div>
-                        )}
-                      </div>
+
+                          {/* Items list */}
+                          {order.items && order.items.length > 0 && (
+                            <div className="space-y-2.5 pt-1">
+                              {order.items.map((item: any) => (
+                                <div
+                                  key={item.id}
+                                  className="flex items-center gap-3 py-1.5"
+                                >
+                                  <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-200 flex-shrink-0 bg-slate-50">
+                                    <img
+                                      src={getProductImage(
+                                        item.imageUrl,
+                                        item.productName
+                                      )}
+                                      alt={item.productName || ""}
+                                      className="w-full h-full object-cover"
+                                      onError={e => {
+                                        (e.target as HTMLImageElement).src =
+                                          "/manju-logo-circle.webp";
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-bold text-[#0a0a0a] line-clamp-1">
+                                      {item.productName}
+                                    </p>
+                                    <p className="text-xs text-[#444444] font-medium">
+                                      Qty: {item.quantity} ×{" "}
+                                      {formatPrice(Number(item.unitPrice))}
+                                    </p>
+                                  </div>
+                                  <div className="text-xs font-black text-[#0a0a0a] flex-shrink-0">
+                                    {formatPrice(
+                                      Number(item.unitPrice) * item.quantity
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </Link>
                     ))}
                   </div>
                 ) : (
@@ -549,7 +548,7 @@ export default function Account() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 border-white/25 rounded-xl px-4 h-9 flex items-center gap-1.5"
+                      className="text-xs font-bold text-[#0F2D5E] bg-white hover:bg-slate-50 border-slate-300 rounded-xl px-4 h-9 flex items-center gap-1.5"
                     >
                       + Explore Products
                     </Button>

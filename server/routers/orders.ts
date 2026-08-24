@@ -10,6 +10,32 @@ import { nanoid } from "nanoid";
 const MOCK_ORDERS: any[] = [];
 let mockOrderIdCounter = 1;
 
+async function attachItemImages(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, items: (typeof orderItems.$inferSelect)[]) {
+  const productIds = Array.from(
+    new Set(
+      items.map(i => Number(i.productId)).filter(id => !isNaN(id) && id > 0)
+    )
+  );
+
+  let imageMap: Record<number, string> = {};
+  if (productIds.length > 0) {
+    const pImages = await db
+      .select()
+      .from(productImages)
+      .where(inArray(productImages.productId, productIds));
+    for (const img of pImages) {
+      if (!imageMap[img.productId]) {
+        imageMap[img.productId] = img.url;
+      }
+    }
+  }
+
+  return items.map(item => ({
+    ...item,
+    imageUrl: imageMap[Number(item.productId)] || null,
+  }));
+}
+
 export const ordersRouter = router({
   // Finding #9 fix: require auth; no client-supplied email lookup (prevents unauthenticated order enumeration)
   list: publicProcedure
@@ -114,7 +140,7 @@ export const ordersRouter = router({
       return {
         ...order,
         totalAmount: order.total,
-        items,
+        items: await attachItemImages(db, items),
       };
     }),
 
@@ -166,7 +192,7 @@ export const ordersRouter = router({
       return {
         ...order,
         totalAmount: order.total,
-        items,
+        items: await attachItemImages(db, items),
       };
     }),
 
