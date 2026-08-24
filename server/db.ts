@@ -12,7 +12,12 @@ let _client: postgres.Sql | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _client = postgres(process.env.DATABASE_URL);
+      _client = postgres(process.env.DATABASE_URL, {
+        prepare: false,
+        max: 1,
+        idle_timeout: 20,
+        connect_timeout: 10,
+      });
       _db = drizzle(_client);
     } catch (error: any) {
       console.warn("[Database] Failed to connect:", error.message || error);
