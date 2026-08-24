@@ -242,7 +242,7 @@ export default function Footer() {
       </div>
 
       {/* ── Bottom Bar: Copyright & Attribution ────────────────── */}
-      <div className="border-t border-white/10 bg-black/40 py-3.5 px-4">
+      <div className="border-t border-white/10 py-3.5 px-4 pb-20 md:pb-3.5">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5 text-center sm:text-left text-[11px] sm:text-xs text-white/70">
           {/* Copyright */}
           <div className="flex items-center gap-1.5">

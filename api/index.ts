@@ -1,15 +1,12 @@
 // Force Vercel nft to trace all backend dependencies
-// (nft fails to trace TypeScript files with "type": "module" if imports are stripped by esbuild)
 export * as _zod from "zod";
 export * as _bcryptjs from "bcryptjs";
 export * as _nanoid from "nanoid";
-export * as _googleauth from "google-auth-library";
-export * as _drizzle1 from "drizzle-orm/mysql2";
-export * as _drizzle2 from "drizzle-orm/mysql-core";
+export * as _drizzle1 from "drizzle-orm/postgres-js";
+export * as _drizzle2 from "drizzle-orm/pg-core";
 export * as _drizzle3 from "drizzle-orm";
-export * as _mysql1 from "mysql2/promise";
-export * as _mysql2 from "mysql2";
-export * as _jose from "jose";
+import postgres from "postgres";
+export { postgres as _postgres };
 export * as _aws1 from "@aws-sdk/client-s3";
 export * as _aws2 from "@aws-sdk/s3-request-presigner";
 export * as _axios from "axios";
@@ -24,13 +21,11 @@ try {
   console.error("Environment Validation Failed:", e);
 }
 
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { appRouter } from "../server/routers/index";
 import { createContext } from "../server/_core/context";
-import { registerOAuthRoutes } from "../server/_core/oauth";
-import { registerGoogleOAuthRoutes } from "../server/_core/googleAuth";
 import { registerStorageProxy } from "../server/_core/storageProxy";
 
 const app = express();
@@ -45,17 +40,15 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Health Check
-app.get(["/", "/api", "/api/health"], (req, res) => {
+app.get(["/", "/api", "/api/health"], (req: Request, res: Response) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 // Register routes
 registerStorageProxy(app);
-registerOAuthRoutes(app);
-registerGoogleOAuthRoutes(app);
 
 // Normalize path so /api/trpc, /trpc, and Vercel serverless rewrites are all handled cleanly
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   if (req.url.startsWith("/trpc")) {
     req.url = `/api${req.url}`;
   }
@@ -75,7 +68,7 @@ app.use(
 );
 
 // Fallback JSON error handler — ensure server never returns raw HTML on errors
-app.use((err, req, res, next) => {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error("[API Error Handler]", err);
   if (res.headersSent) return next(err);
   res.status(err?.status || 500).json({

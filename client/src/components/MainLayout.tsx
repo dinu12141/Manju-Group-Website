@@ -76,8 +76,6 @@ export default function MainLayout({
         {!hideFooter && <Footer />}
         <AIChatWidget />
         <MobileBottomNav />
-        {/* Mobile bottom spacer to clear fixed bottom nav including safe area */}
-        <div className="md:hidden w-full shrink-0" style={{ height: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}></div>
       </div>
     </div>
   );
