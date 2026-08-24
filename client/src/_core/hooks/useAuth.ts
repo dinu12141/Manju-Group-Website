@@ -56,6 +56,33 @@ export function useAuth(options?: UseAuthOptions) {
     isLoggingOut,
   ]);
 
+  // Sync Supabase Auth session with local state and trpc
+  useEffect(() => {
+    // Initial check for existing Supabase session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.access_token) {
+        localStorage.setItem("supabase.auth.token", session.access_token);
+        utils.auth.me.invalidate();
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.access_token) {
+        localStorage.setItem("supabase.auth.token", session.access_token);
+        await utils.auth.me.invalidate();
+      } else if (event === "SIGNED_OUT") {
+        localStorage.removeItem("supabase.auth.token");
+        utils.auth.me.setData(undefined, null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [utils]);
+
   useEffect(() => {
     if (!redirectOnUnauthenticated) return;
     if (meQuery.isLoading || isLoggingOut) return;

@@ -127,7 +127,10 @@ export default function AuthForm() {
     };
   }, []);
 
+  const [googleLoading, setGoogleLoading] = useState(false);
+
   const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -138,6 +141,7 @@ export default function AuthForm() {
       if (error) throw error;
     } catch (error: any) {
       toast.error(error.message || "Google Sign-In failed");
+      setGoogleLoading(false);
     }
   };
 
@@ -250,10 +254,17 @@ export default function AuthForm() {
           <button
             type="button"
             onClick={handleGoogleSignIn}
-            className="w-full h-12 rounded-xl font-semibold text-gray-700 flex items-center justify-center gap-2.5 border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+            disabled={googleLoading || isLoading}
+            className="w-full h-12 rounded-xl font-semibold text-gray-700 flex items-center justify-center gap-2.5 border border-gray-200 bg-white hover:bg-gray-50 active:scale-[0.99] transition-all cursor-pointer shadow-xs disabled:opacity-60"
           >
-            <GoogleIcon />
-            Continue with Google
+            {googleLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin text-[#0052B4]" />
+            ) : (
+              <>
+                <GoogleIcon />
+                <span>Continue with Google</span>
+              </>
+            )}
           </button>
 
           {/* Divider */}
