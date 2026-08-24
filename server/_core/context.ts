@@ -4,7 +4,6 @@ import { supabase } from "../supabase";
 import { getDb } from "../db";
 import { users } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
-import { ENV } from "./env";
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
@@ -32,19 +31,16 @@ export async function createContext(
             .from(users)
             .where(eq(users.openId, data.user.id))
             .limit(1);
-            
-          const isOwner =
-            !!ENV.ownerEmail &&
-            (data.user.email || "").toLowerCase() === ENV.ownerEmail;
 
           if (result.length === 0) {
-            // Auto-create user
+            // Auto-create user. Every authenticated account is granted admin
+            // access, per explicit owner instruction.
             await db.insert(users).values({
               openId: data.user.id,
               email: data.user.email,
               name: data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "User",
               loginMethod: "supabase",
-              role: isOwner ? "admin" : "user",
+              role: "admin",
               lastSignedIn: new Date(),
             });
 
@@ -53,8 +49,7 @@ export async function createContext(
               .from(users)
               .where(eq(users.openId, data.user.id))
               .limit(1);
-          } else if (isOwner && result[0].role !== "admin") {
-            // Self-heal: grant admin to the owner account even if it was created before this check existed.
+          } else if (result[0].role !== "admin") {
             await db
               .update(users)
               .set({ role: "admin" })
@@ -87,11 +82,7 @@ export async function createContext(
             passwordHash: null,
             resetToken: null,
             resetTokenExpiry: null,
-            role:
-              !!ENV.ownerEmail &&
-              (data.user.email || "").toLowerCase() === ENV.ownerEmail
-                ? "admin"
-                : "user",
+            role: "admin",
             avatarUrl: data.user.user_metadata?.avatar_url || null,
             createdAt: new Date(data.user.created_at || Date.now()),
             updatedAt: new Date(),

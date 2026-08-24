@@ -116,3 +116,6 @@ client/public/__manus__/version.json
 
 # Vite/Vitest timestamp cache files (auto-generated)
 *.timestamp-*.mjs
+
+.vercel
+.env*
