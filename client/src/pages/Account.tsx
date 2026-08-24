@@ -277,10 +277,10 @@ export default function Account() {
                 className="space-y-6"
               >
                 <div className="mb-2">
-                  <h2 className="text-2xl font-black font-display text-white tracking-tight">
+                  <h2 className="text-2xl font-black font-display text-slate-900 tracking-tight">
                     Account Overview
                   </h2>
-                  <p className="text-white/60 text-xs font-medium mt-0.5">
+                  <p className="text-slate-500 text-xs font-medium mt-0.5">
                     Welcome back to your Manju Group member dashboard
                   </p>
                 </div>
@@ -398,10 +398,10 @@ export default function Account() {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <div className="flex items-center justify-between mb-5">
                   <div>
-                    <h2 className="text-2xl font-black font-display text-white tracking-tight">
+                    <h2 className="text-2xl font-black font-display text-slate-900 tracking-tight">
                       My Orders ({orders?.length || 0})
                     </h2>
-                    <p className="text-white/60 text-xs font-medium mt-0.5">
+                    <p className="text-slate-500 text-xs font-medium mt-0.5">
                       Track your purchases and view order history
                     </p>
                   </div>
@@ -538,10 +538,10 @@ export default function Account() {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <div className="flex items-center justify-between mb-5">
                   <div>
-                    <h2 className="text-2xl font-black font-display text-white tracking-tight">
+                    <h2 className="text-2xl font-black font-display text-slate-900 tracking-tight">
                       My Wishlist ({wishlistItems?.length || 0})
                     </h2>
-                    <p className="text-white/60 text-xs font-medium mt-0.5">
+                    <p className="text-slate-500 text-xs font-medium mt-0.5">
                       Products you've saved for future purchase
                     </p>
                   </div>
@@ -658,10 +658,10 @@ export default function Account() {
             {activeTab === "settings" && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <div className="mb-5">
-                  <h2 className="text-2xl font-black font-display text-white tracking-tight">
+                  <h2 className="text-2xl font-black font-display text-slate-900 tracking-tight">
                     Account Settings
                   </h2>
-                  <p className="text-white/60 text-xs font-medium mt-0.5">
+                  <p className="text-slate-500 text-xs font-medium mt-0.5">
                     Your personal profile information
                   </p>
                 </div>

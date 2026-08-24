@@ -168,15 +168,7 @@ export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
   orderNumber: varchar("orderNumber", { length: 32 }).notNull().unique(),
   userId: integer("userId"),
-  status: varchar("status", [
-    "pending",
-    "confirmed",
-    "processing",
-    "shipped",
-    "delivered",
-    "cancelled",
-    "refunded",
-  ])
+  status: varchar("status", { length: 32 })
     .default("pending")
     .notNull(),
   subtotal: numeric("subtotal", { precision: 12, scale: 2 }).notNull(),
@@ -189,12 +181,7 @@ export const orders = pgTable("orders", {
   total: numeric("total", { precision: 12, scale: 2 }).notNull(),
   currency: varchar("currency", { length: 8 }).default("LKR").notNull(),
   paymentMethod: varchar("paymentMethod", { length: 64 }),
-  paymentStatus: varchar("paymentStatus", [
-    "pending",
-    "paid",
-    "failed",
-    "refunded",
-  ])
+  paymentStatus: varchar("paymentStatus", { length: 32 })
     .default("pending")
     .notNull(),
   shippingAddress: json("shippingAddress"),
