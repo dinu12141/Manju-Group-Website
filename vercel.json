@@ -3,6 +3,11 @@
   "installCommand": "npm i -g pnpm@9 && pnpm install",
   "buildCommand": "vite build",
   "outputDirectory": "dist/public",
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": "{server/**,drizzle/**,shared/**}"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
