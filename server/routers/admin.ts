@@ -508,6 +508,7 @@ export const adminRouter = router({
               isNew: products.isNew,
               isActive: products.isActive,
               warrantyMonths: products.warrantyMonths,
+              specifications: products.specifications,
               brandName: brands.name,
               categoryName: categories.name,
               createdAt: products.createdAt,
@@ -700,6 +701,7 @@ export const adminRouter = router({
         isActive: z.boolean().default(true),
         warrantyMonths: z.number().int().min(0).optional(),
         imageUrl: z.string().optional(),
+        specifications: z.any().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -727,6 +729,19 @@ export const adminRouter = router({
           slug = `${baseSlug}-${suffix}`;
         }
 
+        let parsedSpecs: any = null;
+        if (input.specifications) {
+          if (typeof input.specifications === "string") {
+            try {
+              parsedSpecs = JSON.parse(input.specifications);
+            } catch {
+              parsedSpecs = null;
+            }
+          } else if (typeof input.specifications === "object") {
+            parsedSpecs = input.specifications;
+          }
+        }
+
         const [created] = await db
           .insert(products)
           .values({
@@ -746,6 +761,7 @@ export const adminRouter = router({
             isNew: input.isNew,
             isActive: input.isActive,
             warrantyMonths: input.warrantyMonths ?? 12,
+            specifications: parsedSpecs,
             createdAt: new Date(),
             updatedAt: new Date(),
           })
@@ -790,6 +806,7 @@ export const adminRouter = router({
         isActive: z.boolean(),
         warrantyMonths: z.number().int().min(0).optional(),
         imageUrl: z.string().optional(),
+        specifications: z.any().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -802,25 +819,45 @@ export const adminRouter = router({
       }
 
       try {
+        let parsedSpecs: any = undefined;
+        if (input.specifications !== undefined) {
+          if (typeof input.specifications === "string") {
+            try {
+              parsedSpecs = JSON.parse(input.specifications);
+            } catch {
+              parsedSpecs = null;
+            }
+          } else {
+            parsedSpecs = input.specifications;
+          }
+        }
+
+        const updateSet: Record<string, any> = {
+          name: input.name,
+          sku: input.sku,
+          brandId: input.brandId,
+          categoryId: input.categoryId,
+          shortDescription: input.shortDescription ?? null,
+          description: input.description ?? null,
+          basePrice: input.basePrice.toString(),
+          salePrice: input.salePrice != null ? input.salePrice.toString() : null,
+          stockQuantity: input.stockQuantity,
+          isInStock: input.stockQuantity > 0,
+          isFeatured: input.isFeatured,
+          isBestSeller: input.isBestSeller,
+          isNew: input.isNew,
+          isActive: input.isActive,
+          warrantyMonths: input.warrantyMonths ?? 12,
+          updatedAt: new Date(),
+        };
+
+        if (parsedSpecs !== undefined) {
+          updateSet.specifications = parsedSpecs;
+        }
+
         await db
           .update(products)
-          .set({
-            name: input.name,
-            sku: input.sku,
-            brandId: input.brandId,
-            categoryId: input.categoryId,
-            shortDescription: input.shortDescription ?? null,
-            description: input.description ?? null,
-            basePrice: input.basePrice.toString(),
-            salePrice: input.salePrice != null ? input.salePrice.toString() : null,
-            stockQuantity: input.stockQuantity,
-            isInStock: input.stockQuantity > 0,
-            isFeatured: input.isFeatured,
-            isBestSeller: input.isBestSeller,
-            isNew: input.isNew,
-            isActive: input.isActive,
-            warrantyMonths: input.warrantyMonths ?? 12,
-          })
+          .set(updateSet)
           .where(eq(products.id, input.productId));
 
         if (input.imageUrl) {
@@ -1218,4 +1255,115 @@ export const adminRouter = router({
       { date: "2026-08-23", revenue: 1200000, count: 4 },
     ];
   }),
+
+  // Customer Reviews Moderation
+  reviewsList: adminProcedure
+    .input(
+      z
+        .object({
+          page: z.number().int().min(1).default(1),
+          limit: z.number().int().min(1).max(100).default(50),
+          search: z.string().optional(),
+        })
+        .optional()
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { items: [], total: 0 };
+      const page = input?.page ?? 1;
+      const limit = input?.limit ?? 50;
+      const offset = (page - 1) * limit;
+
+      const conditions = input?.search?.trim()
+        ? [
+            or(
+              like(reviews.authorName, `%${input.search.trim()}%`),
+              like(reviews.body, `%${input.search.trim()}%`),
+              like(reviews.title, `%${input.search.trim()}%`)
+            ),
+          ]
+        : [];
+
+      const [items, countResult] = await Promise.all([
+        db
+          .select({
+            id: reviews.id,
+            productId: reviews.productId,
+            userId: reviews.userId,
+            authorName: reviews.authorName,
+            userEmail: reviews.userEmail,
+            rating: reviews.rating,
+            title: reviews.title,
+            body: reviews.body,
+            isVerified: reviews.isVerified,
+            isApproved: reviews.isApproved,
+            createdAt: reviews.createdAt,
+            productName: products.name,
+          })
+          .from(reviews)
+          .leftJoin(
+            products,
+            eq(sql`CAST(${products.id} AS text)`, reviews.productId)
+          )
+          .where(conditions.length > 0 ? and(...conditions) : undefined)
+          .orderBy(desc(reviews.createdAt))
+          .limit(limit)
+          .offset(offset),
+        db.select({ count: sql<number>`count(*)` }).from(reviews),
+      ]);
+
+      return {
+        items,
+        total: Number(countResult[0]?.count ?? 0),
+      };
+    }),
+
+  updateReview: adminProcedure
+    .input(
+      z.object({
+        reviewId: z.number(),
+        rating: z.number().int().min(1).max(5),
+        authorName: z.string().min(1).max(100),
+        title: z.string().max(256).optional().nullable(),
+        body: z.string().min(1).max(2000),
+        isApproved: z.boolean().default(true),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+      }
+
+      await db
+        .update(reviews)
+        .set({
+          rating: input.rating,
+          authorName: input.authorName,
+          title: input.title || null,
+          body: input.body,
+          isApproved: input.isApproved,
+        })
+        .where(eq(reviews.id, input.reviewId));
+
+      return { success: true };
+    }),
+
+  deleteReview: adminProcedure
+    .input(z.object({ reviewId: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+      }
+
+      await db.delete(reviews).where(eq(reviews.id, input.reviewId));
+      return { success: true };
+    }),
 });

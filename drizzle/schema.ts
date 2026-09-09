@@ -213,7 +213,9 @@ export type OrderItem = typeof orderItems.$inferSelect;
 export const reviews = pgTable("reviews", {
   id: serial("id").primaryKey(),
   productId: varchar("productId", { length: 256 }).notNull(),
-  userId: integer("userId").notNull(),
+  userId: integer("userId"),
+  authorName: varchar("authorName", { length: 128 }),
+  userEmail: varchar("userEmail", { length: 256 }),
   rating: integer("rating").notNull(),
   title: varchar("title", { length: 256 }),
   body: text("body"),

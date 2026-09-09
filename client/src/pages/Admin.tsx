@@ -44,6 +44,10 @@ import {
   MessageSquare,
   CreditCard,
   Loader2,
+  Star,
+  Eye,
+  EyeOff,
+  Check,
 } from "lucide-react";
 import {
   AreaChart,
@@ -86,6 +90,7 @@ type AdminTab =
   | "orders"
   | "customers"
   | "users"
+  | "reviews"
   | "ads"
   | "contacts_bank"
   | "showrooms"
@@ -159,6 +164,7 @@ interface AdminProduct {
   isNew?: boolean;
   isActive: boolean;
   warrantyMonths?: number | null;
+  specifications?: any;
   brandName: string | null;
   categoryName: string | null;
   category?: string | null;
@@ -186,6 +192,7 @@ interface ProductFormState {
   imageUrl?: string;
   description?: string;
   shortDescription?: string;
+  specifications?: any;
   warrantyMonths?: number;
 }
 
@@ -650,6 +657,154 @@ export default function Admin() {
   );
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
+  // Specifications Builder State
+  const [specRows, setSpecRows] = useState<{ key: string; value: string }[]>([]);
+
+  const handleAddSpecRow = () => {
+    setSpecRows(prev => [...prev, { key: "", value: "" }]);
+  };
+
+  const handleRemoveSpecRow = (idx: number) => {
+    setSpecRows(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleUpdateSpecRow = (
+    idx: number,
+    field: "key" | "value",
+    val: string
+  ) => {
+    setSpecRows(prev =>
+      prev.map((row, i) => (i === idx ? { ...row, [field]: val } : row))
+    );
+  };
+
+  const handleOpenAddProduct = () => {
+    setEditingProduct({
+      name: "",
+      sku: `MNJ-0${Math.floor(Math.random() * 4) + 1}-01-${Date.now().toString().slice(-3)}`,
+      brandName: "Dew Motors",
+      brandId: 1,
+      category: "Electric Bikes",
+      categoryId: 1,
+      basePrice: "100000.00",
+      salePrice: null,
+      currency: "LKR",
+      stockQuantity: 15,
+      isInStock: true,
+      isFeatured: false,
+      isBestSeller: false,
+      isNew: true,
+      isActive: true,
+      imageUrl: "/scooter_red.webp",
+      description:
+        "High performance Sri Lankan built equipment engineered for durability, efficiency, and reliability.",
+      shortDescription: "Official Manju Group warranty, islandwide delivery.",
+      warrantyMonths: 24,
+    });
+    setSpecRows([
+      { key: "Motor / Power", value: "2000W High Efficiency Brushless" },
+      { key: "Battery / Capacity", value: "72V 45Ah Lithium-ion" },
+      { key: "Max Speed", value: "75 km/h" },
+      { key: "Mileage / Range", value: "110 km per single charge" },
+      { key: "Warranty", value: "2 Years Official Warranty" },
+    ]);
+    setIsProductModalOpen(true);
+  };
+
+  const handleOpenEditProduct = (p: AdminProduct) => {
+    let rows: { key: string; value: string }[] = [];
+    if (p.specifications) {
+      try {
+        const parsed =
+          typeof p.specifications === "string"
+            ? JSON.parse(p.specifications)
+            : p.specifications;
+        if (parsed && typeof parsed === "object") {
+          rows = Object.entries(parsed).map(([k, v]) => ({
+            key: k,
+            value: String(v ?? ""),
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to parse specifications:", err);
+      }
+    }
+    if (rows.length === 0) {
+      rows = [
+        { key: "Motor / Power", value: "" },
+        { key: "Battery / Capacity", value: "" },
+        { key: "Warranty", value: `${p.warrantyMonths || 12} Months Official Warranty` },
+      ];
+    }
+    setSpecRows(rows);
+    setEditingProduct({
+      id: p.id,
+      name: p.name,
+      sku: p.sku,
+      brandId: p.brandId || 1,
+      categoryId: p.categoryId || 1,
+      brandName: p.brandName || "Dew Motors",
+      category: p.categoryName || p.category || "Electric Bikes",
+      basePrice: p.basePrice,
+      salePrice: p.salePrice,
+      stockQuantity: p.stockQuantity ?? 15,
+      isInStock: p.isInStock,
+      isFeatured: p.isFeatured,
+      isBestSeller: p.isBestSeller,
+      isNew: p.isNew ?? false,
+      isActive: p.isActive,
+      imageUrl: p.imageUrl || "/scooter_red.webp",
+      description: p.description || "",
+      shortDescription: p.shortDescription || "",
+      warrantyMonths: p.warrantyMonths ?? 12,
+    });
+    setIsProductModalOpen(true);
+  };
+
+  // Customer Reviews Moderation
+  const [reviewSearch, setReviewSearch] = useState("");
+  const [reviewPage, setReviewPage] = useState(1);
+  const [editingReview, setEditingReview] = useState<{
+    id: number;
+    authorName: string;
+    rating: number;
+    title: string;
+    body: string;
+    isApproved: boolean;
+  } | null>(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  const {
+    data: adminReviewsData,
+    isLoading: isLoadingReviews,
+    refetch: refetchAdminReviews,
+  } = trpc.admin.reviewsList.useQuery(
+    { page: reviewPage, limit: 20, search: reviewSearch || undefined },
+    { enabled: isAdmin }
+  );
+
+  const updateReviewMutation = trpc.admin.updateReview.useMutation({
+    onSuccess: () => {
+      utils.admin.reviewsList.invalidate();
+      setIsReviewModalOpen(false);
+      setEditingReview(null);
+      toast.success("Customer review updated successfully");
+    },
+    onError: err => {
+      toast.error(err.message || "Failed to update review");
+    },
+  });
+
+  const deleteReviewMutation = trpc.admin.deleteReview.useMutation({
+    onSuccess: () => {
+      utils.admin.reviewsList.invalidate();
+      toast.success("Customer review deleted successfully");
+    },
+    onError: err => {
+      toast.error(err.message || "Failed to delete review");
+    },
+  });
+
   // Invoice / Order Detail Modal
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
 
@@ -696,6 +851,15 @@ export default function Admin() {
     e.preventDefault();
     if (!editingProduct) return;
 
+    const specsObject: Record<string, string> = {};
+    for (const row of specRows) {
+      const k = row.key.trim();
+      const v = row.value.trim();
+      if (k) {
+        specsObject[k] = v;
+      }
+    }
+
     const payload = {
       name: editingProduct.name,
       sku: editingProduct.sku,
@@ -703,6 +867,7 @@ export default function Admin() {
       categoryId: Number(editingProduct.categoryId) || 1,
       shortDescription: editingProduct.shortDescription || undefined,
       description: editingProduct.description || undefined,
+      specifications: specsObject,
       basePrice: Number(editingProduct.basePrice),
       salePrice: editingProduct.salePrice
         ? Number(editingProduct.salePrice)
@@ -958,6 +1123,12 @@ export default function Admin() {
                 label: "Users & Customers",
                 icon: Users,
                 badge: usersData?.total || 0,
+              },
+              {
+                id: "reviews",
+                label: "Customer Reviews",
+                icon: Star,
+                badge: adminReviewsData?.total ?? 0,
               },
               {
                 id: "ads",
@@ -1333,31 +1504,7 @@ export default function Admin() {
                 </div>
 
                 <button
-                  onClick={() => {
-                    setEditingProduct({
-                      name: "",
-                      sku: `MNJ-0${Math.floor(Math.random() * 4) + 1}-01-${Date.now().toString().slice(-3)}`,
-                      brandName: "Dew Motors",
-                      brandId: 1,
-                      category: "Electric Bikes",
-                      categoryId: 1,
-                      basePrice: "100000.00",
-                      salePrice: null,
-                      currency: "LKR",
-                      stockQuantity: 15,
-                      isInStock: true,
-                      isFeatured: false,
-                      isBestSeller: false,
-                      isNew: true,
-                      isActive: true,
-                      imageUrl: "/scooter_red.webp",
-                      description:
-                        "High performance Sri Lankan built equipment.",
-                      shortDescription: "Official Manju Group warranty.",
-                      warrantyMonths: 24,
-                    });
-                    setIsProductModalOpen(true);
-                  }}
+                  onClick={handleOpenAddProduct}
                   className="px-4 py-2.5 bg-[#0052B4] hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
                 >
                   <Plus size={15} />
@@ -1481,30 +1628,7 @@ export default function Admin() {
                           <td className="p-3 text-right">
                             <div className="flex items-center justify-end gap-1.5">
                               <button
-                                onClick={() => {
-                                  setEditingProduct({
-                                    id: p.id,
-                                    name: p.name,
-                                    sku: p.sku,
-                                    brandId: p.brandId || 1,
-                                    categoryId: p.categoryId || 1,
-                                    brandName: p.brandName || "Dew Motors",
-                                    category: p.categoryName || p.category || "Electric Bikes",
-                                    basePrice: p.basePrice,
-                                    salePrice: p.salePrice,
-                                    stockQuantity: p.stockQuantity ?? 15,
-                                    isInStock: p.isInStock,
-                                    isFeatured: p.isFeatured,
-                                    isBestSeller: p.isBestSeller,
-                                    isNew: p.isNew ?? false,
-                                    isActive: p.isActive,
-                                    imageUrl: p.imageUrl || "/scooter_red.webp",
-                                    description: p.description || "",
-                                    shortDescription: p.shortDescription || "",
-                                    warrantyMonths: p.warrantyMonths ?? 12,
-                                  });
-                                  setIsProductModalOpen(true);
-                                }}
+                                onClick={() => handleOpenEditProduct(p)}
                                 className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 cursor-pointer"
                                 title="Edit Product"
                               >
@@ -3080,6 +3204,236 @@ export default function Admin() {
             </div>
           )}
 
+          {/* TAB: REVIEWS MODERATION */}
+          {activeTab === "reviews" && (
+            <div className="space-y-6">
+              {/* Header & Controls */}
+              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                    <Star size={20} className="text-amber-500 fill-amber-500" />
+                    Customer Reviews &amp; Live Comments
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1 font-medium">
+                    Live feedback and ratings submitted by verified customers and visitors. Moderate, edit, or remove reviews.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                  <div className="relative flex-1 md:w-72">
+                    <Search
+                      size={15}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Search reviews, authors, products..."
+                      value={reviewSearch}
+                      onChange={e => {
+                        setReviewSearch(e.target.value);
+                        setReviewPage(1);
+                      }}
+                      className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0052B4]"
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => refetchAdminReviews()}
+                    className="p-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl border border-slate-200 transition-colors cursor-pointer"
+                    title="Refresh Reviews"
+                  >
+                    <RefreshCw
+                      size={15}
+                      className={isLoadingReviews ? "animate-spin" : ""}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              {/* Stats KPI Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-black">
+                    <Star size={20} className="fill-amber-500 text-amber-500" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-400 uppercase">
+                      Total Reviews
+                    </div>
+                    <div className="text-xl font-black text-slate-900">
+                      {adminReviewsData?.total ?? 0}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black">
+                    <CheckCircle2 size={20} />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-400 uppercase">
+                      Live / Approved
+                    </div>
+                    <div className="text-xl font-black text-slate-900">
+                      {adminReviewsData?.items?.filter(r => r.isApproved).length ?? 0}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-black">
+                    <MessageSquare size={20} />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-400 uppercase">
+                      Current Page
+                    </div>
+                    <div className="text-xl font-black text-slate-900">
+                      Page {reviewPage}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Reviews Table */}
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-black uppercase text-[11px] tracking-wider">
+                      <tr>
+                        <th className="p-4">Customer</th>
+                        <th className="p-4">Product</th>
+                        <th className="p-4">Rating</th>
+                        <th className="p-4">Comment</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4">Date</th>
+                        <th className="p-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium">
+                      {isLoadingReviews ? (
+                        <tr>
+                          <td colSpan={7} className="p-8 text-center text-slate-400">
+                            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#0052B4]" />
+                            Loading customer reviews...
+                          </td>
+                        </tr>
+                      ) : adminReviewsData?.items && adminReviewsData.items.length > 0 ? (
+                        adminReviewsData.items.map(rev => (
+                          <tr key={rev.id} className="hover:bg-slate-50/60 transition-colors">
+                            <td className="p-4">
+                              <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                                <span>{rev.authorName || "Customer"}</span>
+                                {rev.isVerified && (
+                                  <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-black">
+                                    Verified
+                                  </span>
+                                )}
+                              </div>
+                              {rev.userEmail && (
+                                <div className="text-[11px] text-slate-400 mt-0.5">
+                                  {rev.userEmail}
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-4">
+                              <div className="font-bold text-slate-800 line-clamp-1 max-w-[180px]">
+                                {rev.productName || `Product #${rev.productId}`}
+                              </div>
+                              <div className="text-[10px] text-slate-400 font-mono">
+                                ID: {rev.productId}
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex items-center gap-1">
+                                {[1, 2, 3, 4, 5].map(star => (
+                                  <Star
+                                    key={star}
+                                    size={13}
+                                    className={
+                                      star <= rev.rating
+                                        ? "text-amber-400 fill-amber-400"
+                                        : "text-slate-200"
+                                    }
+                                  />
+                                ))}
+                                <span className="text-[11px] font-black text-slate-700 ml-1">
+                                  {rev.rating}.0
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-4 max-w-xs">
+                              {rev.title && (
+                                <div className="font-bold text-slate-900 text-xs mb-0.5">
+                                  {rev.title}
+                                </div>
+                              )}
+                              <p className="text-slate-600 text-xs leading-relaxed line-clamp-2">
+                                {rev.body}
+                              </p>
+                            </td>
+                            <td className="p-4">
+                              {rev.isApproved ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  <Check size={11} /> Visible
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                  <EyeOff size={11} /> Hidden
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-4 text-slate-400 whitespace-nowrap text-[11px]">
+                              {new Date(rev.createdAt).toLocaleDateString()}
+                            </td>
+                            <td className="p-4 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => {
+                                    setEditingReview({
+                                      id: rev.id,
+                                      authorName: rev.authorName || "",
+                                      rating: rev.rating,
+                                      title: rev.title || "",
+                                      body: rev.body || "",
+                                      isApproved: rev.isApproved,
+                                    });
+                                    setIsReviewModalOpen(true);
+                                  }}
+                                  className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors cursor-pointer"
+                                  title="Edit Review"
+                                >
+                                  <Edit2 size={14} />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (confirm("Are you sure you want to permanently delete this customer review?")) {
+                                      deleteReviewMutation.mutate({ reviewId: rev.id });
+                                    }
+                                  }}
+                                  className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 transition-colors cursor-pointer"
+                                  title="Delete Review"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={7} className="p-12 text-center text-slate-400 font-medium">
+                            No customer reviews found matching your search.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* TAB 4: SHOWROOMS */}
           {activeTab === "showrooms" && (
             <div className="space-y-4">
@@ -3331,7 +3685,7 @@ export default function Admin() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                 <h3 className="text-lg font-black text-slate-900">
@@ -3521,6 +3875,105 @@ export default function Admin() {
                       });
                     }}
                   />
+                </div>
+
+                {/* Short Description */}
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">
+                    Short Description / Overview Summary
+                  </label>
+                  <input
+                    type="text"
+                    value={editingProduct.shortDescription || ""}
+                    onChange={e =>
+                      setEditingProduct({
+                        ...editingProduct,
+                        shortDescription: e.target.value,
+                      })
+                    }
+                    placeholder="e.g. Official Manju Group warranty, islandwide door-step delivery."
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                  />
+                </div>
+
+                {/* Full Detailed Description */}
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">
+                    Full Detailed Description &amp; Features
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={editingProduct.description || ""}
+                    onChange={e =>
+                      setEditingProduct({
+                        ...editingProduct,
+                        description: e.target.value,
+                      })
+                    }
+                    placeholder="Provide a comprehensive product description, highlights, build quality, and key features..."
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium resize-y"
+                  />
+                </div>
+
+                {/* Technical Specifications & Attributes Builder */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="font-bold text-slate-900 block text-xs">
+                        Technical Specifications &amp; Attributes
+                      </label>
+                      <p className="text-[11px] text-slate-500">
+                        Add custom key-value pairs (e.g. Motor, Battery, Speed, Range, Dimensions)
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAddSpecRow}
+                      className="px-3 py-1.5 bg-[#0052B4] hover:bg-blue-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1 cursor-pointer transition-all"
+                    >
+                      <Plus size={13} />
+                      <span>Add Spec Row</span>
+                    </button>
+                  </div>
+
+                  {specRows.length === 0 ? (
+                    <p className="text-[11px] text-slate-400 italic text-center py-2">
+                      No custom specifications added yet. Click &quot;Add Spec Row&quot; above.
+                    </p>
+                  ) : (
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      {specRows.map((row, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            placeholder="Attribute (e.g. Motor / Power)"
+                            value={row.key}
+                            onChange={e =>
+                              handleUpdateSpecRow(idx, "key", e.target.value)
+                            }
+                            className="w-2/5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg font-semibold text-xs"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Value (e.g. 2400W Brushless DC)"
+                            value={row.value}
+                            onChange={e =>
+                              handleUpdateSpecRow(idx, "value", e.target.value)
+                            }
+                            className="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSpecRow(idx)}
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer transition-all"
+                            title="Remove Specification"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2 pt-2">
@@ -3914,6 +4367,180 @@ export default function Admin() {
                   </span>
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* EDIT REVIEW MODAL */}
+        {isReviewModalOpen && editingReview && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4"
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <Star size={18} className="text-amber-500 fill-amber-500" />
+                  <h3 className="text-base font-black text-slate-900">
+                    Moderate Customer Review #{editingReview.id}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsReviewModalOpen(false);
+                    setEditingReview(null);
+                  }}
+                  className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form
+                onSubmit={e => {
+                  e.preventDefault();
+                  if (!editingReview) return;
+                  updateReviewMutation.mutate({
+                    reviewId: editingReview.id,
+                    authorName: editingReview.authorName,
+                    rating: editingReview.rating,
+                    title: editingReview.title,
+                    body: editingReview.body,
+                    isApproved: editingReview.isApproved,
+                  });
+                }}
+                className="space-y-4 text-xs"
+              >
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">
+                    Rating (Stars)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <button
+                        type="button"
+                        key={star}
+                        onClick={() =>
+                          setEditingReview({
+                            ...editingReview,
+                            rating: star,
+                          })
+                        }
+                        className="p-1 cursor-pointer transition-transform hover:scale-110"
+                      >
+                        <Star
+                          size={24}
+                          className={
+                            star <= editingReview.rating
+                              ? "text-amber-400 fill-amber-400"
+                              : "text-slate-200"
+                          }
+                        />
+                      </button>
+                    ))}
+                    <span className="font-black text-slate-800 text-sm ml-2">
+                      {editingReview.rating} of 5 Stars
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">
+                    Author Display Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingReview.authorName}
+                    onChange={e =>
+                      setEditingReview({
+                        ...editingReview,
+                        authorName: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">
+                    Review Headline / Title (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={editingReview.title}
+                    onChange={e =>
+                      setEditingReview({
+                        ...editingReview,
+                        title: e.target.value,
+                      })
+                    }
+                    placeholder="e.g. Excellent build quality and range"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">
+                    Review Comment / Body
+                  </label>
+                  <textarea
+                    rows={4}
+                    required
+                    value={editingReview.body}
+                    onChange={e =>
+                      setEditingReview({
+                        ...editingReview,
+                        body: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium resize-y"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="reviewApprovedToggle"
+                    checked={editingReview.isApproved}
+                    onChange={e =>
+                      setEditingReview({
+                        ...editingReview,
+                        isApproved: e.target.checked,
+                      })
+                    }
+                    className="rounded border-slate-300"
+                  />
+                  <label
+                    htmlFor="reviewApprovedToggle"
+                    className="font-bold text-slate-800 cursor-pointer"
+                  >
+                    Approved &amp; Visible on Live Website
+                  </label>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsReviewModalOpen(false);
+                      setEditingReview(null);
+                    }}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updateReviewMutation.isPending}
+                    className="px-5 py-2 bg-[#0052B4] hover:bg-blue-700 text-white font-black rounded-xl shadow-md cursor-pointer disabled:opacity-50"
+                  >
+                    {updateReviewMutation.isPending ? "Saving..." : "Save Review Changes"}
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import {
@@ -7,6 +8,7 @@ import {
   categories,
   productImages,
   productVariants,
+  reviews,
 } from "../../drizzle/schema";
 import {
   and,
@@ -480,5 +482,63 @@ export const productsRouter = router({
         .limit(input.limit);
 
       return hydrateRows(db, rows);
+    }),
+
+  // Product Reviews (Public)
+  reviews: publicProcedure
+    .input(z.object({ productId: z.union([z.number(), z.string()]) }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const prodIdStr = String(input.productId);
+      const rows = await db
+        .select()
+        .from(reviews)
+        .where(and(eq(reviews.productId, prodIdStr), eq(reviews.isApproved, true)))
+        .orderBy(desc(reviews.createdAt));
+      return rows;
+    }),
+
+  addReview: publicProcedure
+    .input(
+      z.object({
+        productId: z.union([z.number(), z.string()]),
+        authorName: z.string().min(1, "Name is required").max(100),
+        rating: z.number().int().min(1).max(5),
+        title: z.string().max(256).optional(),
+        body: z.string().min(2, "Review comment must be at least 2 characters").max(2000),
+        userEmail: z.string().email().optional().or(z.literal("")),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+      }
+
+      const prodIdStr = String(input.productId);
+      const userId = ctx.user?.id ? Number(ctx.user.id) : null;
+      const authorName = input.authorName.trim() || ctx.user?.name || "Verified Customer";
+
+      const [created] = await db
+        .insert(reviews)
+        .values({
+          productId: prodIdStr,
+          userId,
+          authorName,
+          userEmail: (input.userEmail && input.userEmail.trim()) || ctx.user?.email || null,
+          rating: input.rating,
+          title: input.title?.trim() || null,
+          body: input.body.trim(),
+          isVerified: !!userId,
+          isApproved: true, // Visible immediately
+          createdAt: new Date(),
+        })
+        .returning();
+
+      return created;
     }),
 });
