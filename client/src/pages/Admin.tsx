@@ -3484,20 +3484,41 @@ export default function Admin() {
 
                 <div>
                   <label className="font-bold text-slate-700 block mb-1">
-                    Image Asset Path / URL
+                    Product Photo (Direct Device Upload &amp; Auto-Compression)
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={editingProduct.imageUrl}
-                    onChange={e =>
+                  <p className="text-[11px] text-slate-500 mb-2">
+                    Upload product photo directly from your device. It will automatically convert to highly-compressed WebP for ultra-fast and smooth website loading.
+                  </p>
+                  <MediaUploader
+                    label="Upload Product Photo"
+                    currentUrl={editingProduct.imageUrl || ""}
+                    accept="image"
+                    recommendedDimensions="Square 800×800 or 1000×1000 px"
+                    onUploaded={url => {
                       setEditingProduct({
                         ...editingProduct,
-                        imageUrl: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-[11px]"
+                        imageUrl: url,
+                      });
+                    }}
                   />
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      Asset Path:
+                    </span>
+                    <input
+                      type="text"
+                      required
+                      value={editingProduct.imageUrl}
+                      onChange={e =>
+                        setEditingProduct({
+                          ...editingProduct,
+                          imageUrl: e.target.value,
+                        })
+                      }
+                      placeholder="/scooter_red.webp or /uploads/..."
+                      className="flex-1 px-2.5 py-1 text-[11px] bg-slate-50 border border-slate-200 rounded-lg font-mono text-slate-600 focus:outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 pt-2">
