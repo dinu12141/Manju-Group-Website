@@ -516,7 +516,7 @@ export const adminRouter = router({
             .leftJoin(brands, eq(products.brandId, brands.id))
             .leftJoin(categories, eq(products.categoryId, categories.id))
             .where(conditions.length > 0 ? and(...conditions) : undefined)
-            .orderBy(desc(products.createdAt))
+            .orderBy(desc(products.id))
             .limit(input.limit)
             .offset(offset),
           db.select({ count: sql<number>`count(*)` }).from(products),
@@ -746,6 +746,8 @@ export const adminRouter = router({
             isNew: input.isNew,
             isActive: input.isActive,
             warrantyMonths: input.warrantyMonths ?? 12,
+            createdAt: new Date(),
+            updatedAt: new Date(),
           })
           .returning({ id: products.id, slug: products.slug });
 

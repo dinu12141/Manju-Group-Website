@@ -43,6 +43,7 @@ import {
   Building2,
   MessageSquare,
   CreditCard,
+  Loader2,
 } from "lucide-react";
 import {
   AreaChart,
@@ -409,13 +410,20 @@ export default function Admin() {
       { enabled: isAdmin }
     );
 
-  // Real product catalog — backed by admin.products with instant STATIC_PRODUCTS
-  // fallback so catalog is NEVER empty or blank.
+  // Real product catalog — backed by admin.products with instant fallback
   const {
     data: productsData,
     isLoading: isLoadingProducts,
     error: productsError,
-  } = trpc.admin.products.useQuery({ page: 1, limit: 100 }, { enabled: isAdmin });
+    refetch: refetchProducts,
+  } = trpc.admin.products.useQuery(
+    { page: 1, limit: 100 },
+    {
+      enabled: isAdmin,
+      staleTime: 1000 * 30,
+      refetchOnWindowFocus: false,
+    }
+  );
 
   const staticAdminProducts: AdminProduct[] = useMemo(
     () =>
@@ -450,8 +458,11 @@ export default function Admin() {
     if (productsData?.items && productsData.items.length > 0) {
       return productsData.items as unknown as AdminProduct[];
     }
+    if (isLoadingProducts && !productsData) {
+      return [];
+    }
     return staticAdminProducts;
-  }, [productsData, staticAdminProducts]);
+  }, [productsData, isLoadingProducts, staticAdminProducts]);
 
   const { data: brandOptions } = trpc.admin.brandOptions.useQuery();
   const { data: categoryOptions } = trpc.admin.categoryOptions.useQuery();
@@ -482,6 +493,7 @@ export default function Admin() {
     utils.admin.stats.invalidate();
     utils.products.list.invalidate();
     utils.products.getFeatured.invalidate();
+    refetchProducts();
   };
 
   const createProductMutation = trpc.admin.createProduct.useMutation({
@@ -1368,7 +1380,15 @@ export default function Admin() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {filteredProducts.length === 0 ? (
+                      {isLoadingProducts && !productsData ? (
+                        <tr>
+                          <td colSpan={6} className="p-12 text-center text-slate-400">
+                            <Loader2 size={32} className="mx-auto mb-2 text-[#0052B4] animate-spin" />
+                            <p className="font-bold text-slate-700 text-sm">Loading inventory catalog…</p>
+                            <p className="text-xs text-slate-400 mt-1">Connecting to live database</p>
+                          </td>
+                        </tr>
+                      ) : filteredProducts.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="p-8 text-center text-slate-400">
                             <Package size={36} className="mx-auto mb-2 text-slate-300" />
