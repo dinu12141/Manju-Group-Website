@@ -835,9 +835,11 @@ export const adminRouter = router({
       }
 
       try {
-        await db.delete(productImages).where(eq(productImages.productId, input.productId));
-        await db.delete(productVariants).where(eq(productVariants.productId, input.productId));
-        await db.delete(products).where(eq(products.id, input.productId));
+        await db.transaction(async tx => {
+          await tx.delete(productImages).where(eq(productImages.productId, input.productId));
+          await tx.delete(productVariants).where(eq(productVariants.productId, input.productId));
+          await tx.delete(products).where(eq(products.id, input.productId));
+        });
 
         return { success: true };
       } catch (e: any) {
@@ -920,8 +922,15 @@ export const adminRouter = router({
 
   // Generic JSON site settings — used for admin-managed config blobs like
   // the home page ad/promo config (key: "home_ad_config").
+  //
+  // getSiteSetting is intentionally publicProcedure (the storefront reads
+  // home_ad_config without logging in), so the key is restricted to an
+  // explicit allowlist of values that are safe to expose with no auth.
+  // Do not widen this to z.string() — site_settings is a generic key/value
+  // store and a future admin feature could store non-public data under a
+  // new key; without this allowlist that data would be readable by anyone.
   getSiteSetting: publicProcedure
-    .input(z.object({ key: z.string().min(1).max(128) }))
+    .input(z.object({ key: z.enum(["home_ad_config"]) }))
     .query(async ({ input }) => {
       try {
         const db = await getDb();
