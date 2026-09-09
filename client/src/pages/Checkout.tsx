@@ -29,6 +29,7 @@ import { Separator } from "@/components/ui/separator";
 import { formatPrice } from "@/lib/data";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { useSiteBankDetails } from "@/lib/siteSettings";
 
 // ─── Schema ────────────────────────────────────────────────────────────────
 
@@ -240,6 +241,7 @@ function OrderSummaryBox({ compact = false }: { compact?: boolean }) {
 // ─── Main component ─────────────────────────────────────────────────────────
 
 export default function Checkout() {
+  const { bankDetails } = useSiteBankDetails();
   const [, navigate] = useLocation();
   const { items, total, itemCount, clearCart } = useCart();
 
@@ -865,14 +867,46 @@ export default function Checkout() {
                           exit={{ opacity: 0, height: 0 }}
                           className="mt-4 overflow-hidden"
                         >
-                          <div className="bg-blue-50 rounded-xl p-4 text-xs text-blue-800 space-y-1">
-                            <p className="font-bold">Bank Transfer Details</p>
-                            <p>Bank: Commercial Bank of Ceylon</p>
-                            <p>Account Name: Manju Group (Pvt) Ltd</p>
-                            <p>Account No: 1234 5678 9012</p>
-                            <p>
-                              Reference: Your order number (provided after
-                              placing)
+                          <div className="bg-blue-50/90 border border-blue-200 rounded-2xl p-4 text-xs text-blue-900 space-y-2">
+                            <div className="flex items-center justify-between border-b border-blue-200/60 pb-1.5">
+                              <p className="font-extrabold text-blue-950 flex items-center gap-1.5">
+                                <Building2 size={15} className="text-[#0F2D5E]" />
+                                Direct Bank Transfer Details
+                              </p>
+                              <span className="bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
+                                Official Account
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-slate-800">
+                              <div>
+                                <span className="text-slate-500 font-semibold block text-[10px]">
+                                  Bank:
+                                </span>
+                                <strong className="font-bold">{bankDetails.bankName}</strong>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 font-semibold block text-[10px]">
+                                  Account Name:
+                                </span>
+                                <strong className="font-bold">{bankDetails.accountName}</strong>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 font-semibold block text-[10px]">
+                                  Account No:
+                                </span>
+                                <strong className="font-mono font-black text-blue-900 text-sm tracking-wide">
+                                  {bankDetails.accountNumber}
+                                </strong>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 font-semibold block text-[10px]">
+                                  Branch:
+                                </span>
+                                <strong className="font-bold">{bankDetails.branch}</strong>
+                              </div>
+                            </div>
+                            <p className="text-[11px] text-blue-900/90 pt-2 border-t border-blue-200/60 leading-relaxed font-medium">
+                              {bankDetails.instructions}
                             </p>
                           </div>
                         </motion.div>
@@ -982,7 +1016,7 @@ export default function Checkout() {
                                 Direct Bank Transfer
                               </p>
                               <p className="text-xs text-slate-500 font-medium">
-                                Commercial Bank of Ceylon
+                                {bankDetails.bankName}
                               </p>
                             </div>
                           </>

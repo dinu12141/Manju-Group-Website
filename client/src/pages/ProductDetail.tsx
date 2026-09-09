@@ -34,6 +34,7 @@ import ProductCard from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { STATIC_PRODUCTS } from "@/lib/staticData";
 import { getProductImage, cleanText } from "@/lib/data";
+import SEO from "@/components/SEO";
 
 interface ProductDetailProps {
   params: { slug: string };
@@ -431,6 +432,44 @@ export default function ProductDetail({ params }: ProductDetailProps) {
 
   return (
     <MainLayout>
+      <SEO
+        title={`${item.name} | Best Price in Sri Lanka`}
+        description={item.shortDescription || `Buy ${item.name} at the best price in Sri Lanka from Manju Group with official warranty and fast islandwide delivery.`}
+        canonical={`/products/${item.slug}`}
+        image={mainImageUrl}
+        type="product"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": item.name,
+          "image": images,
+          "description": item.shortDescription || item.name,
+          "sku": item.sku || item.slug,
+          "brand": {
+            "@type": "Brand",
+            "name": item.brandName || "Manju Group",
+          },
+          "offers": {
+            "@type": "Offer",
+            "url": `https://manjugroup.lk/products/${item.slug}`,
+            "priceCurrency": "LKR",
+            "price": displayPrice,
+            "availability": item.isInStock
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+            "itemCondition": "https://schema.org/NewCondition",
+            "seller": {
+              "@type": "Organization",
+              "name": "Manju Group Sri Lanka",
+            },
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": rating.toFixed(1),
+            "reviewCount": reviewCount,
+          },
+        }}
+      />
       {/* Breadcrumbs Navigation */}
       <div className="bg-white/80 border-b border-slate-200/80 backdrop-blur-md sticky top-16 z-20 py-3">
         <div className="container mx-auto px-4 text-xs font-semibold text-slate-500 flex items-center gap-2 flex-wrap">

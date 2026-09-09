@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <!-- Core Website Pages -->
   <url>
     <loc>https://manjugroup.lk/</loc>
     <changefreq>daily</changefreq>
@@ -8,7 +10,7 @@
   <url>
     <loc>https://manjugroup.lk/products</loc>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://manjugroup.lk/brands</loc>
@@ -18,10 +20,20 @@
   <url>
     <loc>https://manjugroup.lk/about</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://manjugroup.lk/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://manjugroup.lk/locations</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://manjugroup.lk/faq</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -29,5 +41,89 @@
     <loc>https://manjugroup.lk/news</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+
+  <!-- Brand Hub Pages -->
+  <url>
+    <loc>https://manjugroup.lk/brands/dew-motors</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://manjugroup.lk/brands/dew-plus</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://manjugroup.lk/brands/dew-plus-ac</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://manjugroup.lk/brands/manju-dew-super</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Key Product Pages -->
+  <url>
+    <loc>https://manjugroup.lk/products/dew-motors-em005-2400w</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://manjugroup.lk/products/dew-plus-32-inch-smart-frameless-tv</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://manjugroup.lk/products/dew-plus-43-inch-smart-4k-uhd-tv</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://manjugroup.lk/products/dew-plus-55-inch-4k-smart-google-tv</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://manjugroup.lk/products/dew-plus-65-inch-4k-uhd-smart-tv</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://manjugroup.lk/products/dew-plus-75-inch-4k-uhd-smart-google-tv</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://manjugroup.lk/products/dew-plus-98-inch-giant-4k-smart-tv</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://manjugroup.lk/products/dew-plus-1-ton-inverter-ac</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://manjugroup.lk/products/dew-plus-1-5-ton-inverter-ac</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://manjugroup.lk/products/dew-plus-2-ton-inverter-ac</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://manjugroup.lk/products/manju-dew-super-hot-cold-dispenser</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://manjugroup.lk/products/dew-super-ro-plus-water-purifier</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>

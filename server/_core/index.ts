@@ -11,6 +11,7 @@ import { rateLimit } from "express-rate-limit";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 
 import { registerStorageProxy } from "./storageProxy";
+import { registerUploadRoute } from "../routers/upload";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -87,11 +88,12 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "1mb", extended: true }));
 
   registerStorageProxy(app);
+  registerUploadRoute(app);
 
-  // Serve static assets from client/public directly
-  app.use(
-    express.static(path.resolve(import.meta.dirname, "../../client/public"))
-  );
+  // Serve static assets from client/public directly (including /uploads)
+  const clientPublicPath = path.resolve(import.meta.dirname, "../../client/public");
+  app.use(express.static(clientPublicPath));
+  app.use("/uploads", express.static(path.join(clientPublicPath, "uploads")));
 
   // AI rate limit: 10 requests/min per IP (finding #18)
   app.use("/api/trpc/ai.chat", aiRateLimit);

@@ -39,6 +39,10 @@ import {
   Volume2,
   Users,
   UserCircle,
+  PhoneCall,
+  Building2,
+  MessageSquare,
+  CreditCard,
 } from "lucide-react";
 import {
   AreaChart,
@@ -61,9 +65,19 @@ import {
   type HeroSlideAd,
   type PromoBannerAd,
 } from "@/lib/adSettings";
+import {
+  useSiteContacts,
+  useSiteBankDetails,
+  type SiteContacts,
+  type SiteBankDetails,
+  DEFAULT_CONTACTS,
+  DEFAULT_BANK_DETAILS,
+} from "@/lib/siteSettings";
+import { MediaUploader } from "@/components/admin/MediaUploader";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
+import SEO from "@/components/SEO";
 
 type AdminTab =
   | "dashboard"
@@ -72,6 +86,7 @@ type AdminTab =
   | "customers"
   | "users"
   | "ads"
+  | "contacts_bank"
   | "showrooms"
   | "inquiries"
   | "erp"
@@ -502,6 +517,62 @@ export default function Admin() {
     setLocalAdConfig(liveAdConfig);
   }, [liveAdConfig]);
 
+  // Site Contacts & Bank Details Hooks
+  const {
+    contacts: liveContacts,
+    updateContacts: saveContacts,
+    resetContacts: resetContactsSetting,
+    isSaving: isSavingContacts,
+  } = useSiteContacts();
+  const [localContacts, setLocalContacts] =
+    useState<SiteContacts>(liveContacts);
+
+  useEffect(() => {
+    setLocalContacts(liveContacts);
+  }, [liveContacts]);
+
+  const {
+    bankDetails: liveBankDetails,
+    updateBankDetails: saveBankDetails,
+    resetBankDetails: resetBankDetailsSetting,
+    isSaving: isSavingBank,
+  } = useSiteBankDetails();
+  const [localBank, setLocalBank] =
+    useState<SiteBankDetails>(liveBankDetails);
+
+  useEffect(() => {
+    setLocalBank(liveBankDetails);
+  }, [liveBankDetails]);
+
+  const handleSaveContactsAndBank = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    try {
+      await Promise.all([
+        saveContacts(localContacts),
+        saveBankDetails(localBank),
+      ]);
+      toast.success("🏢 Hotline & Bank Details Updated Live across website!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update contact/bank settings");
+    }
+  };
+
+  const handleResetContactsAndBank = async () => {
+    if (confirm("Reset contact numbers and bank transfer details to defaults?")) {
+      try {
+        await Promise.all([
+          resetContactsSetting(),
+          resetBankDetailsSetting(),
+        ]);
+        setLocalContacts(DEFAULT_CONTACTS);
+        setLocalBank(DEFAULT_BANK_DETAILS);
+        toast.info("Contact numbers and bank details reset to defaults");
+      } catch (err: any) {
+        toast.error(err.message || "Failed to reset settings");
+      }
+    }
+  };
+
   // Product Add / Edit Modal
   const [editingProduct, setEditingProduct] = useState<ProductFormState | null>(
     null
@@ -638,6 +709,7 @@ export default function Admin() {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#001433] via-[#00224D] to-[#0A2E5C] flex items-center justify-center p-4">
+        <SEO title="Admin Login | Command Center" noindex />
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -709,6 +781,7 @@ export default function Admin() {
   // ── MAIN ENTERPRISE DASHBOARD ───────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#F1F5F9] text-slate-800 flex flex-col">
+      <SEO title="Enterprise Command Center" noindex />
       {/* ── TOP EXECUTIVE APPBAR ─────────────────────────────────────────── */}
       <header className="bg-[#001A3D] text-white border-b border-blue-900/60 sticky top-0 z-40 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
@@ -813,6 +886,12 @@ export default function Admin() {
                 label: "Banner & Video Ads",
                 icon: Megaphone,
                 badge: "Hero+Home",
+              },
+              {
+                id: "contacts_bank",
+                label: "Hotline & Bank Settings",
+                icon: PhoneCall,
+                badge: "Live",
               },
               {
                 id: "showrooms",
@@ -1475,29 +1554,27 @@ export default function Admin() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-3">
-                    <div>
-                      <label className="text-xs font-bold text-slate-700 block mb-1">
-                        Video / Image Media URL
-                      </label>
-                      <input
-                        type="text"
-                        value={localAdConfig.heroVideo.videoUrl}
-                        onChange={e =>
-                          setLocalAdConfig({
-                            ...localAdConfig,
-                            heroVideo: {
-                              ...localAdConfig.heroVideo,
-                              videoUrl: e.target.value,
-                            },
-                          })
-                        }
-                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-mono"
-                        placeholder="/promo-video.mp4 or Image URL"
-                      />
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        <span className="text-[10px] text-slate-400 font-semibold mr-1 py-0.5">
-                          Quick Pick:
-                        </span>
+                    <MediaUploader
+                      label="Upload Video / Image Media (Auto-Compressed)"
+                      currentUrl={localAdConfig.heroVideo.videoUrl}
+                      accept="both"
+                      recommendedDimensions="16:9 (1280x720 HD recommended)"
+                      onUploaded={url =>
+                        setLocalAdConfig({
+                          ...localAdConfig,
+                          heroVideo: {
+                            ...localAdConfig.heroVideo,
+                            videoUrl: url,
+                          },
+                        })
+                      }
+                    />
+
+                    <div className="pt-1">
+                      <span className="text-[10px] text-slate-400 font-semibold block mb-1">
+                        Preset Media:
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
                         {PRESET_AD_MEDIA.map((m, idx) => (
                           <button
                             key={idx}
@@ -1784,25 +1861,22 @@ export default function Admin() {
                       </div>
                     </div>
 
-                    <div>
-                      <label className="text-xs font-bold text-slate-700 block mb-1">
-                        Banner Image URL
-                      </label>
-                      <input
-                        type="text"
-                        value={localAdConfig.heroFlashSale.imageUrl}
-                        onChange={e =>
-                          setLocalAdConfig({
-                            ...localAdConfig,
-                            heroFlashSale: {
-                              ...localAdConfig.heroFlashSale,
-                              imageUrl: e.target.value,
-                            },
-                          })
-                        }
-                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-mono text-[11px]"
-                      />
-                      <div className="flex flex-wrap gap-1 mt-2">
+                    <MediaUploader
+                      label="Upload Flash Sale Banner Image (Auto-WebP)"
+                      currentUrl={localAdConfig.heroFlashSale.imageUrl}
+                      accept="image"
+                      recommendedDimensions="600x400 / 4:3 card"
+                      onUploaded={url =>
+                        setLocalAdConfig({
+                          ...localAdConfig,
+                          heroFlashSale: {
+                            ...localAdConfig.heroFlashSale,
+                            imageUrl: url,
+                          },
+                        })
+                      }
+                    />
+                    <div className="flex flex-wrap gap-1 mt-1.5">
                         {PRESET_AD_MEDIA.filter(m => m.type === "image").map(
                           (m, idx) => (
                             <button
@@ -1825,7 +1899,6 @@ export default function Admin() {
                         )}
                       </div>
                     </div>
-                  </div>
 
                   {/* Preview */}
                   <div className="rounded-2xl bg-white border border-red-200 p-3 flex flex-col justify-between relative overflow-hidden min-h-[190px] shadow-sm">
@@ -1994,27 +2067,24 @@ export default function Admin() {
                         />
                       </div>
 
-                      <div>
-                        <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                          Image URL
-                        </label>
-                        <input
-                          type="text"
-                          value={banner.imageUrl}
-                          onChange={e => {
-                            const newBanners = [...localAdConfig.promoBanners];
-                            newBanners[bIdx] = {
-                              ...banner,
-                              imageUrl: e.target.value,
-                            };
-                            setLocalAdConfig({
-                              ...localAdConfig,
-                              promoBanners: newBanners,
-                            });
-                          }}
-                          className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg font-mono text-[11px]"
-                        />
-                        <div className="flex flex-wrap gap-1 mt-1.5">
+                      <MediaUploader
+                        label={`Upload Banner #${bIdx + 1} Image (Auto-WebP)`}
+                        currentUrl={banner.imageUrl}
+                        accept="image"
+                        recommendedDimensions="800x450 (16:9 banner)"
+                        onUploaded={url => {
+                          const newBanners = [...localAdConfig.promoBanners];
+                          newBanners[bIdx] = {
+                            ...banner,
+                            imageUrl: url,
+                          };
+                          setLocalAdConfig({
+                            ...localAdConfig,
+                            promoBanners: newBanners,
+                          });
+                        }}
+                      />
+                      <div className="flex flex-wrap gap-1 mt-1.5">
                           {PRESET_AD_MEDIA.filter(m => m.type === "image").map(
                             (m, mIdx) => (
                               <button
@@ -2041,7 +2111,6 @@ export default function Admin() {
                           )}
                         </div>
                       </div>
-                    </div>
                   ))}
                 </div>
               </div>
@@ -2073,6 +2142,510 @@ export default function Admin() {
                   >
                     <Save size={15} />
                     <span>Save & Publish Live</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: CONTACTS & BANK DETAILS MANAGEMENT */}
+          {activeTab === "contacts_bank" && (
+            <div className="space-y-6">
+              {/* TOP ACTION BAR */}
+              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#0052B4] flex items-center justify-center font-bold">
+                      <PhoneCall size={18} />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-black text-slate-900">
+                        Hotline, Support &amp; Bank Details Control
+                      </h2>
+                      <p className="text-xs text-slate-500">
+                        Manage company phone numbers, WhatsApp, email, and bank transfer credentials shown site-wide.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={handleResetContactsAndBank}
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all"
+                  >
+                    <RotateCcw size={14} />
+                    <span>Reset Defaults</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveContactsAndBank}
+                    disabled={isSavingContacts || isSavingBank}
+                    className="px-5 py-2 rounded-xl bg-[#0052B4] hover:bg-blue-700 text-white text-xs font-black flex items-center gap-1.5 shadow-md cursor-pointer transition-all hover:scale-105 disabled:opacity-60"
+                  >
+                    <Save size={14} />
+                    <span>
+                      {isSavingContacts || isSavingBank
+                        ? "Saving…"
+                        : "Save & Publish Live"}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* CARD 1: OFFICIAL CONTACT NUMBERS & CHANNELS */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Phone className="text-[#0052B4]" size={18} />
+                    <h4 className="font-extrabold text-sm text-slate-900">
+                      1. Official Hotlines &amp; Support Channels
+                    </h4>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold text-[10px]">
+                    Site-wide Header, Mobile Bar &amp; Contact Page
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Left Column: Form Fields */}
+                  <div className="space-y-3.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">
+                          General Hotline Phone
+                        </label>
+                        <input
+                          type="text"
+                          value={localContacts.hotline}
+                          onChange={e =>
+                            setLocalContacts({
+                              ...localContacts,
+                              hotline: e.target.value,
+                            })
+                          }
+                          placeholder="+94 11 234 5678"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                        <span className="text-[10px] text-slate-400 mt-0.5 block">
+                          Displays in Topbar, Mobile header &amp; Drawer
+                        </span>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">
+                          Support Hotline (Direct)
+                        </label>
+                        <input
+                          type="text"
+                          value={localContacts.supportPhone}
+                          onChange={e =>
+                            setLocalContacts({
+                              ...localContacts,
+                              supportPhone: e.target.value,
+                            })
+                          }
+                          placeholder="+94 77 123 4567"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                        <span className="text-[10px] text-slate-400 mt-0.5 block">
+                          Technical inquiries &amp; service support
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">
+                          WhatsApp Business Number
+                        </label>
+                        <input
+                          type="text"
+                          value={localContacts.whatsappNumber}
+                          onChange={e =>
+                            setLocalContacts({
+                              ...localContacts,
+                              whatsappNumber: e.target.value,
+                            })
+                          }
+                          placeholder="+94 77 123 4567"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                        />
+                        <span className="text-[10px] text-slate-400 mt-0.5 block">
+                          Used for live chat &amp; bank slip confirmation
+                        </span>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">
+                          Official Email Address
+                        </label>
+                        <input
+                          type="email"
+                          value={localContacts.email}
+                          onChange={e =>
+                            setLocalContacts({
+                              ...localContacts,
+                              email: e.target.value,
+                            })
+                          }
+                          placeholder="info@manjugroup.lk"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
+                        Operating Hours
+                      </label>
+                      <input
+                        type="text"
+                        value={localContacts.openingHours}
+                        onChange={e =>
+                          setLocalContacts({
+                            ...localContacts,
+                            openingHours: e.target.value,
+                          })
+                        }
+                        placeholder="Mon–Fri: 8:30 AM – 6:00 PM, Sat: 9:00 AM – 4:00 PM"
+                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
+                        Corporate Head Office Address
+                      </label>
+                      <input
+                        type="text"
+                        value={localContacts.address}
+                        onChange={e =>
+                          setLocalContacts({
+                            ...localContacts,
+                            address: e.target.value,
+                          })
+                        }
+                        placeholder="Manju Group Corporate HQ, No. 123, Galle Road, Colombo 03, Sri Lanka"
+                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
+                        Facebook Page URL
+                      </label>
+                      <input
+                        type="text"
+                        value={localContacts.facebookUrl}
+                        onChange={e =>
+                          setLocalContacts({
+                            ...localContacts,
+                            facebookUrl: e.target.value,
+                          })
+                        }
+                        placeholder="https://www.facebook.com/ManjuEnterprisesLK"
+                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-mono text-[11px] text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right Column: Live Visual Previews */}
+                  <div className="space-y-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <h5 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+                      Live Customer-Facing Previews
+                    </h5>
+
+                    {/* Preview 1: Header Topbar Hotline Badge */}
+                    <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5">
+                      <span className="text-[10px] font-bold text-slate-400 block uppercase">
+                        Header Topbar Hotline Badge
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <div className="inline-flex items-center gap-1.5 bg-blue-50 text-[#0052B4] px-3 py-1.5 rounded-full border border-blue-200 text-xs font-extrabold shadow-sm">
+                          <PhoneCall size={13} />
+                          <span>Hotline: {localContacts.hotline || "+94 11 234 5678"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Preview 2: Mobile Sticky Call Button */}
+                    <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5">
+                      <span className="text-[10px] font-bold text-slate-400 block uppercase">
+                        Mobile Header Quick Call Button
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-sm">
+                          <PhoneCall size={16} />
+                        </div>
+                        <div className="text-xs font-bold text-slate-800">
+                          One-tap call directly opens:{" "}
+                          <span className="text-emerald-700 font-mono">
+                            {localContacts.hotline}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Preview 3: WhatsApp & Support Cards */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-950">
+                        <div className="flex items-center gap-1 text-emerald-700 font-bold mb-1">
+                          <MessageSquare size={14} />
+                          <span>WhatsApp Live</span>
+                        </div>
+                        <strong className="block font-black text-sm">
+                          {localContacts.whatsappNumber || "+94 77 123 4567"}
+                        </strong>
+                        <span className="text-[10px] text-emerald-700 font-medium">
+                          Direct WhatsApp chat link
+                        </span>
+                      </div>
+
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-950">
+                        <div className="flex items-center gap-1 text-blue-700 font-bold mb-1">
+                          <Mail size={14} />
+                          <span>Official Email</span>
+                        </div>
+                        <strong className="block font-black text-xs truncate">
+                          {localContacts.email || "info@manjugroup.lk"}
+                        </strong>
+                        <span className="text-[10px] text-blue-700 font-medium">
+                          Inquiries inbox
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* CARD 2: BANK TRANSFER DETAILS */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="text-[#0052B4]" size={18} />
+                    <h4 className="font-extrabold text-sm text-slate-900">
+                      2. Company Bank Account (Direct Bank Transfer)
+                    </h4>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-[10px]">
+                    Checkout Payment Step &amp; Order Invoices
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Left Column: Form Fields */}
+                  <div className="space-y-3.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">
+                          Bank Name
+                        </label>
+                        <input
+                          type="text"
+                          value={localBank.bankName}
+                          onChange={e =>
+                            setLocalBank({
+                              ...localBank,
+                              bankName: e.target.value,
+                            })
+                          }
+                          placeholder="Commercial Bank of Ceylon"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">
+                          Account Holder Name
+                        </label>
+                        <input
+                          type="text"
+                          value={localBank.accountName}
+                          onChange={e =>
+                            setLocalBank({
+                              ...localBank,
+                              accountName: e.target.value,
+                            })
+                          }
+                          placeholder="Manju Group (Pvt) Ltd"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">
+                          Account Number
+                        </label>
+                        <input
+                          type="text"
+                          value={localBank.accountNumber}
+                          onChange={e =>
+                            setLocalBank({
+                              ...localBank,
+                              accountNumber: e.target.value,
+                            })
+                          }
+                          placeholder="1234 5678 9012"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-mono font-black text-blue-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">
+                          Branch Name
+                        </label>
+                        <input
+                          type="text"
+                          value={localBank.branch}
+                          onChange={e =>
+                            setLocalBank({
+                              ...localBank,
+                              branch: e.target.value,
+                            })
+                          }
+                          placeholder="Colombo Main Branch"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
+                        SWIFT / BIC Code (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={localBank.swiftCode || ""}
+                        onChange={e =>
+                          setLocalBank({
+                            ...localBank,
+                            swiftCode: e.target.value,
+                          })
+                        }
+                        placeholder="CCEYLKFX"
+                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
+                        Customer Payment Instructions &amp; Reference Note
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={localBank.instructions}
+                        onChange={e =>
+                          setLocalBank({
+                            ...localBank,
+                            instructions: e.target.value,
+                          })
+                        }
+                        placeholder="Please use your Order Number as reference..."
+                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 leading-relaxed"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right Column: Checkout Simulation Card */}
+                  <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <h5 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+                      Checkout Screen Simulation
+                    </h5>
+                    <p className="text-[11px] text-slate-500">
+                      This is exactly what customers will see when selecting &ldquo;Direct Bank Transfer&rdquo; on the checkout screen:
+                    </p>
+
+                    <div className="bg-blue-50/90 border border-blue-200 rounded-2xl p-4 text-blue-900 space-y-2.5 shadow-sm">
+                      <div className="flex items-center justify-between border-b border-blue-200/70 pb-2">
+                        <div className="flex items-center gap-2">
+                          <Building2 size={16} className="text-[#0052B4]" />
+                          <span className="font-extrabold text-xs text-[#001A3D]">
+                            Bank Transfer Details
+                          </span>
+                        </div>
+                        <span className="bg-blue-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full">
+                          Official Account
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-xs pt-0.5">
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-semibold block">
+                            Bank Name
+                          </span>
+                          <strong className="text-xs font-bold text-slate-900">
+                            {localBank.bankName || "Commercial Bank of Ceylon"}
+                          </strong>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-semibold block">
+                            Account Name
+                          </span>
+                          <strong className="text-xs font-bold text-slate-900">
+                            {localBank.accountName || "Manju Group (Pvt) Ltd"}
+                          </strong>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-semibold block">
+                            Account Number
+                          </span>
+                          <strong className="font-mono font-black text-blue-900 text-sm tracking-wide">
+                            {localBank.accountNumber || "1234 5678 9012"}
+                          </strong>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-semibold block">
+                            Branch
+                          </span>
+                          <strong className="text-xs font-bold text-slate-900">
+                            {localBank.branch || "Colombo Main Branch"}
+                          </strong>
+                        </div>
+                      </div>
+
+                      <div className="text-[11px] text-blue-950/85 pt-2 border-t border-blue-200/60 leading-relaxed font-medium bg-blue-100/50 p-2.5 rounded-xl">
+                        {localBank.instructions}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SAVE ACTION BAR */}
+              <div className="bg-gradient-to-r from-[#001D4A] to-[#003882] p-5 rounded-2xl text-white flex items-center justify-between shadow-md">
+                <div>
+                  <h4 className="font-extrabold text-sm">
+                    Publish Contact &amp; Bank Updates to Production
+                  </h4>
+                  <p className="text-xs text-blue-200 mt-0.5">
+                    Updates will sync instantly to all site visitors, checkout pages, and mobile apps.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleResetContactsAndBank}
+                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveContactsAndBank}
+                    disabled={isSavingContacts || isSavingBank}
+                    className="px-6 py-2.5 rounded-xl bg-[#F85606] hover:bg-[#ff641a] text-white text-xs font-black shadow-lg transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center gap-1.5 disabled:opacity-60"
+                  >
+                    <Save size={15} />
+                    <span>
+                      {isSavingContacts || isSavingBank
+                        ? "Publishing…"
+                        : "Save & Publish Live"}
+                    </span>
                   </button>
                 </div>
               </div>

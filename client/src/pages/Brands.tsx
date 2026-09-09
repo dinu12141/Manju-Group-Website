@@ -16,6 +16,7 @@ import { trpc } from "@/lib/trpc";
 import MainLayout from "@/components/MainLayout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { STATIC_BRANDS } from "@/lib/staticData";
+import SEO from "@/components/SEO";
 
 type CategoryKey = "mobility" | "water" | "entertainment" | "climate";
 
@@ -243,6 +244,19 @@ export default function Brands() {
 
   return (
     <MainLayout>
+      <SEO
+        title="Our Brands | DEW Motors, DEW Plus, DEW+ AC, Manju Dew Super"
+        description="Explore the world-class brand portfolio of Manju Group Sri Lanka: DEW Motors electric mobility, DEW Plus smart home entertainment, and commercial water purification."
+        canonical="/brands"
+        image="/manju-logo-transparent.webp"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Brand",
+          "name": "Manju Group Brands Portfolio",
+          "url": "https://manjugroup.lk/brands",
+          "description": "DEW Motors, DEW Plus, and Manju Dew Super official brands portfolio."
+        }}
+      />
       <div className="bg-white text-[#111827]">
         {/* ── LUXURY ANIMATED HERO SECTION ─────────────────────────────── */}
         <section className="relative overflow-hidden bg-gradient-to-b from-[#00122e] via-[#001f4d] to-[#0b2854] pt-16 pb-16 md:pt-24 md:pb-20 text-white border-b border-blue-900/40">

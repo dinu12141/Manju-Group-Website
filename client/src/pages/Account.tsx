@@ -26,6 +26,7 @@ import { formatPrice, getProductImage } from "@/lib/data";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import EmptyState from "@/components/EmptyState";
+import SEO from "@/components/SEO";
 
 type Tab = "overview" | "orders" | "wishlist" | "settings";
 
@@ -35,6 +36,37 @@ export default function Account() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const { items: wishlistItems, toggleWishlist } = useWishlist();
   const { addItem } = useCart();
+
+  // Detect Google OAuth callback handshake
+  const [oauthChecking, setOauthChecking] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const search = window.location.search;
+    const hash = window.location.hash;
+    return search.includes("code=") || hash.includes("access_token=");
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const oauthError = urlParams.get("error_description") || urlParams.get("error");
+    if (oauthError) {
+      toast.error(`Google Sign-In notice: ${oauthError}`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setOauthChecking(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setOauthChecking(false);
+      if (
+        window.location.search.includes("code=") ||
+        window.location.hash.includes("access_token=")
+      ) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, [isAuthenticated]);
 
   const isAuthRoute =
     location === "/login" ||
@@ -52,6 +84,25 @@ export default function Account() {
       navigate("/account");
     }
   }, [isAuthenticated, isAuthRoute, navigate]);
+
+  if (oauthChecking) {
+    return (
+      <MainLayout>
+        <SEO title="Connecting with Google" noindex />
+        <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center px-4">
+          <div className="w-12 h-12 rounded-full border-4 border-[#0052B4] border-t-transparent animate-spin" />
+          <div>
+            <h3 className="text-lg font-bold text-slate-800">
+              Connecting with Google Account...
+            </h3>
+            <p className="text-xs text-slate-500 mt-1">
+              Please wait while your secure session is initialized
+            </p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   // Show loading skeleton only on /account when fetching user data
   if (loading && !isAuthRoute && isAuthenticated === false && user !== null) {
@@ -73,6 +124,12 @@ export default function Account() {
   if (!isAuthenticated) {
     return (
       <MainLayout>
+        <SEO
+          title={isAuthRoute ? "Sign In & Create Account" : "Customer Portal & Login"}
+          description="Log in or create a customer account with Manju Group to track orders, manage warranty claims, and access exclusive member benefits."
+          canonical="/login"
+          noindex
+        />
         <div className="min-h-[80vh] grid grid-cols-1 lg:grid-cols-2">
           {/* Left — navy branding panel */}
           <div
@@ -169,6 +226,12 @@ export default function Account() {
 
   return (
     <MainLayout>
+      <SEO
+        title="My Account & Orders"
+        description="Manage your Manju Group customer profile, track placed orders, view wishlist items, and update delivery settings."
+        canonical="/account"
+        noindex
+      />
       {/* Profile Header */}
       <div className="border-b border-white/10 py-8 bg-gradient-to-b from-white/5 to-transparent">
         <div className="container">

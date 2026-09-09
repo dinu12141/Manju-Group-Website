@@ -24,8 +24,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useSiteContacts } from "@/lib/siteSettings";
+import SEO from "@/components/SEO";
 
 export default function Contact() {
+  const { contacts } = useSiteContacts();
+  const cleanHotline = contacts.hotline.replace(/[^0-9+]/g, "");
+  const cleanSupport = contacts.supportPhone.replace(/[^0-9+]/g, "");
+  const cleanWhatsApp = contacts.whatsappNumber.replace(/[^0-9]/g, "");
+  const waMessage = encodeURIComponent(
+    contacts.whatsappMessage ||
+      "Hello Manju Group, I would like to inquire about your products."
+  );
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -89,6 +100,27 @@ export default function Contact() {
 
   return (
     <MainLayout>
+      <SEO
+        title="Contact Us & 24/7 Hotline | Showrooms & Support"
+        description={`Contact Manju Group Sri Lanka. Call our hotline ${contacts.hotline} or WhatsApp ${contacts.whatsappNumber}. Visit our corporate headquarters or regional showrooms.`}
+        canonical="/contact"
+        image="/manju-logo-transparent.webp"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          "name": "Manju Group Sri Lanka",
+          "telephone": contacts.hotline,
+          "email": contacts.email,
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": contacts.address,
+            "addressLocality": "Colombo",
+            "addressCountry": "LK"
+          },
+          "openingHours": contacts.openingHours,
+          "url": "https://manjugroup.lk/contact"
+        }}
+      />
       {/* ── Luxury Royal Header Section ─────────────────────────────────── */}
       <section className="relative w-full bg-gradient-to-b from-[#001D4A] via-[#002D62] to-[#0F2D5E] text-white pt-14 pb-16 px-4 md:px-8 overflow-hidden border-b border-blue-900/40">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/15 via-transparent to-transparent pointer-events-none" />
@@ -111,7 +143,7 @@ export default function Contact() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto mt-10 text-slate-900">
             {/* Phone Card */}
             <a
-              href="tel:+94112345678"
+              href={`tel:${cleanHotline}`}
               className="bg-white/95 backdrop-blur-md p-5 rounded-2xl border border-white/40 shadow-xl hover:shadow-2xl hover:scale-105 transition-all text-left group cursor-pointer"
             >
               <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-[#0052B4] mb-3 group-hover:bg-[#0052B4] group-hover:text-white transition-colors">
@@ -121,16 +153,16 @@ export default function Contact() {
                 General Hotline
               </span>
               <strong className="text-base font-black text-slate-900 block mt-0.5">
-                +94 11 234 5678
+                {contacts.hotline}
               </strong>
               <span className="text-xs text-slate-500 font-medium">
-                Mon–Sat: 8:30 AM – 7:00 PM
+                {contacts.openingHours}
               </span>
             </a>
 
             {/* WhatsApp Card */}
             <a
-              href="https://wa.me/94771234567?text=Hello%20Manju%20Group,%20I%20would%20like%20to%20inquire%20about%20your%20products."
+              href={`https://wa.me/${cleanWhatsApp}?text=${waMessage}`}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-white/95 backdrop-blur-md p-5 rounded-2xl border border-white/40 shadow-xl hover:shadow-2xl hover:scale-105 transition-all text-left group cursor-pointer"
@@ -142,7 +174,7 @@ export default function Contact() {
                 WhatsApp Live Chat
               </span>
               <strong className="text-base font-black text-slate-900 block mt-0.5">
-                +94 77 123 4567
+                {contacts.whatsappNumber}
               </strong>
               <span className="text-xs text-slate-500 font-medium">
                 Instant Chat Assistance
@@ -151,7 +183,7 @@ export default function Contact() {
 
             {/* Email Card */}
             <a
-              href="mailto:info@manjugroup.lk"
+              href={`mailto:${contacts.email}`}
               className="bg-white/95 backdrop-blur-md p-5 rounded-2xl border border-white/40 shadow-xl hover:shadow-2xl hover:scale-105 transition-all text-left group cursor-pointer"
             >
               <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-3 group-hover:bg-amber-600 group-hover:text-white transition-colors">
@@ -161,7 +193,7 @@ export default function Contact() {
                 Official Inquiries
               </span>
               <strong className="text-base font-black text-slate-900 block mt-0.5">
-                info@manjugroup.lk
+                {contacts.email}
               </strong>
               <span className="text-xs text-slate-500 font-medium">
                 Response within 2 hours
@@ -415,8 +447,7 @@ export default function Contact() {
                       <strong className="text-slate-900 block font-bold">
                         Operational Hours:
                       </strong>
-                      <span>Mon – Fri: 8:30 AM – 6:00 PM</span>
-                      <span className="block text-slate-500">Sat: 9:00 AM – 4:00 PM | Sun: Closed</span>
+                      <span>{contacts.openingHours}</span>
                     </div>
                   </div>
 
@@ -428,16 +459,16 @@ export default function Contact() {
                       </strong>
                       <div className="flex flex-col gap-0.5 mt-0.5">
                         <a
-                          href="tel:+94112345678"
+                          href={`tel:${cleanHotline}`}
                           className="text-[#0052B4] font-extrabold hover:underline"
                         >
-                          +94 11 234 5678 (General)
+                          {contacts.hotline} (General)
                         </a>
                         <a
-                          href="tel:+94771234567"
+                          href={`tel:${cleanSupport}`}
                           className="text-[#0052B4] font-extrabold hover:underline"
                         >
-                          +94 77 123 4567 (Support)
+                          {contacts.supportPhone} (Support)
                         </a>
                       </div>
                     </div>

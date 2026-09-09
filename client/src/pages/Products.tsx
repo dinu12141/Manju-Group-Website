@@ -20,6 +20,7 @@ import MainLayout from "@/components/MainLayout";
 import ProductCard from "@/components/ProductCard";
 import { STATIC_PRODUCTS, STATIC_BRANDS } from "@/lib/staticData";
 import { cleanText } from "@/lib/data";
+import SEO from "@/components/SEO";
 import {
   Select,
   SelectContent,
@@ -260,6 +261,19 @@ export default function Products() {
 
   return (
     <MainLayout>
+      <SEO
+        title="All Products & Appliances | Electric Bikes, 4K TVs, RO Purifiers"
+        description="Explore Manju Group's complete product line in Sri Lanka: DEW Motors electric bikes, DEW Plus frameless 4K smart TVs, inverter ACs, and industrial RO water purifiers."
+        canonical="/products"
+        image="/manju-logo-transparent.webp"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Manju Group Products & Appliances Catalog",
+          "url": "https://manjugroup.lk/products",
+          "description": "Browse genuine multi-brand electronics, vehicles, and water purifiers in Sri Lanka with official warranty."
+        }}
+      />
       {/* ── Page Header Banner ─────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-[#0F2D5E] text-white py-12 md:py-16">
         {/* Subtle Background Glow & Pattern */}

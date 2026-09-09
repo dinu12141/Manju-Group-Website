@@ -10,6 +10,7 @@ import {
   ArrowRight,
   ShieldCheck,
 } from "lucide-react";
+import { useSiteContacts } from "@/lib/siteSettings";
 
 const NAV_COLUMNS = [
   {
@@ -66,6 +67,7 @@ const SOCIAL_LINKS = [
 ];
 
 export default function Footer() {
+  const { contacts } = useSiteContacts();
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 
@@ -189,7 +191,7 @@ export default function Footer() {
                 enabled ? (
                   <a
                     key={label}
-                    href={href}
+                    href={label === "Facebook" ? (contacts.facebookUrl || href) : href}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={label}

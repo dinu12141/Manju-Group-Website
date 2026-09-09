@@ -8,6 +8,7 @@ import ServicesSection from "@/components/home/ServicesSection";
 import ProductGrid from "@/components/home/ProductGrid";
 import { STATIC_PRODUCTS } from "@/lib/staticData";
 import { trpc } from "@/lib/trpc";
+import SEO from "@/components/SEO";
 
 type GridItem = {
   id: string | number;
@@ -64,6 +65,23 @@ export default function Home() {
 
   return (
     <MainLayout>
+      <SEO
+        title="Official Website | Sri Lanka's Premier Multi-Brand Group"
+        description="Discover DEW Motors electric bikes, DEW Plus smart frameless TVs, industrial RO water purifiers, and inverter air conditioners with islandwide delivery in Sri Lanka."
+        canonical="/"
+        image="/manju-logo-transparent.webp"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Manju Group Official Website",
+          "url": "https://manjugroup.lk",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://manjugroup.lk/products?search={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }}
+      />
       <HeroSection />
 
       {/* Kapruka Style Added Sections */}

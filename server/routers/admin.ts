@@ -930,7 +930,11 @@ export const adminRouter = router({
   // store and a future admin feature could store non-public data under a
   // new key; without this allowlist that data would be readable by anyone.
   getSiteSetting: publicProcedure
-    .input(z.object({ key: z.enum(["home_ad_config"]) }))
+    .input(
+      z.object({
+        key: z.enum(["home_ad_config", "site_contacts", "site_bank_details"]),
+      })
+    )
     .query(async ({ input }) => {
       try {
         const db = await getDb();

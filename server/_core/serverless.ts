@@ -27,6 +27,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { appRouter } from "../routers/index";
 import { createContext } from "./context";
 import { registerStorageProxy } from "./storageProxy";
+import { registerUploadRoute } from "../routers/upload";
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.get(["/", "/api", "/api/health"], (req: Request, res: Response) => {
 
 // Register routes
 registerStorageProxy(app);
+registerUploadRoute(app);
 
 // Normalize path so /api/trpc, /trpc, and Vercel serverless rewrites are all handled cleanly
 app.use((req: Request, res: Response, next: NextFunction) => {

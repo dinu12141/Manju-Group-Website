@@ -28,6 +28,7 @@ import { STATIC_PRODUCTS } from "@/lib/staticData";
 import { trpc } from "@/lib/trpc";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useSiteContacts } from "@/lib/siteSettings";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,6 +76,8 @@ const CATEGORY_ITEMS = [
 ];
 
 export default function Header() {
+  const { contacts } = useSiteContacts();
+  const cleanHotline = contacts.hotline.replace(/[^0-9+]/g, "");
   const [location, navigate] = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
   const { itemCount, openDrawer } = useCart();
@@ -472,11 +475,11 @@ export default function Header() {
             {/* Right: Desktop Hotline Direct Link */}
             <div className="flex items-center gap-2 pl-4 border-l border-gray-200 h-5 shrink-0">
               <a
-                href="tel:+94112345678"
+                href={`tel:${cleanHotline}`}
                 className="flex items-center gap-1.5 bg-blue-50 hover:bg-[#0052B4] text-[#0052B4] hover:text-white px-3.5 py-1.5 rounded-full border border-blue-200 text-xs font-extrabold transition-all duration-200 active:scale-95"
               >
                 <PhoneCall size={13} />
-                <span>Hotline: +94 11 234 5678</span>
+                <span>Hotline: {contacts.hotline}</span>
               </a>
             </div>
           </div>
@@ -506,7 +509,7 @@ export default function Header() {
             {/* Right: Hotline Call + 3-Lines Menu Button */}
             <div className="flex items-center gap-2">
               <a
-                href="tel:+94112345678"
+                href={`tel:${cleanHotline}`}
                 className="p-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center shadow-sm active:scale-95 transition-colors"
                 title="Call Hotline"
               >
@@ -780,11 +783,11 @@ export default function Header() {
               {/* Drawer Bottom Actions & Hotline (Fixed at bottom) */}
               <div className="p-4 bg-slate-50 border-t border-slate-200 space-y-3 shrink-0 pb-[max(env(safe-area-inset-bottom,0px),16px)]">
                 <a
-                  href="tel:+94112345678"
+                  href={`tel:${cleanHotline}`}
                   className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95"
                 >
                   <PhoneCall size={14} />
-                  <span>Call Hotline: +94 11 234 5678</span>
+                  <span>Call Hotline: {contacts.hotline}</span>
                 </a>
 
                 <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">

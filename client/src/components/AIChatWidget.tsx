@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, Bot, User, Loader2, Sparkles, PhoneCall } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { useSiteContacts } from "@/lib/siteSettings";
 
 interface Message {
   role: "user" | "assistant";
@@ -18,6 +19,8 @@ const QUICK_PROMPTS = [
 ];
 
 export default function AIChatWidget() {
+  const { contacts } = useSiteContacts();
+  const cleanHotline = contacts.hotline.replace(/[^0-9+]/g, "");
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -69,8 +72,7 @@ export default function AIChatWidget() {
         ...prev,
         {
           role: "assistant",
-          content:
-            "Sorry, I'm having trouble connecting to the network right now. Please call our hotline directly at **+94 11 234 5678** or email **info@manjugroup.lk**.",
+          content: `Sorry, I'm having trouble connecting to the network right now. Please call our hotline directly at **${contacts.hotline}** or email **${contacts.email}**.`,
         },
       ]);
     } finally {
@@ -247,11 +249,11 @@ export default function AIChatWidget() {
               <div className="flex items-center justify-between mt-1.5 px-1 text-[10px] text-slate-400">
                 <span>Supports English, සිංහල &amp; Singlish</span>
                 <a
-                  href="tel:+94112345678"
+                  href={`tel:${cleanHotline}`}
                   className="text-[#0052B4] font-bold hover:underline flex items-center gap-0.5"
                 >
                   <PhoneCall size={10} />
-                  <span>Call: +94 11 234 5678</span>
+                  <span>Call: {contacts.hotline}</span>
                 </a>
               </div>
             </div>

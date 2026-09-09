@@ -10,6 +10,8 @@ import {
   MapPin,
   CreditCard,
   FileText,
+  Building2,
+  MessageSquare,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import MainLayout from "@/components/MainLayout";
@@ -17,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPrice, getProductImage } from "@/lib/data";
 import EmptyState from "@/components/EmptyState";
+import { useSiteBankDetails, useSiteContacts } from "@/lib/siteSettings";
 
 interface OrderDetailProps {
   params: { id: string };
@@ -38,6 +41,9 @@ function getStepIndex(status: string) {
 export default function OrderDetail({ params }: OrderDetailProps) {
   const [, navigate] = useLocation();
   const orderId = Number(params.id);
+  const { bankDetails } = useSiteBankDetails();
+  const { contacts } = useSiteContacts();
+  const cleanWhatsApp = contacts.whatsappNumber.replace(/[^0-9]/g, "");
 
   const {
     data: order,
@@ -298,6 +304,39 @@ export default function OrderDetail({ params }: OrderDetailProps) {
                   <span>Total</span>
                   <span>{formatPrice(total)}</span>
                 </div>
+
+                {(order.paymentMethod === "bank" ||
+                  order.paymentMethod === "bank_transfer") && (
+                  <div className="mt-4 pt-3 border-t border-slate-100 bg-blue-50/80 rounded-xl p-3.5 text-xs text-blue-950 space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-[#0F2D5E] font-bold">
+                      <Building2 size={14} />
+                      <span>Bank Transfer Details</span>
+                    </div>
+                    <p className="font-semibold text-slate-800">
+                      {bankDetails.bankName} • {bankDetails.branch}
+                    </p>
+                    <p className="font-mono font-black text-blue-900 text-sm">
+                      {bankDetails.accountNumber}
+                    </p>
+                    <p className="text-[11px] text-slate-600">
+                      A/C Name: <strong>{bankDetails.accountName}</strong>
+                    </p>
+                    <p className="text-[10px] text-blue-800/80 pt-1">
+                      {bankDetails.instructions}
+                    </p>
+                    <a
+                      href={`https://wa.me/${cleanWhatsApp}?text=${encodeURIComponent(
+                        `Hello Manju Group, here is the payment receipt for my Order ${order.orderNumber}`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 mt-1 text-[11px] font-bold text-emerald-700 bg-emerald-100/80 hover:bg-emerald-200/80 px-2.5 py-1 rounded-lg transition-colors"
+                    >
+                      <MessageSquare size={12} />
+                      <span>WhatsApp Payment Slip</span>
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
 

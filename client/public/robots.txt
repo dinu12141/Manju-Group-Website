@@ -1,4 +1,25 @@
+# robots.txt for https://manjugroup.lk/
 User-agent: *
 Allow: /
+Allow: /products
+Allow: /brands
+Allow: /about
+Allow: /contact
+Allow: /locations
+Allow: /faq
+Allow: /news
+Allow: /uploads/
 
+# Disallow private user accounts and admin dashboard
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /api/admin/*
+Disallow: /account
+Disallow: /account/*
+Disallow: /cart
+Disallow: /checkout
+Disallow: /my-orders
+
+# Host & Sitemap
+Host: https://manjugroup.lk
 Sitemap: https://manjugroup.lk/sitemap.xml
