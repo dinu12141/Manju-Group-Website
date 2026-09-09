@@ -163,7 +163,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
 
       saveLocalItems(updatedList);
-      toast.success(`${productName || "Item"} added to cart!`);
 
       if (openDrawerOnAdd) {
         setIsDrawerOpen(true);
@@ -214,7 +213,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     async (itemId: number) => {
       const updated = localItems.filter(i => i.id !== itemId);
       saveLocalItems(updated);
-      toast.info("Item removed from cart");
 
       try {
         await removeItemMutation.mutateAsync({

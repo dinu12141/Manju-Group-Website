@@ -81,20 +81,6 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         });
 
         await refetch();
-
-        if (res.added) {
-          toast.success(
-            productName
-              ? `Added "${productName}" to wishlist`
-              : "Added to wishlist"
-          );
-        } else {
-          toast.info(
-            productName
-              ? `Removed "${productName}" from wishlist`
-              : "Removed from wishlist"
-          );
-        }
         return res.added;
       } catch (err: any) {
         console.error("Failed to toggle wishlist:", err);
