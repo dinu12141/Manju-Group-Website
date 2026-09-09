@@ -3501,24 +3501,6 @@ export default function Admin() {
                       });
                     }}
                   />
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="text-[10px] text-slate-400 font-mono">
-                      Asset Path:
-                    </span>
-                    <input
-                      type="text"
-                      required
-                      value={editingProduct.imageUrl}
-                      onChange={e =>
-                        setEditingProduct({
-                          ...editingProduct,
-                          imageUrl: e.target.value,
-                        })
-                      }
-                      placeholder="/scooter_red.webp or /uploads/..."
-                      className="flex-1 px-2.5 py-1 text-[11px] bg-slate-50 border border-slate-200 rounded-lg font-mono text-slate-600 focus:outline-none"
-                    />
-                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 pt-2">
