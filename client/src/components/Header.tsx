@@ -23,10 +23,12 @@ import {
   ShoppingCart,
   User,
   ChevronDown,
+  Heart,
 } from "lucide-react";
 import { STATIC_PRODUCTS } from "@/lib/staticData";
 import { trpc } from "@/lib/trpc";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useSiteContacts } from "@/lib/siteSettings";
 import {
@@ -81,6 +83,7 @@ export default function Header() {
   const [location, navigate] = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
   const { itemCount, openDrawer } = useCart();
+  const { itemCount: wishlistCount } = useWishlist();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -344,6 +347,21 @@ export default function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              {/* Wishlist Button */}
+              <Link
+                href="/wishlist"
+                className="relative p-2 rounded-full hover:bg-white/10 transition-colors flex items-center justify-center text-white cursor-pointer focus-visible:outline-none group"
+                title="My Wishlist"
+                aria-label="View Wishlist"
+              >
+                <Heart size={21} className="text-white group-hover:text-red-300 transition-colors" />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[11px] font-black px-1 min-w-[20px] h-[20px] flex items-center justify-center rounded-full shadow-md animate-in zoom-in-50 duration-150">
+                    {wishlistCount}
+                  </span>
+                )}
+              </Link>
+
               {/* Cart Button */}
               <button
                 type="button"
@@ -506,8 +524,22 @@ export default function Header() {
               </span>
             </Link>
 
-            {/* Right: Hotline Call + 3-Lines Menu Button */}
-            <div className="flex items-center gap-2">
+            {/* Right: Wishlist + Hotline Call + 3-Lines Menu Button */}
+            <div className="flex items-center gap-1.5">
+              <Link
+                href="/wishlist"
+                className="relative p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center border border-white/20 shadow-xs transition-colors"
+                title="Wishlist"
+                aria-label="Wishlist"
+              >
+                <Heart size={16} className="text-white" />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-black min-w-[16px] h-[16px] flex items-center justify-center rounded-full shadow-sm">
+                    {wishlistCount}
+                  </span>
+                )}
+              </Link>
+
               <a
                 href={`tel:${cleanHotline}`}
                 className="p-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center shadow-sm active:scale-95 transition-colors"
@@ -694,6 +726,11 @@ export default function Header() {
                     {[
                       { href: "/", label: "Home", icon: Sparkles },
                       { href: "/products", label: "All Products", icon: ShoppingBag },
+                      {
+                        href: "/wishlist",
+                        label: wishlistCount > 0 ? `My Wishlist (${wishlistCount})` : "My Wishlist",
+                        icon: Heart,
+                      },
                       { href: "/brands", label: "Our Brands", icon: Zap },
                       { href: "/about", label: "About Us", icon: Info },
                       { href: "/locations", label: "Showrooms & Branches", icon: MapPin },

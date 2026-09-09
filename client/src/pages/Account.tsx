@@ -33,7 +33,17 @@ type Tab = "overview" | "orders" | "wishlist" | "settings";
 export default function Account() {
   const [location, navigate] = useLocation();
   const { user, isAuthenticated, loading, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  
+  const isWishlistPath = location === "/wishlist";
+  const urlTab = typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("tab") as Tab | null) : null;
+
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    if (isWishlistPath || urlTab === "wishlist") return "wishlist";
+    if (location === "/my-orders" || urlTab === "orders") return "orders";
+    if (urlTab && ["overview", "orders", "wishlist", "settings"].includes(urlTab)) return urlTab;
+    return "overview";
+  });
+
   const { items: wishlistItems, toggleWishlist } = useWishlist();
   const { addItem } = useCart();
 
@@ -121,7 +131,27 @@ export default function Account() {
     );
   }
 
-  if (!isAuthenticated) {
+  // Keep activeTab synchronized with URL query params and route changes
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab") as Tab | null;
+    if (location === "/wishlist" || tabParam === "wishlist") {
+      setActiveTab("wishlist");
+    } else if (location === "/my-orders" || tabParam === "orders") {
+      setActiveTab("orders");
+    } else if (tabParam && ["overview", "orders", "wishlist", "settings"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [location]);
+
+  const isWishlistRoute =
+    location === "/wishlist" ||
+    activeTab === "wishlist" ||
+    (typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("tab") === "wishlist");
+
+  if (!isAuthenticated && !isWishlistRoute) {
     return (
       <MainLayout>
         <SEO
@@ -248,18 +278,18 @@ export default function Account() {
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-black text-[#0F2D5E] font-display flex-shrink-0 shadow-lg"
                 style={{ backgroundColor: "#C9A84C" }}
               >
-                {user?.name?.charAt(0).toUpperCase() || "U"}
+                {isAuthenticated ? user?.name?.charAt(0).toUpperCase() || "U" : <Heart size={28} className="text-[#0F2D5E]" />}
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-black font-display text-white tracking-tight">
-                  {user?.name || "Customer Account"}
+                  {isAuthenticated ? user?.name || "Customer Account" : "My Saved Wishlist"}
                 </h1>
                 <p className="text-white/70 text-sm mt-0.5 font-medium">
-                  {user?.email}
+                  {isAuthenticated ? user?.email : "Guest Session • Saved in this browser"}
                 </p>
                 <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 border border-white/15 rounded-full text-xs font-bold text-[#C9A84C] capitalize">
                   <CheckCircle size={13} className="text-[#C9A84C]" />
-                  {user?.role || "customer"} Member
+                  {isAuthenticated ? `${user?.role || "customer"} Member` : "Guest Wishlist"}
                 </div>
               </div>
             </div>
@@ -284,7 +314,13 @@ export default function Account() {
               {TABS.map(tab => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    if (!isAuthenticated && tab.id !== "wishlist") {
+                      navigate("/login");
+                      return;
+                    }
+                    setActiveTab(tab.id);
+                  }}
                   className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all ${
                     activeTab === tab.id
                       ? "bg-[#0F2D5E] text-white shadow-sm font-bold"
@@ -318,15 +354,24 @@ export default function Account() {
                 </button>
               ))}
               <div className="pt-2 border-t border-slate-100 mt-2">
-                <button
-                  onClick={() => {
-                    logout();
-                    toast.success("Signed out successfully");
-                  }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                >
-                  <LogOut size={16} /> Sign Out
-                </button>
+                {isAuthenticated ? (
+                  <button
+                    onClick={() => {
+                      logout();
+                      toast.success("Signed out successfully");
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                  >
+                    <LogOut size={16} /> Sign Out
+                  </button>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-[#0052B4] hover:bg-blue-800 rounded-xl transition-colors shadow-sm"
+                  >
+                    <User size={14} /> Sign In to Your Account
+                  </Link>
+                )}
               </div>
             </div>
           </aside>
@@ -617,6 +662,20 @@ export default function Account() {
                     </Button>
                   </Link>
                 </div>
+
+                {!isAuthenticated && (
+                  <div className="bg-amber-50/90 border border-amber-200 text-amber-900 rounded-2xl p-4 mb-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                    <div className="flex items-center gap-2 text-xs font-semibold">
+                      <span className="text-base">💡</span>
+                      <span>You are viewing items saved in this browser. Sign in to sync your wishlist across all your devices.</span>
+                    </div>
+                    <Link href="/login">
+                      <Button size="sm" className="bg-[#0052B4] hover:bg-blue-800 text-white text-xs font-bold rounded-xl h-8 px-3 shrink-0">
+                        Sign In / Register
+                      </Button>
+                    </Link>
+                  </div>
+                )}
                 {wishlistItems && wishlistItems.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {wishlistItems.map(item => (

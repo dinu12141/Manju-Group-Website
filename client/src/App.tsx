@@ -61,6 +61,7 @@ function Router() {
             {params => <NewsDetail params={params as { slug: string }} />}
           </Route>
           <Route path="/account" component={Account} />
+          <Route path="/wishlist" component={Account} />
           <Route path="/login" component={Account} />
           <Route path="/signin" component={Account} />
           <Route path="/register" component={Account} />

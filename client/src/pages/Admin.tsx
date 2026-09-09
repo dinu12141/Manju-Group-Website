@@ -465,11 +465,18 @@ export default function Admin() {
     if (productsData?.items && productsData.items.length > 0) {
       return productsData.items as unknown as AdminProduct[];
     }
-    if (isLoadingProducts && !productsData) {
-      return [];
-    }
     return staticAdminProducts;
-  }, [productsData, isLoadingProducts, staticAdminProducts]);
+  }, [productsData, staticAdminProducts]);
+
+  const totalGrossRevenue = useMemo(() => {
+    if (ordersList && ordersList.length > 0) {
+      return ordersList.reduce((sum, o) => {
+        if (o.status === "cancelled" || o.status === "refunded") return sum;
+        return sum + (Number(o.total) || 0);
+      }, 0);
+    }
+    return 0;
+  }, [ordersList]);
 
   const { data: brandOptions } = trpc.admin.brandOptions.useQuery();
   const { data: categoryOptions } = trpc.admin.categoryOptions.useQuery();
@@ -1104,7 +1111,7 @@ export default function Admin() {
                 id: "products",
                 label: "Products & Inventory",
                 icon: Package,
-                badge: productsList.length,
+                badge: productsData?.total ?? productsList.length,
               },
               {
                 id: "orders",
@@ -1223,10 +1230,10 @@ export default function Admin() {
                     <DollarSign size={16} className="text-emerald-600" />
                   </div>
                   <div className="text-xl sm:text-2xl font-black text-slate-900">
-                    Rs. 18.45M
+                    {formatPrice(totalGrossRevenue)}
                   </div>
-                  <span className="text-[11px] text-emerald-600 font-bold mt-1 block">
-                    +18.4% this month
+                  <span className="text-[11px] text-slate-500 font-bold mt-1 block">
+                    {totalGrossRevenue === 0 ? "Rs. 0.00 (No sales yet)" : `${ordersList.length} lifetime orders`}
                   </span>
                 </div>
 
@@ -1254,7 +1261,7 @@ export default function Admin() {
                     <Package size={16} className="text-purple-600" />
                   </div>
                   <div className="text-xl sm:text-2xl font-black text-slate-900">
-                    {productsList.length} Items
+                    {productsData?.total ?? productsList.length} Items
                   </div>
                   <span className="text-[11px] text-purple-600 font-bold mt-1 block">
                     4 Brands Synchronized
