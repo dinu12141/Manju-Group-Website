@@ -51,3 +51,11 @@ ALTER TABLE public.carts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cart_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wishlists ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contact_messages ENABLE ROW LEVEL SECURITY;
+
+-- 4. Secure SECURITY DEFINER functions from public PostgREST execution
+-- Fixes Supabase lints 0028_anon_security_definer_function_executable & 0029_authenticated_security_definer_function_executable
+REVOKE ALL ON FUNCTION public.rls_auto_enable() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.rls_auto_enable() FROM anon;
+REVOKE ALL ON FUNCTION public.rls_auto_enable() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.rls_auto_enable() TO postgres, service_role;
+
