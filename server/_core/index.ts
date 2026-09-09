@@ -43,6 +43,16 @@ const aiRateLimit = rateLimit({
   message: { error: "Too many AI requests, please wait a moment." },
 });
 
+// Admin passcode is a single shared secret with no username/lockout, so it
+// must be rate-limited hard against brute force: 5 attempts per 15 min per IP.
+const adminAuthRateLimit = rateLimit({
+  windowMs: 15 * 60_000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many admin login attempts, please try again later." },
+});
+
 async function startServer() {
   const app = express();
   const server = createServer(app);
@@ -85,6 +95,9 @@ async function startServer() {
 
   // AI rate limit: 10 requests/min per IP (finding #18)
   app.use("/api/trpc/ai.chat", aiRateLimit);
+
+  // Admin passcode rate limit: 5 attempts/15min per IP, to block brute force
+  app.use("/api/trpc/admin.verifyPasscode", adminAuthRateLimit);
 
   // tRPC API
   app.use(
