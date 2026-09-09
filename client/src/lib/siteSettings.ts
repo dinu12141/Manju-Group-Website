@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
+import { supabase } from "@/lib/supabase";
 
 export interface SiteContacts {
   hotline: string;
@@ -216,6 +217,41 @@ export async function uploadAdminMedia(
   size: number;
   isVideo: boolean;
 }> {
+  const isVideo = file.type.startsWith("video/");
+  const rawExt = file.name.split(".").pop() || (isVideo ? "mp4" : "webp");
+  const ext = rawExt.replace(/[^a-zA-Z0-9]/g, "").toLowerCase() || (isVideo ? "mp4" : "webp");
+  const prefix = isVideo ? "ad_video" : "ad_img";
+  const uniqueId = Math.random().toString(36).substring(2, 10);
+  const cleanName = `${prefix}_${Date.now()}_${uniqueId}.${ext}`;
+
+  // 1. Direct Cloud Upload to Supabase Storage (Safe for 50MB videos & photos, no Vercel payload limits)
+  try {
+    if (onProgress) onProgress(15);
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("uploads")
+      .upload(cleanName, file, {
+        contentType: file.type || (isVideo ? "video/mp4" : "image/webp"),
+        upsert: true,
+      });
+
+    if (!uploadError && uploadData) {
+      if (onProgress) onProgress(100);
+      const { data: publicUrlData } = supabase.storage
+        .from("uploads")
+        .getPublicUrl(cleanName);
+
+      return {
+        url: publicUrlData.publicUrl,
+        filename: cleanName,
+        size: file.size,
+        isVideo,
+      };
+    }
+  } catch (supabaseErr) {
+    console.warn("[MediaUpload] Supabase direct upload fallback:", supabaseErr);
+  }
+
+  // 2. Fallback to server endpoint
   return new Promise((resolve, reject) => {
     const adminToken = localStorage.getItem("manju_admin_token") || "";
 
