@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 import { STATIC_PRODUCTS } from "@/lib/staticData";
+import { trpc } from "@/lib/trpc";
 
 export default function SuggestionsSection() {
   const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -36,15 +37,26 @@ export default function SuggestionsSection() {
     emblaApi.on("reInit", onSelect);
   }, [emblaApi, onSelect]);
 
-  const suggestions = STATIC_PRODUCTS.filter(p => p.id !== 3)
-    .slice(0, 10)
-    .map(p => ({
-      id: p.id,
-      slug: p.slug,
-      name: p.name,
-      price: p.salePrice ? Number(p.salePrice) : Number(p.basePrice),
-      image: p.imageUrl,
-    }));
+  const { data: featuredData } = trpc.products.getFeatured.useQuery({ limit: 10 });
+
+  const suggestions =
+    featuredData && featuredData.length > 0
+      ? featuredData.map(p => ({
+          id: p.id,
+          slug: p.slug,
+          name: p.name,
+          price: p.salePrice ?? p.basePrice,
+          image: p.imageUrl || "/scooter_red.webp",
+        }))
+      : STATIC_PRODUCTS.filter(p => p.id !== 3)
+          .slice(0, 10)
+          .map(p => ({
+            id: p.id,
+            slug: p.slug,
+            name: p.name,
+            price: p.salePrice ? Number(p.salePrice) : Number(p.basePrice),
+            image: p.imageUrl,
+          }));
 
   if (suggestions.length === 0) return null;
 

@@ -125,6 +125,54 @@ interface AdminOrder {
   itemCount: number;
 }
 
+interface AdminProduct {
+  id: number;
+  slug: string;
+  sku: string;
+  name: string;
+  shortDescription?: string | null;
+  description?: string | null;
+  brandId?: number;
+  categoryId?: number;
+  basePrice: string;
+  salePrice: string | null;
+  stockQuantity: number;
+  isInStock: boolean;
+  isFeatured: boolean;
+  isBestSeller: boolean;
+  isNew?: boolean;
+  isActive: boolean;
+  warrantyMonths?: number | null;
+  brandName: string | null;
+  categoryName: string | null;
+  category?: string | null;
+  imageUrl?: string;
+  createdAt: Date | string;
+}
+
+interface ProductFormState {
+  id?: number;
+  name: string;
+  sku: string;
+  brandId: number;
+  categoryId: number;
+  brandName?: string;
+  category?: string;
+  basePrice: string;
+  salePrice?: string | null;
+  currency?: string;
+  stockQuantity: number;
+  isInStock?: boolean;
+  isFeatured: boolean;
+  isBestSeller: boolean;
+  isNew: boolean;
+  isActive: boolean;
+  imageUrl?: string;
+  description?: string;
+  shortDescription?: string;
+  warrantyMonths?: number;
+}
+
 const SHOWROOMS_DATA = [
   {
     id: 1,
@@ -301,7 +349,6 @@ export default function Admin() {
   };
 
   const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
-  const [productsList, setProductsList] = useState(STATIC_PRODUCTS);
   const [orderFilter, setOrderFilter] = useState<string>("all");
   const [orderPage, setOrderPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -344,6 +391,66 @@ export default function Admin() {
       { page: customerPage, limit: 20, search: customerSearch || undefined },
       { enabled: isAdmin }
     );
+
+  // Real product catalog — backed by admin.products (reads the live DB
+  // table), replacing the old STATIC_PRODUCTS-seeded local state.
+  const { data: productsData, isLoading: isLoadingProducts } =
+    trpc.admin.products.useQuery({ page: 1, limit: 100 }, { enabled: isAdmin });
+
+  const productsList: AdminProduct[] = (productsData?.items ??
+    []) as unknown as AdminProduct[];
+
+  const { data: brandOptions } = trpc.admin.brandOptions.useQuery();
+  const { data: categoryOptions } = trpc.admin.categoryOptions.useQuery();
+
+  const invalidateProductQueries = () => {
+    utils.admin.products.invalidate();
+    utils.admin.stats.invalidate();
+    utils.products.list.invalidate();
+    utils.products.getFeatured.invalidate();
+  };
+
+  const createProductMutation = trpc.admin.createProduct.useMutation({
+    onSuccess: () => {
+      invalidateProductQueries();
+      setIsProductModalOpen(false);
+      setEditingProduct(null);
+    },
+    onError: err => {
+      toast.error(err.message || "Failed to create product");
+    },
+  });
+
+  const updateProductMutation = trpc.admin.updateProduct.useMutation({
+    onSuccess: () => {
+      invalidateProductQueries();
+      setIsProductModalOpen(false);
+      setEditingProduct(null);
+    },
+    onError: err => {
+      toast.error(err.message || "Failed to update product");
+    },
+  });
+
+  const deleteProductMutation = trpc.admin.deleteProduct.useMutation({
+    onSuccess: () => {
+      invalidateProductQueries();
+      toast.success("Product removed from catalog");
+    },
+    onError: err => {
+      toast.error(err.message || "Failed to delete product");
+    },
+  });
+
+  const toggleProductActiveMutation = trpc.admin.toggleProductActive.useMutation({
+    onSuccess: () => {
+      invalidateProductQueries();
+      toast.success("Product stock/active status updated");
+    },
+    onError: err => {
+      toast.error(err.message || "Failed to update product status");
+    },
+  });
 
   // Delete Target state for confirmation modal
   const [deleteTarget, setDeleteTarget] = useState<{
@@ -396,7 +503,9 @@ export default function Admin() {
   }, [liveAdConfig]);
 
   // Product Add / Edit Modal
-  const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductFormState | null>(
+    null
+  );
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
   // Invoice / Order Detail Modal
@@ -445,22 +554,34 @@ export default function Admin() {
     e.preventDefault();
     if (!editingProduct) return;
 
+    const payload = {
+      name: editingProduct.name,
+      sku: editingProduct.sku,
+      brandId: Number(editingProduct.brandId) || 1,
+      categoryId: Number(editingProduct.categoryId) || 1,
+      shortDescription: editingProduct.shortDescription || undefined,
+      description: editingProduct.description || undefined,
+      basePrice: Number(editingProduct.basePrice),
+      salePrice: editingProduct.salePrice
+        ? Number(editingProduct.salePrice)
+        : undefined,
+      stockQuantity: Number(editingProduct.stockQuantity ?? 0),
+      isFeatured: !!editingProduct.isFeatured,
+      isBestSeller: !!editingProduct.isBestSeller,
+      isNew: !!editingProduct.isNew,
+      isActive: editingProduct.isActive ?? true,
+      warrantyMonths: Number(editingProduct.warrantyMonths) || 12,
+      imageUrl: editingProduct.imageUrl || undefined,
+    };
+
     if (editingProduct.id) {
-      setProductsList(prev =>
-        prev.map(p => (p.id === editingProduct.id ? editingProduct : p))
-      );
-      toast.success(`Product "${editingProduct.name}" updated successfully`);
+      updateProductMutation.mutate({
+        productId: editingProduct.id,
+        ...payload,
+      });
     } else {
-      const newProd = {
-        ...editingProduct,
-        id: Date.now(),
-        slug: editingProduct.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-      };
-      setProductsList(prev => [newProd, ...prev]);
-      toast.success(`Product "${newProd.name}" created successfully`);
+      createProductMutation.mutate(payload);
     }
-    setIsProductModalOpen(false);
-    setEditingProduct(null);
   };
 
   const handleDeleteProduct = (id: number) => {
@@ -469,8 +590,7 @@ export default function Admin() {
         "Are you sure you want to remove this product from the live catalog?"
       )
     ) {
-      setProductsList(prev => prev.filter(p => p.id !== id));
-      toast.success("Product removed from catalog");
+      deleteProductMutation.mutate({ productId: id });
     }
   };
 
@@ -1030,10 +1150,12 @@ export default function Admin() {
                       basePrice: "100000.00",
                       salePrice: null,
                       currency: "LKR",
+                      stockQuantity: 15,
                       isInStock: true,
                       isFeatured: false,
                       isBestSeller: false,
                       isNew: true,
+                      isActive: true,
                       imageUrl: "/scooter_red.webp",
                       description:
                         "High performance Sri Lankan built equipment.",
@@ -1088,13 +1210,13 @@ export default function Admin() {
                               className="px-2 py-0.5 rounded-full text-[10px] font-black text-white"
                               style={{
                                 backgroundColor:
-                                  BRAND_COLORS[p.brandName] || "#0052B4",
+                                  (p.brandName && BRAND_COLORS[p.brandName]) || "#0052B4",
                               }}
                             >
-                              {p.brandName}
+                              {p.brandName || "Manju Group"}
                             </span>
                             <span className="text-[10px] text-slate-500 block mt-0.5">
-                              {p.category}
+                              {p.categoryName || p.category || "General"}
                             </span>
                           </td>
                           <td className="p-3 font-mono text-slate-600">
@@ -1104,21 +1226,60 @@ export default function Admin() {
                             {formatPrice(p.basePrice)}
                           </td>
                           <td className="p-3">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                                p.isInStock
-                                  ? "bg-emerald-100 text-emerald-800"
-                                  : "bg-red-100 text-red-700"
+                            <button
+                              type="button"
+                              onClick={() =>
+                                toggleProductActiveMutation.mutate({
+                                  productId: p.id,
+                                  isActive: !(p.isActive && p.isInStock),
+                                })
+                              }
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-black cursor-pointer transition-all hover:scale-105 flex items-center gap-1.5 ${
+                                p.isActive && p.isInStock
+                                  ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                                  : "bg-red-100 text-red-700 hover:bg-red-200"
                               }`}
+                              title="Click to toggle Active / Stock status in live catalog"
                             >
-                              {p.isInStock ? "In Stock" : "Out of Stock"}
-                            </span>
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  p.isActive && p.isInStock
+                                    ? "bg-emerald-600"
+                                    : "bg-red-600"
+                                }`}
+                              />
+                              <span>
+                                {p.isActive && p.isInStock
+                                  ? "In Stock / Active"
+                                  : "Out of Stock / Inactive"}
+                              </span>
+                            </button>
                           </td>
                           <td className="p-3 text-right">
                             <div className="flex items-center justify-end gap-1.5">
                               <button
                                 onClick={() => {
-                                  setEditingProduct(p);
+                                  setEditingProduct({
+                                    id: p.id,
+                                    name: p.name,
+                                    sku: p.sku,
+                                    brandId: p.brandId || 1,
+                                    categoryId: p.categoryId || 1,
+                                    brandName: p.brandName || "Dew Motors",
+                                    category: p.categoryName || p.category || "Electric Bikes",
+                                    basePrice: p.basePrice,
+                                    salePrice: p.salePrice,
+                                    stockQuantity: p.stockQuantity ?? 15,
+                                    isInStock: p.isInStock,
+                                    isFeatured: p.isFeatured,
+                                    isBestSeller: p.isBestSeller,
+                                    isNew: p.isNew ?? false,
+                                    isActive: p.isActive,
+                                    imageUrl: p.imageUrl || "/scooter_red.webp",
+                                    description: p.description || "",
+                                    shortDescription: p.shortDescription || "",
+                                    warrantyMonths: p.warrantyMonths ?? 12,
+                                  });
                                   setIsProductModalOpen(true);
                                 }}
                                 className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 cursor-pointer"
@@ -2171,7 +2332,9 @@ export default function Admin() {
                                     type: "user",
                                     id: user.id,
                                     name:
-                                      user.name || user.email || `User #${user.id}`,
+                                      user.name ||
+                                      user.email ||
+                                      `User #${user.id}`,
                                     details: `Role: ${user.role.toUpperCase()} • Joined: ${new Date(user.createdAt).toLocaleDateString()}`,
                                   })
                                 }
@@ -2487,25 +2650,82 @@ export default function Admin() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="font-bold text-slate-700 block mb-1">
                       Brand Division
                     </label>
                     <select
-                      value={editingProduct.brandName}
-                      onChange={e =>
+                      value={editingProduct.brandId || 1}
+                      onChange={e => {
+                        const bId = Number(e.target.value);
+                        const bName =
+                          brandOptions?.find(b => b.id === bId)?.name ||
+                          (bId === 1
+                            ? "Dew Motors"
+                            : bId === 2
+                              ? "Dew Plus"
+                              : bId === 3
+                                ? "DEW+ AC"
+                                : "Manju Dew Super");
                         setEditingProduct({
                           ...editingProduct,
-                          brandName: e.target.value,
-                        })
-                      }
+                          brandId: bId,
+                          brandName: bName,
+                        });
+                      }}
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
                     >
-                      <option value="Dew Motors">Dew Motors</option>
-                      <option value="Dew Plus">Dew Plus</option>
-                      <option value="DEW+ AC">DEW+ AC</option>
-                      <option value="Manju Dew Super">Manju Dew Super</option>
+                      {brandOptions && brandOptions.length > 0 ? (
+                        brandOptions.map(b => (
+                          <option key={b.id} value={b.id}>
+                            {b.name}
+                          </option>
+                        ))
+                      ) : (
+                        <>
+                          <option value={1}>Dew Motors</option>
+                          <option value={2}>Dew Plus</option>
+                          <option value={3}>DEW+ AC</option>
+                          <option value={4}>Manju Dew Super</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">
+                      Category
+                    </label>
+                    <select
+                      value={editingProduct.categoryId || 1}
+                      onChange={e => {
+                        const cId = Number(e.target.value);
+                        const cName =
+                          categoryOptions?.find(c => c.id === cId)?.name ||
+                          "General";
+                        setEditingProduct({
+                          ...editingProduct,
+                          categoryId: cId,
+                          category: cName,
+                        });
+                      }}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                    >
+                      {categoryOptions && categoryOptions.length > 0 ? (
+                        categoryOptions.map(c => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))
+                      ) : (
+                        <>
+                          <option value={1}>Electric Bikes</option>
+                          <option value={2}>Smart TVs</option>
+                          <option value={3}>Air Conditioners</option>
+                          <option value={4}>Water Purifiers</option>
+                        </>
+                      )}
                     </select>
                   </div>
 

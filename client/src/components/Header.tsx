@@ -25,6 +25,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { STATIC_PRODUCTS } from "@/lib/staticData";
+import { trpc } from "@/lib/trpc";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
@@ -130,12 +131,29 @@ export default function Header() {
     return location === href || location.startsWith(`${href}/`);
   };
 
-  // Real-time search suggestions with multi-word token matching
-  const searchSuggestions = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q || q.length < 1) return [];
+  const trimmedSearch = searchQuery.trim();
+  const { data: liveSearchData } = trpc.products.list.useQuery(
+    { search: trimmedSearch, limit: 6 },
+    { enabled: trimmedSearch.length > 0 }
+  );
 
-    const terms = q.split(/\s+/).filter(Boolean);
+  // Real-time search suggestions with live DB query + multi-word fallback
+  const searchSuggestions = useMemo(() => {
+    if (!trimmedSearch) return [];
+
+    if (liveSearchData && liveSearchData.items && liveSearchData.items.length > 0) {
+      return liveSearchData.items.map(p => ({
+        id: p.id,
+        slug: p.slug,
+        name: p.name,
+        brandName: p.brandName,
+        basePrice: p.basePrice,
+        salePrice: p.salePrice,
+        imageUrl: p.imageUrl || "/scooter_red.webp",
+      }));
+    }
+
+    const terms = trimmedSearch.toLowerCase().split(/\s+/).filter(Boolean);
 
     return STATIC_PRODUCTS.filter(p => {
       const pName = (p.name || "").toLowerCase();
@@ -154,7 +172,7 @@ export default function Header() {
 
       return terms.every(t => combined.includes(t));
     }).slice(0, 6);
-  }, [searchQuery]);
+  }, [trimmedSearch, liveSearchData]);
 
   const handleSearchSubmit = (overrideQuery?: string) => {
     const q = (overrideQuery !== undefined ? overrideQuery : searchQuery).trim();

@@ -5,6 +5,7 @@ import { getDb } from "../db";
 import {
   products,
   productImages,
+  productVariants,
   brands,
   categories,
   orders,
@@ -15,11 +16,22 @@ import {
   carts,
   cartItems,
   reviews,
+  siteSettings,
 } from "../../drizzle/schema";
 import { nanoid } from "nanoid";
 import { eq, desc, asc, sql, and, like, or, inArray } from "drizzle-orm";
 import { STATIC_PRODUCTS, STATIC_BRANDS } from "../../client/src/lib/staticData";
 import { verifyAdminPasscode, issueAdminToken } from "../_core/adminPasscode";
+
+// Kebab-case slug generation matching the convention already used by real
+// product slugs in the DB (e.g. "dew-motors-em005-2400w").
+function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 export const adminRouter = router({
   // Admin panel login via shared passcode — returns a short-lived signed
@@ -483,13 +495,19 @@ export const adminRouter = router({
               slug: products.slug,
               sku: products.sku,
               name: products.name,
+              shortDescription: products.shortDescription,
+              description: products.description,
+              brandId: products.brandId,
+              categoryId: products.categoryId,
               basePrice: products.basePrice,
               salePrice: products.salePrice,
               stockQuantity: products.stockQuantity,
               isInStock: products.isInStock,
               isFeatured: products.isFeatured,
               isBestSeller: products.isBestSeller,
+              isNew: products.isNew,
               isActive: products.isActive,
+              warrantyMonths: products.warrantyMonths,
               brandName: brands.name,
               categoryName: categories.name,
               createdAt: products.createdAt,
@@ -503,7 +521,31 @@ export const adminRouter = router({
             .offset(offset),
           db.select({ count: sql<number>`count(*)` }).from(products),
         ]);
-        return { items, total: Number(countResult[0]?.count ?? 0) };
+
+        const productIds = items.map(p => p.id);
+        let imageMap: Record<number, string> = {};
+        if (productIds.length > 0) {
+          const imgs = await db
+            .select()
+            .from(productImages)
+            .where(inArray(productImages.productId, productIds));
+          const sorted = [...imgs].sort((a, b) => {
+            if (a.isPrimary !== b.isPrimary) return a.isPrimary ? -1 : 1;
+            return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+          });
+          for (const img of sorted) {
+            if (!imageMap[img.productId]) {
+              imageMap[img.productId] = img.url;
+            }
+          }
+        }
+
+        const enrichedItems = items.map(p => ({
+          ...p,
+          imageUrl: imageMap[p.id] || "/scooter_red.webp",
+        }));
+
+        return { items: enrichedItems, total: Number(countResult[0]?.count ?? 0) };
       } catch (e) {
         return {
           items: STATIC_PRODUCTS.map(p => ({
@@ -511,13 +553,19 @@ export const adminRouter = router({
             slug: p.slug,
             sku: p.sku,
             name: p.name,
+            shortDescription: p.shortDescription,
+            description: p.description,
+            brandId: 1,
+            categoryId: p.categoryId,
             basePrice: p.basePrice,
             salePrice: p.salePrice,
             stockQuantity: 15,
             isInStock: p.isInStock,
             isFeatured: p.isFeatured,
             isBestSeller: p.isBestSeller,
+            isNew: p.isNew ?? false,
             isActive: true,
+            warrantyMonths: p.warrantyMonths ?? 12,
             brandName: p.brandName,
             categoryName: p.category,
             imageUrl: p.imageUrl,
@@ -537,33 +585,65 @@ export const adminRouter = router({
         if (!db) return { success: true };
         await db
           .update(products)
-          .set({ isActive: input.isActive })
+          .set({
+            isActive: input.isActive,
+            isInStock: input.isActive,
+          })
           .where(eq(products.id, input.productId));
         return { success: true };
-      } catch (e) {
-        return { success: true };
+      } catch (e: any) {
+        console.error("Failed to toggle product active:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to toggle product active status",
+        });
       }
     }),
 
   // Brand/category lookups for product form dropdowns
   brandOptions: publicProcedure.query(async () => {
-    return STATIC_BRANDS.map(b => ({ id: b.id, name: b.name }));
+    try {
+      const db = await getDb();
+      if (!db) return STATIC_BRANDS.map(b => ({ id: b.id, name: b.name }));
+      const rows = await db
+        .select({ id: brands.id, name: brands.name })
+        .from(brands)
+        .orderBy(asc(brands.sortOrder), asc(brands.name));
+      return rows.length > 0 ? rows : STATIC_BRANDS.map(b => ({ id: b.id, name: b.name }));
+    } catch (e) {
+      return STATIC_BRANDS.map(b => ({ id: b.id, name: b.name }));
+    }
   }),
 
   categoryOptions: publicProcedure.query(async () => {
-    return [
-      { id: 1, name: "Electric Bikes" },
-      { id: 2, name: "Smart TVs" },
-      { id: 3, name: "Air Conditioners" },
-      { id: 4, name: "Water Filters" },
-    ];
+    try {
+      const db = await getDb();
+      if (!db) return [];
+      return await db
+        .select({ id: categories.id, name: categories.name })
+        .from(categories)
+        .orderBy(asc(categories.sortOrder), asc(categories.name));
+    } catch (e) {
+      return [];
+    }
   }),
 
   productById: adminProcedure
     .input(z.object({ productId: z.number() }))
     .query(async ({ input }) => {
-      const p = STATIC_PRODUCTS.find(p => p.id === input.productId);
-      return p ?? null;
+      try {
+        const db = await getDb();
+        if (!db) return null;
+        const rows = await db
+          .select()
+          .from(products)
+          .where(eq(products.id, input.productId))
+          .limit(1);
+        return rows[0] ?? null;
+      } catch (e) {
+        console.error("Failed to fetch product by id:", e);
+        return null;
+      }
     }),
 
   createProduct: adminProcedure
@@ -582,10 +662,75 @@ export const adminRouter = router({
         isBestSeller: z.boolean().default(false),
         isNew: z.boolean().default(false),
         isActive: z.boolean().default(true),
+        warrantyMonths: z.number().int().min(0).optional(),
+        imageUrl: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
-      return { success: true, slug: `${input.sku.toLowerCase()}-${Date.now()}` };
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+      }
+
+      try {
+        const baseSlug = slugify(input.name) || slugify(input.sku) || `product-${Date.now()}`;
+        let slug = baseSlug;
+        let suffix = 1;
+        // Ensure slug uniqueness against real products table.
+        while (true) {
+          const existing = await db
+            .select({ id: products.id })
+            .from(products)
+            .where(eq(products.slug, slug))
+            .limit(1);
+          if (existing.length === 0) break;
+          suffix += 1;
+          slug = `${baseSlug}-${suffix}`;
+        }
+
+        const [created] = await db
+          .insert(products)
+          .values({
+            slug,
+            sku: input.sku,
+            name: input.name,
+            shortDescription: input.shortDescription ?? null,
+            description: input.description ?? null,
+            brandId: input.brandId,
+            categoryId: input.categoryId,
+            basePrice: input.basePrice.toString(),
+            salePrice: input.salePrice != null ? input.salePrice.toString() : null,
+            stockQuantity: input.stockQuantity,
+            isInStock: input.stockQuantity > 0,
+            isFeatured: input.isFeatured,
+            isBestSeller: input.isBestSeller,
+            isNew: input.isNew,
+            isActive: input.isActive,
+            warrantyMonths: input.warrantyMonths ?? 12,
+          })
+          .returning({ id: products.id, slug: products.slug });
+
+        if (input.imageUrl) {
+          await db.insert(productImages).values({
+            productId: created.id,
+            url: input.imageUrl,
+            altText: input.name,
+            isPrimary: true,
+            sortOrder: 0,
+          });
+        }
+
+        return { success: true, id: created.id, slug: created.slug };
+      } catch (e: any) {
+        console.error("Failed to create product:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to create product",
+        });
+      }
     }),
 
   updateProduct: adminProcedure
@@ -605,23 +750,222 @@ export const adminRouter = router({
         isBestSeller: z.boolean(),
         isNew: z.boolean(),
         isActive: z.boolean(),
+        warrantyMonths: z.number().int().min(0).optional(),
+        imageUrl: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
-      return { success: true };
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+      }
+
+      try {
+        await db
+          .update(products)
+          .set({
+            name: input.name,
+            sku: input.sku,
+            brandId: input.brandId,
+            categoryId: input.categoryId,
+            shortDescription: input.shortDescription ?? null,
+            description: input.description ?? null,
+            basePrice: input.basePrice.toString(),
+            salePrice: input.salePrice != null ? input.salePrice.toString() : null,
+            stockQuantity: input.stockQuantity,
+            isInStock: input.stockQuantity > 0,
+            isFeatured: input.isFeatured,
+            isBestSeller: input.isBestSeller,
+            isNew: input.isNew,
+            isActive: input.isActive,
+            warrantyMonths: input.warrantyMonths ?? 12,
+          })
+          .where(eq(products.id, input.productId));
+
+        if (input.imageUrl) {
+          const existingImages = await db
+            .select()
+            .from(productImages)
+            .where(eq(productImages.productId, input.productId));
+          if (existingImages.length > 0) {
+            const primary = existingImages.find(img => img.isPrimary) ?? existingImages[0];
+            await db
+              .update(productImages)
+              .set({ url: input.imageUrl, altText: input.name })
+              .where(eq(productImages.id, primary.id));
+          } else {
+            await db.insert(productImages).values({
+              productId: input.productId,
+              url: input.imageUrl,
+              altText: input.name,
+              isPrimary: true,
+              sortOrder: 0,
+            });
+          }
+        }
+
+        return { success: true };
+      } catch (e: any) {
+        console.error("Failed to update product:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to update product",
+        });
+      }
     }),
 
+  // Hard delete: Admin.tsx's delete confirm() dialog is worded as a
+  // permanent removal ("This action cannot be undone"), not a deactivation,
+  // so unlike toggleProductActive (soft pattern) this performs a real
+  // delete. Related product_images and product_variants rows are cleaned up
+  // first since there is no FK cascade defined in drizzle/schema.ts for
+  // those tables, to avoid leaving orphaned rows behind.
   deleteProduct: adminProcedure
     .input(z.object({ productId: z.number() }))
     .mutation(async ({ input }) => {
-      return { success: true };
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+      }
+
+      try {
+        await db.delete(productImages).where(eq(productImages.productId, input.productId));
+        await db.delete(productVariants).where(eq(productVariants.productId, input.productId));
+        await db.delete(products).where(eq(products.id, input.productId));
+
+        return { success: true };
+      } catch (e: any) {
+        console.error("Failed to delete product:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to delete product",
+        });
+      }
     }),
 
-  // Order detail
+  // Order detail — shape matches the enriched order objects returned by
+  // `ordersList` (AdminOrder in Admin.tsx) so client wiring is a drop-in.
   orderById: adminProcedure
     .input(z.object({ orderId: z.number() }))
     .query(async ({ input }) => {
-      return null;
+      try {
+        const db = await getDb();
+        if (!db) return null;
+
+        const orderRows = await db
+          .select()
+          .from(orders)
+          .where(eq(orders.id, input.orderId))
+          .limit(1);
+
+        const order = orderRows[0];
+        if (!order) return null;
+
+        const items = await db
+          .select({
+            productId: orderItems.productId,
+            productName: orderItems.productName,
+            variantName: orderItems.variantName,
+            sku: orderItems.sku,
+            quantity: orderItems.quantity,
+            unitPrice: orderItems.unitPrice,
+            subtotal: orderItems.subtotal,
+          })
+          .from(orderItems)
+          .where(eq(orderItems.orderId, order.id));
+
+        const productIds = Array.from(
+          new Set(items.map(i => Number(i.productId)).filter(id => !isNaN(id) && id > 0))
+        );
+
+        let imageMap: Record<number, string> = {};
+        if (productIds.length > 0) {
+          const pImages = await db
+            .select()
+            .from(productImages)
+            .where(inArray(productImages.productId, productIds));
+          for (const img of pImages) {
+            if (!imageMap[img.productId]) {
+              imageMap[img.productId] = img.url;
+            }
+          }
+        }
+
+        const enrichedItems = items.map(item => ({
+          productName: item.productName,
+          variantName: item.variantName,
+          sku: item.sku,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          subtotal: item.subtotal,
+          imageUrl: imageMap[Number(item.productId)] || null,
+        }));
+
+        return {
+          ...order,
+          items: enrichedItems,
+          itemCount: enrichedItems.reduce((sum, i) => sum + i.quantity, 0),
+        };
+      } catch (e) {
+        console.error("Failed to fetch order by id:", e);
+        return null;
+      }
+    }),
+
+  // Generic JSON site settings — used for admin-managed config blobs like
+  // the home page ad/promo config (key: "home_ad_config").
+  getSiteSetting: publicProcedure
+    .input(z.object({ key: z.string().min(1).max(128) }))
+    .query(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) return { key: input.key, value: null };
+        const rows = await db
+          .select({ value: siteSettings.value })
+          .from(siteSettings)
+          .where(eq(siteSettings.key, input.key))
+          .limit(1);
+        return { key: input.key, value: rows[0]?.value ?? null };
+      } catch (e) {
+        console.error("Failed to fetch site setting:", e);
+        return { key: input.key, value: null };
+      }
+    }),
+
+  setSiteSetting: adminProcedure
+    .input(z.object({ key: z.string().min(1).max(128), value: z.unknown() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+      }
+
+      try {
+        await db
+          .insert(siteSettings)
+          .values({ key: input.key, value: input.value as any })
+          .onConflictDoUpdate({
+            target: siteSettings.key,
+            set: { value: input.value as any, updatedAt: new Date() },
+          });
+
+        return { success: true };
+      } catch (e: any) {
+        console.error("Failed to set site setting:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to set site setting",
+        });
+      }
     }),
 
   // Customers
