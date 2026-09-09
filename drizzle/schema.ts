@@ -317,3 +317,16 @@ export const contactMessages = pgTable("contact_messages", {
 });
 
 export type ContactMessage = typeof contactMessages.$inferSelect;
+
+// ─── Site Settings ────────────────────────────────────────────────────────────
+// Generic key-value store for singleton JSON config blobs (e.g. Home page
+// hero video/flash-sale/slides/promo-banners admin editor config) that don't
+// fit a flat per-row table like `banners`.
+export const siteSettings = pgTable("site_settings", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 128 }).notNull().unique(),
+  value: json("value").notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type SiteSetting = typeof siteSettings.$inferSelect;

@@ -345,6 +345,43 @@ export default function Admin() {
       { enabled: isAdmin }
     );
 
+  // Delete Target state for confirmation modal
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: "user" | "customer";
+    id: number | string;
+    name: string;
+    details?: string;
+  } | null>(null);
+
+  const deleteUserMutation = trpc.admin.deleteUser.useMutation({
+    onSuccess: () => {
+      utils.admin.customers.invalidate();
+      utils.admin.stats.invalidate();
+      setDeleteTarget(null);
+      toast.success("User account deleted successfully");
+    },
+    onError: err => {
+      toast.error(err.message || "Failed to delete user account");
+    },
+  });
+
+  const deleteCustomerMutation =
+    trpc.admin.deleteCustomerDirectoryEntry.useMutation({
+      onSuccess: data => {
+        utils.admin.customerDirectory.invalidate();
+        utils.admin.ordersList.invalidate();
+        utils.admin.stats.invalidate();
+        setSelectedCustomer(null);
+        setDeleteTarget(null);
+        toast.success(
+          data.message || "Customer directory entry deleted successfully"
+        );
+      },
+      onError: err => {
+        toast.error(err.message || "Failed to delete customer directory entry");
+      },
+    });
+
   // Ad Settings Hook
   const {
     config: liveAdConfig,
@@ -1923,13 +1960,14 @@ export default function Admin() {
                         <th className="p-4">Orders</th>
                         <th className="p-4">Total Spent</th>
                         <th className="p-4">Last Order</th>
+                        <th className="p-4 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
                       {isLoadingCustomers ? (
                         <tr>
                           <td
-                            colSpan={6}
+                            colSpan={7}
                             className="p-12 text-center text-slate-500"
                           >
                             Loading customers...
@@ -1974,12 +2012,32 @@ export default function Admin() {
                                 customer.lastOrderDate
                               ).toLocaleDateString()}
                             </td>
+                            <td
+                              className="p-4 text-right"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  setDeleteTarget({
+                                    type: "customer",
+                                    id: customer.key,
+                                    name: customer.name,
+                                    details: `${customer.totalOrders} order(s) • ${formatPrice(customer.totalSpent)}`,
+                                  });
+                                }}
+                                className="p-2 rounded-xl hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                                title="Delete Customer & Order Records"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
                           <td
-                            colSpan={6}
+                            colSpan={7}
                             className="p-12 text-center text-slate-500"
                           >
                             No customers found.
@@ -2043,13 +2101,14 @@ export default function Admin() {
                         <th className="p-4">Role</th>
                         <th className="p-4">Joined Date</th>
                         <th className="p-4">Last Active</th>
+                        <th className="p-4 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
                       {isLoadingUsers ? (
                         <tr>
                           <td
-                            colSpan={5}
+                            colSpan={6}
                             className="p-12 text-center text-slate-500"
                           >
                             Loading users...
@@ -2105,12 +2164,29 @@ export default function Admin() {
                                   ).toLocaleDateString()
                                 : "N/A"}
                             </td>
+                            <td className="p-4 text-right">
+                              <button
+                                onClick={() =>
+                                  setDeleteTarget({
+                                    type: "user",
+                                    id: user.id,
+                                    name:
+                                      user.name || user.email || `User #${user.id}`,
+                                    details: `Role: ${user.role.toUpperCase()} • Joined: ${new Date(user.createdAt).toLocaleDateString()}`,
+                                  })
+                                }
+                                className="p-2 rounded-xl hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                                title="Delete User Account"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
                           <td
-                            colSpan={5}
+                            colSpan={6}
                             className="p-12 text-center text-slate-500"
                           >
                             No users found in the database.
@@ -2795,6 +2871,108 @@ export default function Admin() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Modal Footer Actions */}
+              <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+                <button
+                  onClick={() => setSelectedCustomer(null)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setDeleteTarget({
+                      type: "customer",
+                      id: selectedCustomer.key,
+                      name: selectedCustomer.name,
+                      details: `${selectedCustomer.totalOrders} order(s) • ${formatPrice(selectedCustomer.totalSpent)}`,
+                    });
+                  }}
+                  className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Trash2 size={14} />
+                  <span>Delete Customer & Orders</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Confirmation Modal for Permanent Deletion */}
+      <AnimatePresence>
+        {deleteTarget && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-red-100"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center text-red-600 mb-4">
+                <AlertTriangle size={24} />
+              </div>
+              <h3 className="text-lg font-black text-slate-900">
+                {deleteTarget.type === "user"
+                  ? "Delete User Account?"
+                  : "Delete Customer Record?"}
+              </h3>
+              <p className="text-sm text-slate-600 mt-2">
+                Are you sure you want to permanently delete{" "}
+                <strong className="text-slate-900">{deleteTarget.name}</strong>?
+              </p>
+              {deleteTarget.details && (
+                <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 font-mono">
+                  {deleteTarget.details}
+                </div>
+              )}
+              <p className="text-xs text-red-600 font-semibold mt-3">
+                {deleteTarget.type === "user"
+                  ? "⚠️ This user account will be permanently removed. Order records will be retained with detached user ownership."
+                  : "⚠️ This customer and all associated order records will be permanently deleted from the database."}
+              </p>
+
+              <div className="mt-6 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  disabled={
+                    deleteUserMutation.isPending ||
+                    deleteCustomerMutation.isPending
+                  }
+                  onClick={() => setDeleteTarget(null)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={
+                    deleteUserMutation.isPending ||
+                    deleteCustomerMutation.isPending
+                  }
+                  onClick={() => {
+                    if (deleteTarget.type === "user") {
+                      deleteUserMutation.mutate({
+                        userId: Number(deleteTarget.id),
+                      });
+                    } else {
+                      deleteCustomerMutation.mutate({
+                        customerKey: String(deleteTarget.id),
+                      });
+                    }
+                  }}
+                  className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-black rounded-xl shadow-md flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <Trash2 size={14} />
+                  <span>
+                    {deleteUserMutation.isPending ||
+                    deleteCustomerMutation.isPending
+                      ? "Deleting..."
+                      : "Permanently Delete"}
+                  </span>
+                </button>
               </div>
             </motion.div>
           </div>

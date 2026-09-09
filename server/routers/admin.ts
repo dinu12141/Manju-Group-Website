@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { publicProcedure, adminProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import {
@@ -10,6 +11,10 @@ import {
   orderItems,
   users,
   contactMessages,
+  wishlists,
+  carts,
+  cartItems,
+  reviews,
 } from "../../drizzle/schema";
 import { nanoid } from "nanoid";
 import { eq, desc, asc, sql, and, like, or, inArray } from "drizzle-orm";
@@ -652,6 +657,146 @@ export const adminRouter = router({
       } catch (e) {
         console.error("Failed to fetch customers:", e);
         return { items: [], total: 0 };
+      }
+    }),
+
+  // Delete registered user account with safe relation cleanup
+  deleteUser: adminProcedure
+    .input(z.object({ userId: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Database not available",
+          });
+        }
+
+        // Prevent self-deletion if logged in as this user
+        if (ctx.user && ctx.user.id === input.userId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "You cannot delete your own active user account while logged in.",
+          });
+        }
+
+        const existing = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, input.userId))
+          .limit(1);
+
+        if (existing.length === 0) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "User account not found",
+          });
+        }
+
+        // 1. Delete user's wishlists
+        await db.delete(wishlists).where(eq(wishlists.userId, input.userId));
+
+        // 2. Delete user's cart items and carts
+        const userCarts = await db
+          .select({ id: carts.id })
+          .from(carts)
+          .where(eq(carts.userId, input.userId));
+        if (userCarts.length > 0) {
+          const cartIds = userCarts.map(c => c.id);
+          await db.delete(cartItems).where(inArray(cartItems.cartId, cartIds));
+          await db.delete(carts).where(eq(carts.userId, input.userId));
+        }
+
+        // 3. Delete user's reviews
+        await db.delete(reviews).where(eq(reviews.userId, input.userId));
+
+        // 4. Detach orders so accounting and past transactions remain intact
+        await db
+          .update(orders)
+          .set({ userId: null })
+          .where(eq(orders.userId, input.userId));
+
+        // 5. Delete user account
+        await db.delete(users).where(eq(users.id, input.userId));
+
+        return {
+          success: true,
+          message: "User account and associated profile data deleted successfully",
+        };
+      } catch (e: any) {
+        if (e instanceof TRPCError) throw e;
+        console.error("Failed to delete user:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to delete user account",
+        });
+      }
+    }),
+
+  // Delete customer and their associated order records from Customer Directory
+  deleteCustomerDirectoryEntry: adminProcedure
+    .input(
+      z.object({
+        customerKey: z.string().min(1),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Database not available",
+          });
+        }
+
+        const allOrders = await db
+          .select({
+            id: orders.id,
+            shippingAddress: orders.shippingAddress,
+          })
+          .from(orders);
+
+        const targetKey = input.customerKey.trim().toLowerCase();
+        const targetCleanPhone = targetKey.replace(/\D/g, "");
+        const matchingOrderIds: number[] = [];
+
+        for (const order of allOrders) {
+          const addr = (order.shippingAddress || {}) as Record<string, unknown>;
+          const rawPhone = String(addr.phone || "").replace(/\D/g, "");
+          const rawEmail = String(addr.email || "").trim().toLowerCase();
+          const key = rawPhone || rawEmail;
+
+          if (
+            key === input.customerKey ||
+            (targetCleanPhone && rawPhone === targetCleanPhone) ||
+            (rawEmail && rawEmail === targetKey)
+          ) {
+            matchingOrderIds.push(order.id);
+          }
+        }
+
+        if (matchingOrderIds.length > 0) {
+          // Delete child order items first
+          await db.delete(orderItems).where(inArray(orderItems.orderId, matchingOrderIds));
+
+          // Delete parent orders
+          await db.delete(orders).where(inArray(orders.id, matchingOrderIds));
+        }
+
+        return {
+          success: true,
+          deletedOrdersCount: matchingOrderIds.length,
+          message: `Customer and associated ${matchingOrderIds.length} order(s) removed successfully`,
+        };
+      } catch (e: any) {
+        if (e instanceof TRPCError) throw e;
+        console.error("Failed to delete customer directory entry:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to delete customer directory entry",
+        });
       }
     }),
 
