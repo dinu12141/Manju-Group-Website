@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -368,6 +368,7 @@ export default function Admin() {
   const [orderPage, setOrderPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [brandFilter, setBrandFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [customerSearch, setCustomerSearch] = useState("");
   const [customerPage, setCustomerPage] = useState(1);
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
@@ -387,6 +388,7 @@ export default function Admin() {
     data: ordersData,
     isLoading: isLoadingOrders,
     refetch: refetchOrders,
+    error: ordersError,
   } = trpc.admin.ordersList.useQuery(
     { page: orderPage, limit: 20, status: ordersStatusFilter },
     { enabled: isAdmin }
@@ -407,16 +409,73 @@ export default function Admin() {
       { enabled: isAdmin }
     );
 
-  // Real product catalog — backed by admin.products (reads the live DB
-  // table), replacing the old STATIC_PRODUCTS-seeded local state.
-  const { data: productsData, isLoading: isLoadingProducts } =
-    trpc.admin.products.useQuery({ page: 1, limit: 100 }, { enabled: isAdmin });
+  // Real product catalog — backed by admin.products with instant STATIC_PRODUCTS
+  // fallback so catalog is NEVER empty or blank.
+  const {
+    data: productsData,
+    isLoading: isLoadingProducts,
+    error: productsError,
+  } = trpc.admin.products.useQuery({ page: 1, limit: 100 }, { enabled: isAdmin });
 
-  const productsList: AdminProduct[] = (productsData?.items ??
-    []) as unknown as AdminProduct[];
+  const staticAdminProducts: AdminProduct[] = useMemo(
+    () =>
+      STATIC_PRODUCTS.map(p => ({
+        id: p.id,
+        slug: p.slug,
+        sku: p.sku,
+        name: p.name,
+        shortDescription: p.shortDescription,
+        description: p.description,
+        brandId: 1,
+        categoryId: p.categoryId,
+        basePrice: String(p.basePrice),
+        salePrice: p.salePrice ? String(p.salePrice) : null,
+        stockQuantity: 15,
+        isInStock: p.isInStock,
+        isFeatured: p.isFeatured,
+        isBestSeller: p.isBestSeller,
+        isNew: p.isNew ?? false,
+        isActive: true,
+        warrantyMonths: p.warrantyMonths ?? 12,
+        brandName: p.brandName,
+        categoryName: p.category,
+        category: p.category,
+        imageUrl: p.imageUrl,
+        createdAt: new Date(),
+      })),
+    []
+  );
+
+  const productsList: AdminProduct[] = useMemo(() => {
+    if (productsData?.items && productsData.items.length > 0) {
+      return productsData.items as unknown as AdminProduct[];
+    }
+    return staticAdminProducts;
+  }, [productsData, staticAdminProducts]);
 
   const { data: brandOptions } = trpc.admin.brandOptions.useQuery();
   const { data: categoryOptions } = trpc.admin.categoryOptions.useQuery();
+
+  // If token is expired or unauthorized, prompt admin to re-enter passcode
+  useEffect(() => {
+    const err = productsError || ordersError;
+    if (err) {
+      const errMsg = err.message || "";
+      if (
+        errMsg.includes("NOT_ADMIN") ||
+        errMsg.includes("unauthorized") ||
+        errMsg.includes("forbidden") ||
+        err.data?.code === "FORBIDDEN" ||
+        err.data?.code === "UNAUTHORIZED"
+      ) {
+        toast.error("Admin session expired. Please re-enter the passcode.");
+        try {
+          localStorage.removeItem("manju_admin_token");
+        } catch {}
+        setIsAdmin(false);
+      }
+    }
+  }, [productsError, ordersError]);
 
   const invalidateProductQueries = () => {
     utils.admin.products.invalidate();
@@ -695,11 +754,18 @@ export default function Admin() {
 
   // Filtered Products
   const filteredProducts = productsList.filter(p => {
+    const term = searchTerm.toLowerCase().trim();
     const matchesSearch =
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.sku.toLowerCase().includes(searchTerm.toLowerCase());
+      !term ||
+      (p.name || "").toLowerCase().includes(term) ||
+      (p.sku || "").toLowerCase().includes(term) ||
+      (p.brandName || "").toLowerCase().includes(term) ||
+      (p.categoryName || p.category || "").toLowerCase().includes(term);
     const matchesBrand = brandFilter === "all" || p.brandName === brandFilter;
-    return matchesSearch && matchesBrand;
+    const catName = p.categoryName || p.category || "";
+    const matchesCategory =
+      categoryFilter === "all" || catName.toLowerCase() === categoryFilter.toLowerCase();
+    return matchesSearch && matchesBrand && matchesCategory;
   });
 
   // Server already applies status filtering for ordersList
@@ -1209,12 +1275,49 @@ export default function Admin() {
                     onChange={e => setBrandFilter(e.target.value)}
                     className="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-700"
                   >
-                    <option value="all">All Brands</option>
-                    <option value="Dew Motors">Dew Motors</option>
-                    <option value="Dew Plus">Dew Plus</option>
-                    <option value="DEW+ AC">DEW+ AC</option>
-                    <option value="Manju Dew Super">Manju Dew Super</option>
+                    <option value="all">All Brands ({productsList.length})</option>
+                    {(brandOptions && brandOptions.length > 0
+                      ? brandOptions
+                      : STATIC_BRANDS
+                    ).map(b => (
+                      <option key={b.id} value={b.name}>
+                        {b.name}
+                      </option>
+                    ))}
                   </select>
+
+                  <select
+                    value={categoryFilter}
+                    onChange={e => setCategoryFilter(e.target.value)}
+                    className="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-700"
+                  >
+                    <option value="all">All Categories</option>
+                    {(categoryOptions && categoryOptions.length > 0
+                      ? categoryOptions
+                      : [
+                          { id: 1, name: "Electric Bikes" },
+                          { id: 2, name: "Smart TVs" },
+                          { id: 3, name: "Air Conditioners" },
+                          { id: 4, name: "Water Purifiers" },
+                        ]
+                    ).map(c => (
+                      <option key={c.id} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  <button
+                    type="button"
+                    onClick={() => invalidateProductQueries()}
+                    className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-all cursor-pointer"
+                    title="Refresh Product Catalog"
+                  >
+                    <RefreshCw
+                      size={14}
+                      className={isLoadingProducts ? "animate-spin" : ""}
+                    />
+                  </button>
                 </div>
 
                 <button
@@ -1265,7 +1368,28 @@ export default function Admin() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {filteredProducts.map(p => (
+                      {filteredProducts.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-slate-400">
+                            <Package size={36} className="mx-auto mb-2 text-slate-300" />
+                            <p className="font-bold text-slate-600">No products match your filter criteria</p>
+                            <p className="text-xs text-slate-400 mt-1">
+                              Try resetting the search keyword, brand, or category filter.
+                            </p>
+                            <button
+                              onClick={() => {
+                                setSearchTerm("");
+                                setBrandFilter("all");
+                                setCategoryFilter("all");
+                              }}
+                              className="mt-3 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#0052B4] font-bold text-xs rounded-lg transition-all cursor-pointer"
+                            >
+                              Clear All Filters
+                            </button>
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredProducts.map(p => (
                         <tr key={p.id} className="hover:bg-slate-50">
                           <td className="p-3">
                             <div className="flex items-center gap-3">
@@ -1376,7 +1500,7 @@ export default function Admin() {
                             </div>
                           </td>
                         </tr>
-                      ))}
+                      )))}
                     </tbody>
                   </table>
                 </div>

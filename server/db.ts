@@ -22,8 +22,8 @@ export async function getDb() {
     _client = postgres(dbUrl, {
       ssl: "require",
       prepare: false,
-      max: 3,
-      idle_timeout: 20,
+      max: 10,
+      idle_timeout: 30,
       connect_timeout: 15,
     });
     _db = drizzle(_client);

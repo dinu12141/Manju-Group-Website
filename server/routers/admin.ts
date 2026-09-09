@@ -545,6 +545,35 @@ export const adminRouter = router({
           imageUrl: imageMap[p.id] || "/scooter_red.webp",
         }));
 
+        if (items.length === 0 && !input.search) {
+          return {
+            items: STATIC_PRODUCTS.map(p => ({
+              id: p.id,
+              slug: p.slug,
+              sku: p.sku,
+              name: p.name,
+              shortDescription: p.shortDescription,
+              description: p.description,
+              brandId: 1,
+              categoryId: p.categoryId,
+              basePrice: String(p.basePrice),
+              salePrice: p.salePrice ? String(p.salePrice) : null,
+              stockQuantity: 15,
+              isInStock: p.isInStock,
+              isFeatured: p.isFeatured,
+              isBestSeller: p.isBestSeller,
+              isNew: p.isNew ?? false,
+              isActive: true,
+              warrantyMonths: p.warrantyMonths ?? 12,
+              brandName: p.brandName,
+              categoryName: p.category,
+              imageUrl: p.imageUrl,
+              createdAt: new Date().toISOString(),
+            })),
+            total: STATIC_PRODUCTS.length,
+          };
+        }
+
         return { items: enrichedItems, total: Number(countResult[0]?.count ?? 0) };
       } catch (e) {
         return {
@@ -557,8 +586,8 @@ export const adminRouter = router({
             description: p.description,
             brandId: 1,
             categoryId: p.categoryId,
-            basePrice: p.basePrice,
-            salePrice: p.salePrice,
+            basePrice: String(p.basePrice),
+            salePrice: p.salePrice ? String(p.salePrice) : null,
             stockQuantity: 15,
             isInStock: p.isInStock,
             isFeatured: p.isFeatured,
@@ -616,15 +645,22 @@ export const adminRouter = router({
   }),
 
   categoryOptions: publicProcedure.query(async () => {
+    const fallbackCategories = [
+      { id: 1, name: "Electric Bikes" },
+      { id: 2, name: "Smart TVs" },
+      { id: 3, name: "Air Conditioners" },
+      { id: 4, name: "Water Purifiers" },
+    ];
     try {
       const db = await getDb();
-      if (!db) return [];
-      return await db
+      if (!db) return fallbackCategories;
+      const rows = await db
         .select({ id: categories.id, name: categories.name })
         .from(categories)
         .orderBy(asc(categories.sortOrder), asc(categories.name));
+      return rows.length > 0 ? rows : fallbackCategories;
     } catch (e) {
-      return [];
+      return fallbackCategories;
     }
   }),
 
