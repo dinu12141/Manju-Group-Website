@@ -1,7 +1,50 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, adminProcedure, router } from "../_core/trpc";
-import { getDb } from "../db";
+import { getDb, resetDb } from "../db";
+
+/**
+ * Run a DB query with a hard timeout.
+ *
+ * On a connection-level error (CONNECTION_DESTROYED / stale socket) it
+ * triggers a pool reset (see db.ts — rate-limited to once per 10 s so
+ * concurrent callers don't stomp each other) and rethrows so the caller
+ * can propagate a proper tRPC error. The client's React-Query retry will
+ * then fire on the freshly-reset pool.
+ *
+ * The 20 s timeout ensures that a genuinely hung query fails fast rather
+ * than blocking the Node.js event loop indefinitely.
+ */
+async function withDbTimeout<T>(fn: () => Promise<T>, timeoutMs = 20_000): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error("DB query timeout")), timeoutMs);
+  });
+  try {
+    const result = await Promise.race([fn(), timeoutPromise]);
+    return result;
+  } catch (err: any) {
+    const msg: string = err?.message ?? "";
+    const code: string = err?.cause?.code ?? err?.code ?? "";
+    const isConnErr =
+      code === "CONNECTION_DESTROYED" ||
+      msg.includes("CONNECTION_DESTROYED") ||
+      msg.includes("ECONNRESET") ||
+      msg.includes("Connection terminated") ||
+      msg.includes("socket") ||
+      msg.includes("closed") ||
+      msg.includes("DB query timeout");
+    if (isConnErr) {
+      // Rate-limited in db.ts — safe to call from N concurrent handlers.
+      resetDb().catch(() => {});
+    }
+    throw err;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+
 import {
   products,
   productImages,
@@ -77,16 +120,18 @@ export const adminRouter = router({
         };
       }
 
-      const [orderStats, productCount, customerCount] = await Promise.all([
-        db
-          .select({
-            count: sql<number>`count(*)`,
-            revenue: sql<number>`coalesce(sum(total), 0)`,
-          })
-          .from(orders),
-        db.select({ count: sql<number>`count(*)` }).from(products),
-        db.select({ count: sql<number>`count(*)` }).from(users),
-      ]);
+      const [orderStats, productCount, customerCount] = await withDbTimeout(() =>
+        Promise.all([
+          db
+            .select({
+              count: sql<number>`count(*)`,
+              revenue: sql<number>`coalesce(sum(total), 0)`,
+            })
+            .from(orders),
+          db.select({ count: sql<number>`count(*)` }).from(products),
+          db.select({ count: sql<number>`count(*)` }).from(users),
+        ])
+      );
 
       const totalRevenue = Number(orderStats[0]?.revenue ?? 0);
       const totalOrders = Number(orderStats[0]?.count ?? 0);
@@ -270,33 +315,35 @@ export const adminRouter = router({
           ? eq(orders.status, input.status)
           : undefined;
 
-        const [orderRows, countResult] = await Promise.all([
-          db
-            .select({
-              id: orders.id,
-              orderNumber: orders.orderNumber,
-              status: orders.status,
-              paymentMethod: orders.paymentMethod,
-              paymentStatus: orders.paymentStatus,
-              subtotal: orders.subtotal,
-              shippingFee: orders.shippingFee,
-              discount: orders.discount,
-              total: orders.total,
-              currency: orders.currency,
-              shippingAddress: orders.shippingAddress,
-              createdAt: orders.createdAt,
-              updatedAt: orders.updatedAt,
-            })
-            .from(orders)
-            .where(whereClause)
-            .orderBy(desc(orders.createdAt))
-            .limit(input.limit)
-            .offset(offset),
-          db
-            .select({ count: sql<number>`count(*)` })
-            .from(orders)
-            .where(whereClause),
-        ]);
+        const [orderRows, countResult] = await withDbTimeout(() =>
+          Promise.all([
+            db
+              .select({
+                id: orders.id,
+                orderNumber: orders.orderNumber,
+                status: orders.status,
+                paymentMethod: orders.paymentMethod,
+                paymentStatus: orders.paymentStatus,
+                subtotal: orders.subtotal,
+                shippingFee: orders.shippingFee,
+                discount: orders.discount,
+                total: orders.total,
+                currency: orders.currency,
+                shippingAddress: orders.shippingAddress,
+                createdAt: orders.createdAt,
+                updatedAt: orders.updatedAt,
+              })
+              .from(orders)
+              .where(whereClause)
+              .orderBy(desc(orders.createdAt))
+              .limit(input.limit)
+              .offset(offset),
+            db
+              .select({ count: sql<number>`count(*)` })
+              .from(orders)
+              .where(whereClause),
+          ])
+        );
 
         const orderIds = orderRows.map(o => o.id);
         let itemsByOrder: Record<
@@ -313,19 +360,21 @@ export const adminRouter = router({
         > = {};
 
         if (orderIds.length > 0) {
-          const items = await db
-            .select({
-              orderId: orderItems.orderId,
-              productId: orderItems.productId,
-              productName: orderItems.productName,
-              variantName: orderItems.variantName,
-              sku: orderItems.sku,
-              quantity: orderItems.quantity,
-              unitPrice: orderItems.unitPrice,
-              subtotal: orderItems.subtotal,
-            })
-            .from(orderItems)
-            .where(inArray(orderItems.orderId, orderIds));
+          const items = await withDbTimeout(() =>
+            db
+              .select({
+                orderId: orderItems.orderId,
+                productId: orderItems.productId,
+                productName: orderItems.productName,
+                variantName: orderItems.variantName,
+                sku: orderItems.sku,
+                quantity: orderItems.quantity,
+                unitPrice: orderItems.unitPrice,
+                subtotal: orderItems.subtotal,
+              })
+              .from(orderItems)
+              .where(inArray(orderItems.orderId, orderIds))
+          );
 
           const productIds = Array.from(
             new Set(
@@ -337,10 +386,12 @@ export const adminRouter = router({
 
           let imageMap: Record<number, string> = {};
           if (productIds.length > 0) {
-            const pImages = await db
-              .select()
-              .from(productImages)
-              .where(inArray(productImages.productId, productIds));
+            const pImages = await withDbTimeout(() =>
+              db
+                .select()
+                .from(productImages)
+                .where(inArray(productImages.productId, productIds))
+            );
             for (const img of pImages) {
               if (!imageMap[img.productId]) {
                 imageMap[img.productId] = img.url;
@@ -1364,54 +1415,65 @@ export const adminRouter = router({
         .optional()
     )
     .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) return { items: [], total: 0 };
-      const page = input?.page ?? 1;
-      const limit = input?.limit ?? 50;
-      const offset = (page - 1) * limit;
+      try {
+        const db = await getDb();
+        if (!db) return { items: [], total: 0 };
+        const page = input?.page ?? 1;
+        const limit = input?.limit ?? 50;
+        const offset = (page - 1) * limit;
 
-      const conditions = input?.search?.trim()
-        ? [
-            or(
-              like(reviews.authorName, `%${input.search.trim()}%`),
-              like(reviews.body, `%${input.search.trim()}%`),
-              like(reviews.title, `%${input.search.trim()}%`)
-            ),
-          ]
-        : [];
+        const conditions = input?.search?.trim()
+          ? [
+              or(
+                like(reviews.authorName, `%${input.search.trim()}%`),
+                like(reviews.body, `%${input.search.trim()}%`),
+                like(reviews.title, `%${input.search.trim()}%`)
+              ),
+            ]
+          : [];
 
-      const [items, countResult] = await Promise.all([
-        db
-          .select({
-            id: reviews.id,
-            productId: reviews.productId,
-            userId: reviews.userId,
-            authorName: reviews.authorName,
-            userEmail: reviews.userEmail,
-            rating: reviews.rating,
-            title: reviews.title,
-            body: reviews.body,
-            isVerified: reviews.isVerified,
-            isApproved: reviews.isApproved,
-            createdAt: reviews.createdAt,
-            productName: products.name,
-          })
-          .from(reviews)
-          .leftJoin(
-            products,
-            eq(sql`CAST(${products.id} AS text)`, reviews.productId)
-          )
-          .where(conditions.length > 0 ? and(...conditions) : undefined)
-          .orderBy(desc(reviews.createdAt))
-          .limit(limit)
-          .offset(offset),
-        db.select({ count: sql<number>`count(*)` }).from(reviews),
-      ]);
+        const [items, countResult] = await withDbTimeout(() =>
+          Promise.all([
+            db
+              .select({
+                id: reviews.id,
+                productId: reviews.productId,
+                userId: reviews.userId,
+                authorName: reviews.authorName,
+                userEmail: reviews.userEmail,
+                rating: reviews.rating,
+                title: reviews.title,
+                body: reviews.body,
+                isVerified: reviews.isVerified,
+                isApproved: reviews.isApproved,
+                createdAt: reviews.createdAt,
+                productName: products.name,
+              })
+              .from(reviews)
+              // reviews.productId is text; cast it to int to join properly
+              .leftJoin(
+                products,
+                eq(products.id, sql<number>`CAST(${reviews.productId} AS integer)`)
+              )
+              .where(conditions.length > 0 ? and(...conditions) : undefined)
+              .orderBy(desc(reviews.createdAt))
+              .limit(limit)
+              .offset(offset),
+            db.select({ count: sql<number>`count(*)` }).from(reviews),
+          ])
+        );
 
-      return {
-        items,
-        total: Number(countResult[0]?.count ?? 0),
-      };
+        return {
+          items,
+          total: Number(countResult[0]?.count ?? 0),
+        };
+      } catch (e: any) {
+        console.error("Failed to fetch admin reviews list:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to fetch reviews list",
+        });
+      }
     }),
 
   updateReview: adminProcedure

@@ -8,33 +8,93 @@ import { ENV } from "./_core/env";
 let _db: ReturnType<typeof drizzle> | null = null;
 let _client: postgres.Sql | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
-export async function getDb() {
-  if (_db) return _db;
+/**
+ * Shared in-flight promise so that many concurrent callers during reconnect
+ * all wait for the SAME new pool instead of each trying to create their own.
+ */
+let _connectingPromise: Promise<ReturnType<typeof drizzle> | null> | null = null;
 
+/**
+ * Timestamp of the last successful resetDb().  We enforce a 10-second
+ * cooldown so that a burst of simultaneous errors (one per concurrent query)
+ * only destroys the pool once — the second caller skips the reset and waits
+ * for the first reset/reconnect cycle to complete.
+ */
+let _lastResetAt = 0;
+const RESET_COOLDOWN_MS = 10_000;
+
+/**
+ * Force-close the current DB client and clear the cached instance.
+ * Rate-limited to once per 10 s to prevent concurrent error handlers from
+ * racing and destroying a freshly-created pool.
+ */
+export async function resetDb() {
+  const now = Date.now();
+  if (now - _lastResetAt < RESET_COOLDOWN_MS) {
+    console.warn("[Database] Reset skipped — cooldown active, waiting for reconnect");
+    return;
+  }
+  _lastResetAt = now;
+  console.warn("[Database] Resetting stale connection pool...");
+  const old = _client;
+  _db = null;
+  _client = null;
+  _connectingPromise = null;
+  if (old) {
+    try {
+      await old.end({ timeout: 3 });
+    } catch {
+      // Best-effort close; ignore if already dead.
+    }
+  }
+}
+
+async function _doConnect(): Promise<ReturnType<typeof drizzle> | null> {
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) {
     console.warn("[Database] DATABASE_URL not set");
     return null;
   }
-
   try {
     _client = postgres(dbUrl, {
       ssl: "require",
       prepare: false,
-      max: 10,
-      idle_timeout: 30,
-      connect_timeout: 15,
-      max_lifetime: 60 * 30,
+      max: 5,
+      // Supabase shared pooler drops idle connections after ~5 min.
+      // Keep max_lifetime well under that so the pool self-refreshes.
+      max_lifetime: 60 * 4,  // 4 minutes
+      idle_timeout: 20,      // release idle connections quickly
+      connect_timeout: 15,   // allow up to 15s for new TCP connections
     });
     _db = drizzle(_client);
-    console.log("[Database] Connected successfully");
+
+    // Verify the pool actually works before handing it to callers.
+    await _client`SELECT 1`;
+    console.log("[Database] Connected and verified successfully");
+    return _db;
   } catch (error: any) {
-    console.error("[Database] Failed to connect:", error.message || error);
+    console.error("[Database] Failed to connect/verify:", error.message || error);
     _db = null;
-    _client = null;
+    if (_client) {
+      try { await (_client as any).end({ timeout: 1 }); } catch {}
+      _client = null;
+    }
+    return null;
+  } finally {
+    // Clear the in-flight promise so the NEXT getDb() call after a failure
+    // can try again from scratch.
+    _connectingPromise = null;
   }
-  return _db;
+}
+
+// Lazily create the drizzle instance so local tooling can run without a DB.
+// Concurrent callers share the in-flight promise — only ONE new pool is
+// ever created at a time.
+export async function getDb() {
+  if (_db) return _db;
+  if (_connectingPromise) return _connectingPromise;
+  _connectingPromise = _doConnect();
+  return _connectingPromise;
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {
