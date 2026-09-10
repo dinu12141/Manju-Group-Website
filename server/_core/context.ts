@@ -22,7 +22,19 @@ export async function createContext(
     const authHeader = opts.req.headers.authorization;
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.substring(7);
-      const { data, error } = await supabase.auth.getUser(token);
+      const authPromise = supabase.auth.getUser(token);
+      const timeoutPromise = new Promise<{ data: { user: null }; error: Error }>(
+        resolve =>
+          setTimeout(
+            () =>
+              resolve({
+                data: { user: null },
+                error: new Error("Auth timeout"),
+              }),
+            2500
+          )
+      );
+      const { data, error } = await Promise.race([authPromise, timeoutPromise]);
 
       if (!error && data?.user) {
         // Fetch full user record from our database using the Supabase auth ID
