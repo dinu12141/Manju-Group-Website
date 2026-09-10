@@ -120,8 +120,7 @@ export const adminRouter = router({
         };
       }
 
-      const [orderStats, productCount, customerCount] = await withDbTimeout(() =>
-        Promise.all([
+      const [orderStats, productCount, customerCount] = await Promise.all([
           db
             .select({
               count: sql<number>`count(*)`,
@@ -130,8 +129,7 @@ export const adminRouter = router({
             .from(orders),
           db.select({ count: sql<number>`count(*)` }).from(products),
           db.select({ count: sql<number>`count(*)` }).from(users),
-        ])
-      );
+        ]);
 
       const totalRevenue = Number(orderStats[0]?.revenue ?? 0);
       const totalOrders = Number(orderStats[0]?.count ?? 0);
@@ -180,7 +178,7 @@ export const adminRouter = router({
       };
     } catch (err: any) {
       console.error("Failed to fetch admin stats:", err);
-      throw new TRPCError({
+      throw new TRPCError({ cause: err,
         code: "INTERNAL_SERVER_ERROR",
         message: err.message || "Failed to fetch admin dashboard stats",
       });
@@ -213,7 +211,7 @@ export const adminRouter = router({
           .limit(input.limit);
       } catch (e: any) {
         console.error("Failed to fetch recent orders:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to fetch recent orders",
         });
@@ -245,7 +243,7 @@ export const adminRouter = router({
         return { items, total: Number(countResult[0]?.count ?? 0) };
       } catch (e: any) {
         console.error("Failed to fetch orders:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to fetch orders",
         });
@@ -279,7 +277,7 @@ export const adminRouter = router({
         return { success: true };
       } catch (e: any) {
         console.error("Failed to update order status:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to update order status",
         });
@@ -315,8 +313,7 @@ export const adminRouter = router({
           ? eq(orders.status, input.status)
           : undefined;
 
-        const [orderRows, countResult] = await withDbTimeout(() =>
-          Promise.all([
+        const [orderRows, countResult] = await Promise.all([
             db
               .select({
                 id: orders.id,
@@ -342,8 +339,7 @@ export const adminRouter = router({
               .select({ count: sql<number>`count(*)` })
               .from(orders)
               .where(whereClause),
-          ])
-        );
+          ]);
 
         const orderIds = orderRows.map(o => o.id);
         let itemsByOrder: Record<
@@ -428,7 +424,7 @@ export const adminRouter = router({
         };
       } catch (e: any) {
         console.error("Failed to fetch admin orders list:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to fetch orders list",
         });
@@ -559,7 +555,7 @@ export const adminRouter = router({
         return { items, total };
       } catch (e: any) {
         console.error("Failed to build customer directory:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to build customer directory",
         });
@@ -703,7 +699,7 @@ export const adminRouter = router({
         };
       } catch (e: any) {
         console.error("Failed to fetch admin products:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to fetch admin products",
         });
@@ -727,7 +723,7 @@ export const adminRouter = router({
         return { success: true };
       } catch (e: any) {
         console.error("Failed to toggle product active:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to toggle product active status",
         });
@@ -748,7 +744,7 @@ export const adminRouter = router({
         : STATIC_BRANDS.map(b => ({ id: b.id, name: b.name }));
     } catch (e: any) {
       console.error("Failed to fetch brand options:", e);
-      throw new TRPCError({
+      throw new TRPCError({ cause: e,
         code: "INTERNAL_SERVER_ERROR",
         message: e.message || "Failed to fetch brand options",
       });
@@ -772,7 +768,7 @@ export const adminRouter = router({
       return rows.length > 0 ? rows : fallbackCategories;
     } catch (e: any) {
       console.error("Failed to fetch category options:", e);
-      throw new TRPCError({
+      throw new TRPCError({ cause: e,
         code: "INTERNAL_SERVER_ERROR",
         message: e.message || "Failed to fetch category options",
       });
@@ -793,7 +789,7 @@ export const adminRouter = router({
         return rows[0] ?? null;
       } catch (e: any) {
         console.error("Failed to fetch product by id:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to fetch product",
         });
@@ -899,7 +895,7 @@ export const adminRouter = router({
         return { success: true, id: created.id, slug: created.slug };
       } catch (e: any) {
         console.error("Failed to create product:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to create product",
         });
@@ -1006,7 +1002,7 @@ export const adminRouter = router({
         return { success: true };
       } catch (e: any) {
         console.error("Failed to update product:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to update product",
         });
@@ -1044,7 +1040,7 @@ export const adminRouter = router({
         return { success: true };
       } catch (e: any) {
         console.error("Failed to delete product:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to delete product",
         });
@@ -1120,7 +1116,7 @@ export const adminRouter = router({
         };
       } catch (e: any) {
         console.error("Failed to fetch order by id:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to fetch order",
         });
@@ -1154,7 +1150,7 @@ export const adminRouter = router({
         return { key: input.key, value: rows[0]?.value ?? null };
       } catch (e: any) {
         console.error("Failed to fetch site setting:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to fetch site setting",
         });
@@ -1184,7 +1180,7 @@ export const adminRouter = router({
         return { success: true };
       } catch (e: any) {
         console.error("Failed to set site setting:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to set site setting",
         });
@@ -1226,7 +1222,7 @@ export const adminRouter = router({
         return { items, total: Number(countResult[0]?.count ?? 0) };
       } catch (e: any) {
         console.error("Failed to fetch customers:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to fetch customers",
         });
@@ -1302,7 +1298,7 @@ export const adminRouter = router({
       } catch (e: any) {
         if (e instanceof TRPCError) throw e;
         console.error("Failed to delete user:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to delete user account",
         });
@@ -1372,7 +1368,7 @@ export const adminRouter = router({
       } catch (e: any) {
         if (e instanceof TRPCError) throw e;
         console.error("Failed to delete customer directory entry:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to delete customer directory entry",
         });
@@ -1432,8 +1428,7 @@ export const adminRouter = router({
             ]
           : [];
 
-        const [items, countResult] = await withDbTimeout(() =>
-          Promise.all([
+        const [items, countResult] = await Promise.all([
             db
               .select({
                 id: reviews.id,
@@ -1460,8 +1455,7 @@ export const adminRouter = router({
               .limit(limit)
               .offset(offset),
             db.select({ count: sql<number>`count(*)` }).from(reviews),
-          ])
-        );
+          ]);
 
         return {
           items,
@@ -1469,7 +1463,7 @@ export const adminRouter = router({
         };
       } catch (e: any) {
         console.error("Failed to fetch admin reviews list:", e);
-        throw new TRPCError({
+        throw new TRPCError({ cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to fetch reviews list",
         });
