@@ -15,8 +15,14 @@ const dbRetryMiddleware = t.middleware(async opts => {
     const timeoutPromise = new Promise<never>((_, reject) => {
       timer = setTimeout(() => reject(new Error("DB query timeout")), 15000);
     });
+    
+    // Prevent unhandled promise rejection crash if timeoutPromise wins the race
+    // and this promise rejects later in the background.
+    const nextPromise = opts.next();
+    nextPromise.catch(() => {}); 
+    
     try {
-      return await Promise.race([opts.next(), timeoutPromise]);
+      return await Promise.race([nextPromise, timeoutPromise]);
     } finally {
       if (timer) clearTimeout(timer);
     }
@@ -42,7 +48,8 @@ const dbRetryMiddleware = t.middleware(async opts => {
         errString.includes("closed") ||
         errString.includes("DB query timeout") ||
         errString.includes("read ECONNRESET") ||
-        errString.includes("Database not available");
+        errString.includes("Database not available") ||
+        errString.includes("canceling statement due to statement timeout");
 
       if (isConnErr && attempt <= 2) {
         console.warn(`[tRPC] DB connection error in ${opts.path} (attempt ${attempt}). Resetting pool and retrying...`);

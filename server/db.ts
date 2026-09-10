@@ -39,14 +39,17 @@ export async function resetDb() {
   const old = _client;
   _db = null;
   _client = null;
-  _connectingPromise = null;
   if (old) {
     try {
-      await old.end({ timeout: 3 });
+      await old.end({ timeout: 1 });
     } catch {
       // Best-effort close; ignore if already dead.
     }
   }
+
+  // Clear connecting promise AFTER old connection is destroyed to prevent
+  // concurrent callers from spawning dozens of new pools in parallel.
+  _connectingPromise = null;
 }
 
 async function _doConnect(): Promise<ReturnType<typeof drizzle> | null> {
