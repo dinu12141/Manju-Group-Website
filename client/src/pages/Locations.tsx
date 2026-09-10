@@ -366,7 +366,9 @@ export default function Locations() {
               Find a Manju Group Showroom
             </h1>
             <p className="text-blue-100/90 text-sm md:text-base leading-relaxed">
-              Visit our official experience centers to test-ride Dew Motors Electric Bikes, experience Dew Plus 4K Smart TVs, demo DEW+ Inverter ACs, and test water purification solutions.
+              Visit our official experience centers to test-ride Dew Motors
+              Electric Bikes, experience Dew Plus 4K Smart TVs, demo DEW+
+              Inverter ACs, and test water purification solutions.
             </p>
           </div>
 
@@ -421,7 +423,10 @@ export default function Locations() {
       </section>
 
       {/* ── Interactive Master Map & Showcase Section ───────────────────── */}
-      <section id="master-map-container" className="bg-slate-100 py-8 px-4 md:px-8">
+      <section
+        id="master-map-container"
+        className="bg-slate-100 py-8 px-4 md:px-8"
+      >
         <div className="container mx-auto max-w-7xl">
           {/* Quick Showroom Select Dropdown Filter Bar */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 bg-white p-3.5 px-5 rounded-2xl border border-slate-200 shadow-xs">
@@ -437,7 +442,11 @@ export default function Locations() {
                 className="w-full bg-slate-50 hover:bg-slate-100/80 border border-slate-300 text-slate-900 font-bold text-sm rounded-xl py-2.5 pl-4 pr-10 outline-none focus:ring-2 focus:ring-[#0052B4] cursor-pointer transition-colors appearance-none shadow-xs"
               >
                 {ALL_SHOWROOMS.map(store => (
-                  <option key={store.id} value={store.id} className="py-1 text-slate-900 font-semibold">
+                  <option
+                    key={store.id}
+                    value={store.id}
+                    className="py-1 text-slate-900 font-semibold"
+                  >
                     📍 {store.city} — {store.name}
                   </option>
                 ))}
@@ -470,7 +479,10 @@ export default function Locations() {
 
                   <div className="space-y-3 text-xs md:text-sm text-slate-700 font-medium bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <div className="flex items-start gap-2.5">
-                      <MapPin size={16} className="text-[#0052B4] shrink-0 mt-0.5" />
+                      <MapPin
+                        size={16}
+                        className="text-[#0052B4] shrink-0 mt-0.5"
+                      />
                       <span className="font-semibold text-slate-900 leading-relaxed">
                         {selectedStore.address}
                       </span>
@@ -568,21 +580,26 @@ export default function Locations() {
 
             {/* Province Badges */}
             <div className="flex flex-wrap gap-1.5">
-              {["All", "Western", "Central", "Southern", "North Western", "Northern"].map(
-                prov => (
-                  <button
-                    key={prov}
-                    onClick={() => setSelectedProvince(prov)}
-                    className={`text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
-                      selectedProvince === prov
-                        ? "bg-[#0052B4] text-white shadow-xs"
-                        : "bg-white text-slate-700 hover:bg-slate-200 border border-slate-200"
-                    }`}
-                  >
-                    {prov}
-                  </button>
-                )
-              )}
+              {[
+                "All",
+                "Western",
+                "Central",
+                "Southern",
+                "North Western",
+                "Northern",
+              ].map(prov => (
+                <button
+                  key={prov}
+                  onClick={() => setSelectedProvince(prov)}
+                  className={`text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    selectedProvince === prov
+                      ? "bg-[#0052B4] text-white shadow-xs"
+                      : "bg-white text-slate-700 hover:bg-slate-200 border border-slate-200"
+                  }`}
+                >
+                  {prov}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -643,14 +660,22 @@ export default function Locations() {
                             size={15}
                             className="text-[#0052B4] shrink-0 mt-0.5"
                           />
-                          <span className="text-slate-800 font-semibold">{store.address}</span>
+                          <span className="text-slate-800 font-semibold">
+                            {store.address}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Clock size={14} className="text-slate-400 shrink-0" />
+                          <Clock
+                            size={14}
+                            className="text-slate-400 shrink-0"
+                          />
                           <span>{store.hours}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Phone size={14} className="text-slate-400 shrink-0" />
+                          <Phone
+                            size={14}
+                            className="text-slate-400 shrink-0"
+                          />
                           <a
                             href={`tel:${store.directCall}`}
                             className="text-slate-800 font-bold hover:text-[#0052B4]"
@@ -684,7 +709,9 @@ export default function Locations() {
                         }`}
                       >
                         <Compass size={13} />
-                        <span>{isSelected ? "Active On Map" : "View On Map"}</span>
+                        <span>
+                          {isSelected ? "Active On Map" : "View On Map"}
+                        </span>
                       </button>
 
                       <a

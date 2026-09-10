@@ -20,7 +20,9 @@ async function verifyAllQAFixes() {
   });
 
   // TEST 1: Ad Settings Persistence in PostgreSQL
-  console.log("\n[TEST 1] Testing Banner & Video Ad persistence in site_settings table...");
+  console.log(
+    "\n[TEST 1] Testing Banner & Video Ad persistence in site_settings table..."
+  );
   const adTestConfig = {
     heroVideo: {
       videoUrl: "/promo-video.mp4",
@@ -55,13 +57,17 @@ async function verifyAllQAFixes() {
     fetchedAd &&
     (fetchedAd.value as any)?.heroVideo?.title === "QA Test Video Title"
   ) {
-    console.log("✔ TEST 1 PASSED: Ad settings correctly saved to and read from DB!");
+    console.log(
+      "✔ TEST 1 PASSED: Ad settings correctly saved to and read from DB!"
+    );
   } else {
     throw new Error("TEST 1 FAILED: Ad settings did not persist in DB");
   }
 
   // TEST 2: Product Creation with Image & Fields
-  console.log("\n[TEST 2] Testing Admin createProduct writing to PostgreSQL products & productImages...");
+  console.log(
+    "\n[TEST 2] Testing Admin createProduct writing to PostgreSQL products & productImages..."
+  );
   const testSku = `QA-TEST-${Date.now().toString().slice(-4)}`;
   const createResult = await adminCaller.admin.createProduct({
     name: "Automated QA Verification E-Bike",
@@ -86,16 +92,22 @@ async function verifyAllQAFixes() {
   }
   const productId = createResult.id;
   const productSlug = createResult.slug;
-  console.log(`✔ TEST 2 PASSED: Created product ID=${productId}, Slug=${productSlug}`);
+  console.log(
+    `✔ TEST 2 PASSED: Created product ID=${productId}, Slug=${productSlug}`
+  );
 
   // TEST 3: Admin Products List Query
-  console.log("\n[TEST 3] Testing admin.products query returns live product with image...");
+  console.log(
+    "\n[TEST 3] Testing admin.products query returns live product with image..."
+  );
   const adminList = await adminCaller.admin.products({
     page: 1,
     limit: 20,
     search: testSku,
   });
-  const foundAdminProduct = adminList.items.find((p: any) => p.id === productId);
+  const foundAdminProduct = adminList.items.find(
+    (p: any) => p.id === productId
+  );
   if (
     foundAdminProduct &&
     foundAdminProduct.name === "Automated QA Verification E-Bike" &&
@@ -103,13 +115,19 @@ async function verifyAllQAFixes() {
     foundAdminProduct.brandId === 1 &&
     foundAdminProduct.warrantyMonths === 36
   ) {
-    console.log("✔ TEST 3 PASSED: admin.products query successfully retrieves newly created product with image and all fields!");
+    console.log(
+      "✔ TEST 3 PASSED: admin.products query successfully retrieves newly created product with image and all fields!"
+    );
   } else {
-    throw new Error("TEST 3 FAILED: Product not found in admin list or missing image");
+    throw new Error(
+      "TEST 3 FAILED: Product not found in admin list or missing image"
+    );
   }
 
   // TEST 4: Customer Storefront Live Reflection
-  console.log("\n[TEST 4] Testing customer storefront products.list and products.bySlug...");
+  console.log(
+    "\n[TEST 4] Testing customer storefront products.list and products.bySlug..."
+  );
   const customerBySlug = await publicCaller.products.bySlug({
     slug: productSlug,
   });
@@ -119,13 +137,19 @@ async function verifyAllQAFixes() {
     customerBySlug.name === "Automated QA Verification E-Bike" &&
     customerBySlug.imageUrl === "/scooter_red.webp"
   ) {
-    console.log("✔ TEST 4 PASSED: Customer storefront immediately sees the product live from DB!");
+    console.log(
+      "✔ TEST 4 PASSED: Customer storefront immediately sees the product live from DB!"
+    );
   } else {
-    throw new Error("TEST 4 FAILED: Product bySlug failed on customer storefront");
+    throw new Error(
+      "TEST 4 FAILED: Product bySlug failed on customer storefront"
+    );
   }
 
   // TEST 5: Admin Update Product
-  console.log("\n[TEST 5] Testing admin.updateProduct updates PostgreSQL products & image...");
+  console.log(
+    "\n[TEST 5] Testing admin.updateProduct updates PostgreSQL products & image..."
+  );
   const updatedName = "Automated QA Verification E-Bike (UPDATED)";
   await adminCaller.admin.updateProduct({
     productId,
@@ -155,9 +179,13 @@ async function verifyAllQAFixes() {
     customerAfterUpdate.basePrice === 480000 &&
     customerAfterUpdate.imageUrl === "/scooter_black.webp"
   ) {
-    console.log("✔ TEST 5 PASSED: Product update reflected live on storefront with new image & price!");
+    console.log(
+      "✔ TEST 5 PASSED: Product update reflected live on storefront with new image & price!"
+    );
   } else {
-    throw new Error("TEST 5 FAILED: Customer storefront did not reflect product update");
+    throw new Error(
+      "TEST 5 FAILED: Customer storefront did not reflect product update"
+    );
   }
 
   // TEST 6: Stock & Active Toggle
@@ -170,19 +198,28 @@ async function verifyAllQAFixes() {
     slug: productSlug,
   });
   if (customerAfterToggle && customerAfterToggle.isInStock === false) {
-    console.log("✔ TEST 6 PASSED: toggleProductActive correctly toggled product stock status!");
+    console.log(
+      "✔ TEST 6 PASSED: toggleProductActive correctly toggled product stock status!"
+    );
   } else {
-    console.log("Notice: customerAfterToggle status is:", customerAfterToggle?.isInStock);
+    console.log(
+      "Notice: customerAfterToggle status is:",
+      customerAfterToggle?.isInStock
+    );
   }
 
   // TEST 7: Delete Product
-  console.log("\n[TEST 7] Testing admin.deleteProduct cleans up product and related images...");
+  console.log(
+    "\n[TEST 7] Testing admin.deleteProduct cleans up product and related images..."
+  );
   await adminCaller.admin.deleteProduct({ productId });
   const customerAfterDelete = await publicCaller.products.bySlug({
     slug: productSlug,
   });
   if (!customerAfterDelete) {
-    console.log("✔ TEST 7 PASSED: Product successfully removed from PostgreSQL database!");
+    console.log(
+      "✔ TEST 7 PASSED: Product successfully removed from PostgreSQL database!"
+    );
   } else {
     throw new Error("TEST 7 FAILED: Product still exists after delete");
   }

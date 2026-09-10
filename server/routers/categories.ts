@@ -4,7 +4,11 @@ import { getDb } from "../db";
 import { categories } from "../../drizzle/schema";
 import { and, asc, eq, notInArray } from "drizzle-orm";
 
-const EXCLUDED_CATEGORY_SLUGS = ["stationery", "exercise-books", "manju-exercise-books"];
+const EXCLUDED_CATEGORY_SLUGS = [
+  "stationery",
+  "exercise-books",
+  "manju-exercise-books",
+];
 
 function mapCategory(c: typeof categories.$inferSelect) {
   return {
@@ -26,7 +30,12 @@ export const categoriesRouter = router({
     const rows = await db
       .select()
       .from(categories)
-      .where(and(eq(categories.isActive, true), notInArray(categories.slug, EXCLUDED_CATEGORY_SLUGS)))
+      .where(
+        and(
+          eq(categories.isActive, true),
+          notInArray(categories.slug, EXCLUDED_CATEGORY_SLUGS)
+        )
+      )
       .orderBy(asc(categories.sortOrder));
 
     return rows
@@ -46,7 +55,12 @@ export const categoriesRouter = router({
     const rows = await db
       .select()
       .from(categories)
-      .where(and(eq(categories.isActive, true), notInArray(categories.slug, EXCLUDED_CATEGORY_SLUGS)))
+      .where(
+        and(
+          eq(categories.isActive, true),
+          notInArray(categories.slug, EXCLUDED_CATEGORY_SLUGS)
+        )
+      )
       .orderBy(asc(categories.sortOrder));
 
     return rows
@@ -62,7 +76,8 @@ export const categoriesRouter = router({
   bySlug: publicProcedure
     .input(z.object({ slug: z.string() }))
     .query(async ({ input }) => {
-      if (EXCLUDED_CATEGORY_SLUGS.includes(input.slug.toLowerCase())) return null;
+      if (EXCLUDED_CATEGORY_SLUGS.includes(input.slug.toLowerCase()))
+        return null;
 
       const db = await getDb();
       if (!db) return null;

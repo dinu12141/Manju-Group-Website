@@ -24,11 +24,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { useSiteContacts } from "@/lib/siteSettings";
+import {
+  useSiteContacts,
+  getMapEmbedUrl,
+  getDirectionsUrl,
+} from "@/lib/siteSettings";
 import SEO from "@/components/SEO";
 
 export default function Contact() {
   const { contacts } = useSiteContacts();
+  const mapEmbedUrl = getMapEmbedUrl(contacts);
+  const directionsUrl = getDirectionsUrl(contacts);
   const cleanHotline = contacts.hotline.replace(/[^0-9+]/g, "");
   const cleanSupport = contacts.supportPhone.replace(/[^0-9+]/g, "");
   const cleanWhatsApp = contacts.whatsappNumber.replace(/[^0-9]/g, "");
@@ -61,7 +67,10 @@ export default function Contact() {
       });
       toast.success("Thank you! Your message has been sent successfully.");
     },
-    onError: () => toast.error("Failed to send message. Please try again or call our hotline."),
+    onError: () =>
+      toast.error(
+        "Failed to send message. Please try again or call our hotline."
+      ),
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -108,17 +117,17 @@ export default function Contact() {
         structuredData={{
           "@context": "https://schema.org",
           "@type": "LocalBusiness",
-          "name": "Manju Group Sri Lanka",
-          "telephone": contacts.hotline,
-          "email": contacts.email,
-          "address": {
+          name: "Manju Group Sri Lanka",
+          telephone: contacts.hotline,
+          email: contacts.email,
+          address: {
             "@type": "PostalAddress",
-            "streetAddress": contacts.address,
-            "addressLocality": "Colombo",
-            "addressCountry": "LK"
+            streetAddress: contacts.address,
+            addressLocality: "Colombo",
+            addressCountry: "LK",
           },
-          "openingHours": contacts.openingHours,
-          "url": "https://manjugroup.lk/contact"
+          openingHours: contacts.openingHours,
+          url: "https://manjugroup.lk/contact",
         }}
       />
       {/* ── Luxury Royal Header Section ─────────────────────────────────── */}
@@ -136,7 +145,9 @@ export default function Contact() {
           </h1>
 
           <p className="text-blue-100/90 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-            Have questions about product specifications, installment plans, delivery, or warranty? Our specialist advisors are ready to assist you.
+            Have questions about product specifications, installment plans,
+            delivery, or warranty? Our specialist advisors are ready to assist
+            you.
           </p>
 
           {/* Quick Connect Floating Bar (3 Cards) */}
@@ -225,7 +236,8 @@ export default function Contact() {
                     Thank You for Contacting Us!
                   </h3>
                   <p className="text-slate-600 font-medium text-sm mb-8 max-w-md leading-relaxed">
-                    We have received your message. One of our dedicated product specialists will contact you shortly via email or phone.
+                    We have received your message. One of our dedicated product
+                    specialists will contact you shortly via email or phone.
                   </p>
                   <Button
                     onClick={() => setSubmitted(false)}
@@ -246,7 +258,8 @@ export default function Contact() {
                     Send Us a Message
                   </h2>
                   <p className="text-sm text-slate-600 font-medium mb-8">
-                    Fill out the form below and we will get back to you with exact product information and pricing.
+                    Fill out the form below and we will get back to you with
+                    exact product information and pricing.
                   </p>
 
                   <form onSubmit={handleSubmit} className="space-y-5">
@@ -419,10 +432,10 @@ export default function Contact() {
                 <div className="flex items-center justify-between gap-2 mb-3">
                   <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase px-2.5 py-1 bg-blue-50 text-[#0052B4] rounded-full border border-blue-200">
                     <Building2 size={13} />
-                    Corporate Headquarters
+                    {contacts.locationTitle || "Corporate Headquarters"}
                   </span>
                   <span className="text-xs text-slate-500 font-bold">
-                    Colombo 03
+                    {contacts.locationCity || "Colombo 03"}
                   </span>
                 </div>
 
@@ -432,17 +445,23 @@ export default function Contact() {
 
                 <div className="space-y-4 text-xs md:text-sm text-slate-700 font-medium">
                   <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                    <MapPin size={18} className="text-[#0052B4] shrink-0 mt-0.5" />
+                    <MapPin
+                      size={18}
+                      className="text-[#0052B4] shrink-0 mt-0.5"
+                    />
                     <div>
                       <strong className="text-slate-900 block font-bold">
                         Office & Experience Center:
                       </strong>
-                      <span>No. 234, Galle Road, Kollupitiya, Colombo 03, Sri Lanka</span>
+                      <span>{contacts.address}</span>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                    <Clock size={18} className="text-[#0052B4] shrink-0 mt-0.5" />
+                    <Clock
+                      size={18}
+                      className="text-[#0052B4] shrink-0 mt-0.5"
+                    />
                     <div>
                       <strong className="text-slate-900 block font-bold">
                         Operational Hours:
@@ -452,7 +471,10 @@ export default function Contact() {
                   </div>
 
                   <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                    <Phone size={18} className="text-[#0052B4] shrink-0 mt-0.5" />
+                    <Phone
+                      size={18}
+                      className="text-[#0052B4] shrink-0 mt-0.5"
+                    />
                     <div>
                       <strong className="text-slate-900 block font-bold">
                         Direct Lines:
@@ -477,7 +499,7 @@ export default function Contact() {
 
                 <div className="flex gap-2.5 pt-5">
                   <a
-                    href="https://www.google.com/maps/dir/?api=1&destination=6.9034,79.8524"
+                    href={directionsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 py-3 px-4 bg-[#0052B4] hover:bg-[#003875] text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
@@ -493,14 +515,14 @@ export default function Contact() {
               <div className="bg-white p-2.5 rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
                 <div className="w-full h-[260px] rounded-2xl overflow-hidden relative">
                   <iframe
-                    src="https://maps.google.com/maps?q=6.9034,79.8524&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                    src={mapEmbedUrl}
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
                     allowFullScreen
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
-                    title="Manju Group Head Office Map"
+                    title={`${contacts.locationTitle || "Corporate Headquarters"} Map`}
                     className="w-full h-full object-cover"
                   />
                 </div>

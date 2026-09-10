@@ -71,13 +71,17 @@ async function main() {
       }
 
       console.log(`Enabling RLS on: public.${tableName}`);
-      await sql.unsafe(`ALTER TABLE public."${tableName}" ENABLE ROW LEVEL SECURITY;`);
+      await sql.unsafe(
+        `ALTER TABLE public."${tableName}" ENABLE ROW LEVEL SECURITY;`
+      );
 
       // If it's a public read table, ensure a SELECT policy exists so PostgREST read doesn't break if ever queried
       if (PUBLIC_READ_TABLES.includes(tableName)) {
         const policyName = `public_read_${tableName}`;
         // Drop existing policy if present, then recreate
-        await sql.unsafe(`DROP POLICY IF EXISTS "${policyName}" ON public."${tableName}";`);
+        await sql.unsafe(
+          `DROP POLICY IF EXISTS "${policyName}" ON public."${tableName}";`
+        );
         await sql.unsafe(`
           CREATE POLICY "${policyName}" ON public."${tableName}"
           FOR SELECT
@@ -104,7 +108,9 @@ async function main() {
     }
 
     if (allFixed) {
-      console.log("\n SUCCESS: All tables in public schema now have Row Level Security enabled!");
+      console.log(
+        "\n SUCCESS: All tables in public schema now have Row Level Security enabled!"
+      );
     } else {
       console.log("\n⚠️ WARNING: Some tables still have rowsecurity = false.");
     }

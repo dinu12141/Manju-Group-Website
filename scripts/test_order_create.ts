@@ -39,7 +39,12 @@ async function testOrderCreate() {
       })
       .returning({ id: orders.id, orderNumber: orders.orderNumber });
 
-    console.log("✅ Order inserted successfully! ID:", inserted.id, "Number:", inserted.orderNumber);
+    console.log(
+      "✅ Order inserted successfully! ID:",
+      inserted.id,
+      "Number:",
+      inserted.orderNumber
+    );
 
     await db.insert(orderItems).values([
       {

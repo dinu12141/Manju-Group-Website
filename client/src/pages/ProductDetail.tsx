@@ -122,7 +122,8 @@ export default function ProductDetail({ params }: ProductDetailProps) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("description");
   const [descExpanded, setDescExpanded] = useState(false);
-  const [suggestionFilter, setSuggestionFilter] = useState<SuggestionFilter>("similar");
+  const [suggestionFilter, setSuggestionFilter] =
+    useState<SuggestionFilter>("similar");
 
   const { data: dbProduct, isLoading } = trpc.products.bySlug.useQuery({
     slug,
@@ -170,10 +171,7 @@ export default function ProductDetail({ params }: ProductDetailProps) {
         currency: dbProduct.currency,
         isInStock: dbProduct.isInStock ?? true,
         specifications: dbProduct.specifications as
-          | string
-          | object
-          | null
-          | undefined,
+          string | object | null | undefined,
         warrantyMonths: dbProduct.warrantyMonths,
         images:
           dbProduct.images && dbProduct.images.length > 0
@@ -295,17 +293,28 @@ export default function ProductDetail({ params }: ProductDetailProps) {
 
     // Priority 1: Same category
     const sameCategory = STATIC_PRODUCTS.filter(
-      p => p.id !== currentId && p.slug.toLowerCase() !== currentSlug && p.categoryId === item.categoryId
+      p =>
+        p.id !== currentId &&
+        p.slug.toLowerCase() !== currentSlug &&
+        p.categoryId === item.categoryId
     );
 
     // Priority 2: Same brand
     const sameBrand = STATIC_PRODUCTS.filter(
-      p => p.id !== currentId && p.slug.toLowerCase() !== currentSlug && p.brandId === item.brandId && !sameCategory.some(sc => sc.id === p.id)
+      p =>
+        p.id !== currentId &&
+        p.slug.toLowerCase() !== currentSlug &&
+        p.brandId === item.brandId &&
+        !sameCategory.some(sc => sc.id === p.id)
     );
 
     // Priority 3: Other top products across categories (Bikes, TVs, ACs, Filters)
     const others = STATIC_PRODUCTS.filter(
-      p => p.id !== currentId && p.slug.toLowerCase() !== currentSlug && !sameCategory.some(sc => sc.id === p.id) && !sameBrand.some(sb => sb.id === p.id)
+      p =>
+        p.id !== currentId &&
+        p.slug.toLowerCase() !== currentSlug &&
+        !sameCategory.some(sc => sc.id === p.id) &&
+        !sameBrand.some(sb => sb.id === p.id)
     );
 
     return [...sameCategory, ...sameBrand, ...others];
@@ -330,7 +339,10 @@ export default function ProductDetail({ params }: ProductDetailProps) {
             isInStock: prod.isInStock,
             categoryId: prod.categoryId,
             brandId: prod.brandId,
-            imageUrl: getProductImage(prod.imageUrl || (prod.images?.[0]?.url), prod.name),
+            imageUrl: getProductImage(
+              prod.imageUrl || prod.images?.[0]?.url,
+              prod.name
+            ),
           });
         }
       }
@@ -363,12 +375,17 @@ export default function ProductDetail({ params }: ProductDetailProps) {
     if (!item) return [];
     if (suggestionFilter === "brand") {
       const brandItems = allSuggestions.filter(
-        p => p.brandId === item.brandId || (item.brandName && p.brandName?.toLowerCase() === item.brandName.toLowerCase())
+        p =>
+          p.brandId === item.brandId ||
+          (item.brandName &&
+            p.brandName?.toLowerCase() === item.brandName.toLowerCase())
       );
       if (brandItems.length >= 2) return brandItems.slice(0, 8);
     }
     if (suggestionFilter === "similar") {
-      const catItems = allSuggestions.filter(p => p.categoryId === item.categoryId);
+      const catItems = allSuggestions.filter(
+        p => p.categoryId === item.categoryId
+      );
       if (catItems.length >= 2) return catItems.slice(0, 8);
     }
     return allSuggestions.slice(0, 8);
@@ -405,7 +422,8 @@ export default function ProductDetail({ params }: ProductDetailProps) {
             Product Not Found
           </h2>
           <p className="text-slate-600 max-w-md mx-auto mb-8 text-base">
-            We couldn't find the product you're looking for. It may have been moved or is currently unavailable.
+            We couldn't find the product you're looking for. It may have been
+            moved or is currently unavailable.
           </p>
           <Link
             href="/products"
@@ -491,10 +509,12 @@ export default function ProductDetail({ params }: ProductDetailProps) {
 
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({
-        title: item.name,
-        url: window.location.href,
-      }).catch(() => {});
+      navigator
+        .share({
+          title: item.name,
+          url: window.location.href,
+        })
+        .catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
       setCopiedLink(true);
@@ -512,39 +532,42 @@ export default function ProductDetail({ params }: ProductDetailProps) {
     <MainLayout>
       <SEO
         title={`${item.name} | Best Price in Sri Lanka`}
-        description={item.shortDescription || `Buy ${item.name} at the best price in Sri Lanka from Manju Group with official warranty and fast islandwide delivery.`}
+        description={
+          item.shortDescription ||
+          `Buy ${item.name} at the best price in Sri Lanka from Manju Group with official warranty and fast islandwide delivery.`
+        }
         canonical={`/products/${item.slug}`}
         image={mainImageUrl}
         type="product"
         structuredData={{
           "@context": "https://schema.org",
           "@type": "Product",
-          "name": item.name,
-          "image": images,
-          "description": item.shortDescription || item.name,
-          "sku": item.sku || item.slug,
-          "brand": {
+          name: item.name,
+          image: images,
+          description: item.shortDescription || item.name,
+          sku: item.sku || item.slug,
+          brand: {
             "@type": "Brand",
-            "name": item.brandName || "Manju Group",
+            name: item.brandName || "Manju Group",
           },
-          "offers": {
+          offers: {
             "@type": "Offer",
-            "url": `https://manjugroup.lk/products/${item.slug}`,
-            "priceCurrency": "LKR",
-            "price": displayPrice,
-            "availability": item.isInStock
+            url: `https://manjugroup.lk/products/${item.slug}`,
+            priceCurrency: "LKR",
+            price: displayPrice,
+            availability: item.isInStock
               ? "https://schema.org/InStock"
               : "https://schema.org/OutOfStock",
-            "itemCondition": "https://schema.org/NewCondition",
-            "seller": {
+            itemCondition: "https://schema.org/NewCondition",
+            seller: {
               "@type": "Organization",
-              "name": "Manju Group Sri Lanka",
+              name: "Manju Group Sri Lanka",
             },
           },
-          "aggregateRating": {
+          aggregateRating: {
             "@type": "AggregateRating",
-            "ratingValue": rating.toFixed(1),
-            "reviewCount": reviewCount,
+            ratingValue: rating.toFixed(1),
+            reviewCount: reviewCount,
           },
         }}
       />
@@ -635,7 +658,11 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                     aria-label="Share product"
                     className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-md text-slate-700 hover:text-blue-600 hover:bg-white shadow-sm border border-slate-200/80 flex items-center justify-center transition-all cursor-pointer"
                   >
-                    {copiedLink ? <Check size={16} className="text-emerald-600" /> : <Share2 size={16} />}
+                    {copiedLink ? (
+                      <Check size={16} className="text-emerald-600" />
+                    ) : (
+                      <Share2 size={16} />
+                    )}
                   </button>
                 </div>
 
@@ -700,7 +727,8 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                 <div className="flex items-center justify-between gap-2 mb-3">
                   {item.brandName && (
                     <span className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-widest text-[#0F2D5E] bg-blue-50/80 border border-blue-200/60 px-3 py-1 rounded-lg">
-                      <Award size={13} className="text-[#0F2D5E]" /> {cleanText(item.brandName)}
+                      <Award size={13} className="text-[#0F2D5E]" />{" "}
+                      {cleanText(item.brandName)}
                     </span>
                   )}
                   {item.sku && (
@@ -746,7 +774,8 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                       </div>
                       <div className="text-sm font-bold text-emerald-600 flex items-center gap-1.5 mt-1">
                         <CheckCircle2 size={16} />
-                        You save LKR {savings.toLocaleString("en-LK")} on this order!
+                        You save LKR {savings.toLocaleString("en-LK")} on this
+                        order!
                       </div>
                     </div>
                   ) : (
@@ -878,10 +907,26 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                 {/* Trust Signals 4-Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {[
-                    { icon: Truck, label: "Islandwide Delivery", desc: "Fast & reliable" },
-                    { icon: Shield, label: "Official Warranty", desc: "Genuine support" },
-                    { icon: RotateCcw, label: "Easy Returns", desc: "7-day guarantee" },
-                    { icon: Lock, label: "Secure Payment", desc: "100% encrypted" },
+                    {
+                      icon: Truck,
+                      label: "Islandwide Delivery",
+                      desc: "Fast & reliable",
+                    },
+                    {
+                      icon: Shield,
+                      label: "Official Warranty",
+                      desc: "Genuine support",
+                    },
+                    {
+                      icon: RotateCcw,
+                      label: "Easy Returns",
+                      desc: "7-day guarantee",
+                    },
+                    {
+                      icon: Lock,
+                      label: "Secure Payment",
+                      desc: "100% encrypted",
+                    },
                   ].map(({ icon: Icon, label, desc }) => (
                     <div
                       key={label}
@@ -925,7 +970,8 @@ export default function ProductDetail({ params }: ProductDetailProps) {
               {activeTab === "specifications" && (
                 <div>
                   <h3 className="text-xl font-extrabold text-slate-900 mb-6 flex items-center gap-2">
-                    <Award size={20} className="text-[#0F2D5E]" /> Technical Specifications
+                    <Award size={20} className="text-[#0F2D5E]" /> Technical
+                    Specifications
                   </h3>
                   {specs && Object.keys(specs).length > 0 ? (
                     <dl className="rounded-2xl border border-slate-200 overflow-hidden divide-y divide-slate-200">
@@ -947,7 +993,8 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                     </dl>
                   ) : (
                     <p className="text-slate-500 text-sm font-medium">
-                      Detailed specifications are being updated for this model. Please contact our support line for technical inquiries.
+                      Detailed specifications are being updated for this model.
+                      Please contact our support line for technical inquiries.
                     </p>
                   )}
                 </div>
@@ -1011,7 +1058,8 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                           Customer Ratings &amp; Reviews
                         </h4>
                         <p className="text-sm text-slate-600 mt-1">
-                          {reviewCount} verified customers &amp; visitors have reviewed this product.
+                          {reviewCount} verified customers &amp; visitors have
+                          reviewed this product.
                         </p>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                           <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
@@ -1029,7 +1077,11 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                       className="px-5 py-3 rounded-xl bg-[#0F2D5E] hover:bg-[#1a4a8a] text-white text-xs font-black shadow-md flex items-center gap-2 transition-all cursor-pointer hover:scale-102 self-stretch sm:self-auto justify-center"
                     >
                       <Edit3 size={15} />
-                      <span>{showReviewForm ? "Close Review Form" : "Write a Review"}</span>
+                      <span>
+                        {showReviewForm
+                          ? "Close Review Form"
+                          : "Write a Review"}
+                      </span>
                     </button>
                   </div>
 
@@ -1045,7 +1097,10 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                       >
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                           <h4 className="text-base font-black text-slate-900 flex items-center gap-2">
-                            <MessageSquare size={18} className="text-[#0F2D5E]" />
+                            <MessageSquare
+                              size={18}
+                              className="text-[#0F2D5E]"
+                            />
                             Write Your Product Review
                           </h4>
                           <span className="text-xs text-slate-500 font-medium">
@@ -1061,7 +1116,10 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                           <div className="flex items-center gap-2">
                             {[1, 2, 3, 4, 5].map(star => {
                               const isFilled =
-                                star <= (hoverRating !== null ? hoverRating : reviewRating);
+                                star <=
+                                (hoverRating !== null
+                                  ? hoverRating
+                                  : reviewRating);
                               return (
                                 <button
                                   type="button"
@@ -1083,10 +1141,13 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                               );
                             })}
                             <span className="text-xs font-black text-slate-800 ml-2">
-                              {reviewRating === 5 && "⭐⭐⭐⭐⭐ Outstanding (5/5)"}
+                              {reviewRating === 5 &&
+                                "⭐⭐⭐⭐⭐ Outstanding (5/5)"}
                               {reviewRating === 4 && "⭐⭐⭐⭐ Very Good (4/5)"}
-                              {reviewRating === 3 && "⭐⭐⭐ Good / Average (3/5)"}
-                              {reviewRating === 2 && "⭐⭐ Below Expectations (2/5)"}
+                              {reviewRating === 3 &&
+                                "⭐⭐⭐ Good / Average (3/5)"}
+                              {reviewRating === 2 &&
+                                "⭐⭐ Below Expectations (2/5)"}
                               {reviewRating === 1 && "⭐ Poor (1/5)"}
                             </span>
                           </div>
@@ -1182,7 +1243,11 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                       <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider">
-                        Customer Feedback &amp; Discussion ({dbReviews.length > 0 ? dbReviews.length : "Verified Community"})
+                        Customer Feedback &amp; Discussion (
+                        {dbReviews.length > 0
+                          ? dbReviews.length
+                          : "Verified Community"}
+                        )
                       </h4>
                       <span className="text-xs text-slate-500 font-medium">
                         Showing newest reviews first
@@ -1192,7 +1257,9 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                     {isLoadingReviews ? (
                       <div className="py-8 text-center text-slate-400">
                         <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#0F2D5E]" />
-                        <span className="text-xs">Loading live customer reviews...</span>
+                        <span className="text-xs">
+                          Loading live customer reviews...
+                        </span>
                       </div>
                     ) : dbReviews.length > 0 ? (
                       <div className="space-y-4">
@@ -1204,7 +1271,9 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                             <div className="flex items-center justify-between flex-wrap gap-2">
                               <div className="flex items-center gap-3">
                                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0F2D5E] to-blue-600 text-white font-black text-xs flex items-center justify-center shadow-sm">
-                                  {(rev.authorName || "C").charAt(0).toUpperCase()}
+                                  {(rev.authorName || "C")
+                                    .charAt(0)
+                                    .toUpperCase()}
                                 </div>
                                 <div>
                                   <div className="flex items-center gap-2">
@@ -1212,7 +1281,8 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                                       {rev.authorName || "Verified Customer"}
                                     </span>
                                     <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-black flex items-center gap-1">
-                                      <CheckCircle2 size={10} /> Verified Purchase
+                                      <CheckCircle2 size={10} /> Verified
+                                      Purchase
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-1 mt-0.5">
@@ -1234,11 +1304,14 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                                 </div>
                               </div>
                               <span className="text-[11px] text-slate-400 font-medium">
-                                {new Date(rev.createdAt).toLocaleDateString("en-US", {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                })}
+                                {new Date(rev.createdAt).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  }
+                                )}
                               </span>
                             </div>
 
@@ -1263,7 +1336,8 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                             city: "Colombo",
                             rating: 5,
                             days: "2 days ago",
-                            title: "Exceptional build quality & islandwide service",
+                            title:
+                              "Exceptional build quality & islandwide service",
                             comment:
                               "Received directly from the Colombo flagship showroom. Tested extensively on hill climbs and city traffic. Superb torque and seamless warranty support from Manju Group!",
                           },
@@ -1272,7 +1346,8 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                             city: "Kandy",
                             rating: 5,
                             days: "5 days ago",
-                            title: "Genuine warranty and very helpful customer team",
+                            title:
+                              "Genuine warranty and very helpful customer team",
                             comment:
                               "Delivered to Kandy within 48 hours in secure wooden crating. Battery performance easily matches the listed specifications. Highly recommended!",
                           },
@@ -1304,7 +1379,8 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                                       • {seed.city}
                                     </span>
                                     <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-black flex items-center gap-1">
-                                      <CheckCircle2 size={10} /> Verified Customer
+                                      <CheckCircle2 size={10} /> Verified
+                                      Customer
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-1 mt-0.5">
@@ -1351,13 +1427,15 @@ export default function ProductDetail({ params }: ProductDetailProps) {
             <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-200/70 text-[#F85606] text-xs font-black uppercase tracking-wider mb-2">
-                  <Flame size={14} className="fill-[#F85606]" /> Recommended For You
+                  <Flame size={14} className="fill-[#F85606]" /> Recommended For
+                  You
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                   Similar Items & Recommendations
                 </h2>
                 <p className="text-slate-500 text-xs sm:text-sm font-medium mt-1">
-                  Customers who viewed this item also looked at these popular products
+                  Customers who viewed this item also looked at these popular
+                  products
                 </p>
               </div>
 
@@ -1428,7 +1506,10 @@ export default function ProductDetail({ params }: ProductDetailProps) {
               </div>
             ) : (
               <div className="text-center py-12 bg-white rounded-3xl border border-slate-200">
-                <ShoppingBag size={40} className="mx-auto text-slate-300 mb-3" />
+                <ShoppingBag
+                  size={40}
+                  className="mx-auto text-slate-300 mb-3"
+                />
                 <p className="text-slate-600 font-bold text-sm">
                   Explore our complete collection
                 </p>
@@ -1452,7 +1533,8 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                     Looking for more products?
                   </h4>
                   <p className="text-xs text-white/70">
-                    Discover 100% genuine Sri Lankan warranty products across all Manju Group brands.
+                    Discover 100% genuine Sri Lankan warranty products across
+                    all Manju Group brands.
                   </p>
                 </div>
               </div>

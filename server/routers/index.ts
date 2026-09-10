@@ -17,7 +17,6 @@ import { adminRouter } from "./admin";
 import { aiRouter } from "./ai";
 import { TRPCError } from "@trpc/server";
 
-
 export const appRouter = router({
   system: systemRouter,
   auth: router({

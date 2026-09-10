@@ -33,14 +33,21 @@ type Tab = "overview" | "orders" | "wishlist" | "settings";
 export default function Account() {
   const [location, navigate] = useLocation();
   const { user, isAuthenticated, loading, logout } = useAuth();
-  
+
   const isWishlistPath = location === "/wishlist";
-  const urlTab = typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("tab") as Tab | null) : null;
+  const urlTab =
+    typeof window !== "undefined"
+      ? (new URLSearchParams(window.location.search).get("tab") as Tab | null)
+      : null;
 
   const [activeTab, setActiveTab] = useState<Tab>(() => {
     if (isWishlistPath || urlTab === "wishlist") return "wishlist";
     if (location === "/my-orders" || urlTab === "orders") return "orders";
-    if (urlTab && ["overview", "orders", "wishlist", "settings"].includes(urlTab)) return urlTab;
+    if (
+      urlTab &&
+      ["overview", "orders", "wishlist", "settings"].includes(urlTab)
+    )
+      return urlTab;
     return "overview";
   });
 
@@ -58,7 +65,8 @@ export default function Account() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const urlParams = new URLSearchParams(window.location.search);
-    const oauthError = urlParams.get("error_description") || urlParams.get("error");
+    const oauthError =
+      urlParams.get("error_description") || urlParams.get("error");
     if (oauthError) {
       toast.error(`Google Sign-In notice: ${oauthError}`);
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -73,7 +81,11 @@ export default function Account() {
         window.location.search.includes("code=") ||
         window.location.hash.includes("access_token=")
       ) {
-        window.history.replaceState({}, document.title, window.location.pathname);
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
       }
     }
   }, [isAuthenticated]);
@@ -140,7 +152,10 @@ export default function Account() {
       setActiveTab("wishlist");
     } else if (location === "/my-orders" || tabParam === "orders") {
       setActiveTab("orders");
-    } else if (tabParam && ["overview", "orders", "wishlist", "settings"].includes(tabParam)) {
+    } else if (
+      tabParam &&
+      ["overview", "orders", "wishlist", "settings"].includes(tabParam)
+    ) {
       setActiveTab(tabParam);
     }
   }, [location]);
@@ -155,7 +170,9 @@ export default function Account() {
     return (
       <MainLayout>
         <SEO
-          title={isAuthRoute ? "Sign In & Create Account" : "Customer Portal & Login"}
+          title={
+            isAuthRoute ? "Sign In & Create Account" : "Customer Portal & Login"
+          }
           description="Log in or create a customer account with Manju Group to track orders, manage warranty claims, and access exclusive member benefits."
           canonical="/login"
           noindex
@@ -278,18 +295,28 @@ export default function Account() {
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-black text-[#0F2D5E] font-display flex-shrink-0 shadow-lg"
                 style={{ backgroundColor: "#C9A84C" }}
               >
-                {isAuthenticated ? user?.name?.charAt(0).toUpperCase() || "U" : <Heart size={28} className="text-[#0F2D5E]" />}
+                {isAuthenticated ? (
+                  user?.name?.charAt(0).toUpperCase() || "U"
+                ) : (
+                  <Heart size={28} className="text-[#0F2D5E]" />
+                )}
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-black font-display text-white tracking-tight">
-                  {isAuthenticated ? user?.name || "Customer Account" : "My Saved Wishlist"}
+                  {isAuthenticated
+                    ? user?.name || "Customer Account"
+                    : "My Saved Wishlist"}
                 </h1>
                 <p className="text-white/70 text-sm mt-0.5 font-medium">
-                  {isAuthenticated ? user?.email : "Guest Session • Saved in this browser"}
+                  {isAuthenticated
+                    ? user?.email
+                    : "Guest Session • Saved in this browser"}
                 </p>
                 <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 border border-white/15 rounded-full text-xs font-bold text-[#C9A84C] capitalize">
                   <CheckCircle size={13} className="text-[#C9A84C]" />
-                  {isAuthenticated ? `${user?.role || "customer"} Member` : "Guest Wishlist"}
+                  {isAuthenticated
+                    ? `${user?.role || "customer"} Member`
+                    : "Guest Wishlist"}
                 </div>
               </div>
             </div>
@@ -667,10 +694,16 @@ export default function Account() {
                   <div className="bg-amber-50/90 border border-amber-200 text-amber-900 rounded-2xl p-4 mb-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
                     <div className="flex items-center gap-2 text-xs font-semibold">
                       <span className="text-base">💡</span>
-                      <span>You are viewing items saved in this browser. Sign in to sync your wishlist across all your devices.</span>
+                      <span>
+                        You are viewing items saved in this browser. Sign in to
+                        sync your wishlist across all your devices.
+                      </span>
                     </div>
                     <Link href="/login">
-                      <Button size="sm" className="bg-[#0052B4] hover:bg-blue-800 text-white text-xs font-bold rounded-xl h-8 px-3 shrink-0">
+                      <Button
+                        size="sm"
+                        className="bg-[#0052B4] hover:bg-blue-800 text-white text-xs font-bold rounded-xl h-8 px-3 shrink-0"
+                      >
                         Sign In / Register
                       </Button>
                     </Link>

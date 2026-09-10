@@ -222,7 +222,10 @@ export const cartRouter = router({
           .select()
           .from(cartItems)
           .where(
-            and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, prodIdStr))
+            and(
+              eq(cartItems.cartId, cart.id),
+              eq(cartItems.productId, prodIdStr)
+            )
           )
           .limit(1);
 
@@ -282,13 +285,21 @@ export const cartRouter = router({
         if (item) {
           const cart = MOCK_CARTS.find(c => c.id === item.cartId);
           if (cart && userId && cart.userId !== userId) {
-            throw new TRPCError({ code: "FORBIDDEN", message: "Cart item not found" });
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "Cart item not found",
+            });
           }
           if (cart && !userId && sessionId && cart.sessionId !== sessionId) {
-            throw new TRPCError({ code: "FORBIDDEN", message: "Cart item not found" });
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "Cart item not found",
+            });
           }
           if (input.quantity <= 0) {
-            MOCK_CART_ITEMS = MOCK_CART_ITEMS.filter(i => i.id !== input.itemId);
+            MOCK_CART_ITEMS = MOCK_CART_ITEMS.filter(
+              i => i.id !== input.itemId
+            );
           } else {
             item.quantity = input.quantity;
           }
@@ -307,11 +318,18 @@ export const cartRouter = router({
       const [cart] = userId
         ? await db.select().from(carts).where(eq(carts.userId, userId)).limit(1)
         : sessionId
-          ? await db.select().from(carts).where(eq(carts.sessionId, sessionId)).limit(1)
+          ? await db
+              .select()
+              .from(carts)
+              .where(eq(carts.sessionId, sessionId))
+              .limit(1)
           : [];
 
       if (!cart || cart.id !== item.cartId) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Cart item not found" });
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Cart item not found",
+        });
       }
 
       if (input.quantity <= 0) {
@@ -339,10 +357,16 @@ export const cartRouter = router({
         if (item) {
           const cart = MOCK_CARTS.find(c => c.id === item.cartId);
           if (cart && userId && cart.userId !== userId) {
-            throw new TRPCError({ code: "FORBIDDEN", message: "Cart item not found" });
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "Cart item not found",
+            });
           }
           if (cart && !userId && sessionId && cart.sessionId !== sessionId) {
-            throw new TRPCError({ code: "FORBIDDEN", message: "Cart item not found" });
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "Cart item not found",
+            });
           }
           MOCK_CART_ITEMS = MOCK_CART_ITEMS.filter(i => i.id !== input.itemId);
         }
@@ -360,11 +384,18 @@ export const cartRouter = router({
       const [cart] = userId
         ? await db.select().from(carts).where(eq(carts.userId, userId)).limit(1)
         : sessionId
-          ? await db.select().from(carts).where(eq(carts.sessionId, sessionId)).limit(1)
+          ? await db
+              .select()
+              .from(carts)
+              .where(eq(carts.sessionId, sessionId))
+              .limit(1)
           : [];
 
       if (!cart || cart.id !== item.cartId) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Cart item not found" });
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Cart item not found",
+        });
       }
 
       await db.delete(cartItems).where(eq(cartItems.id, input.itemId));

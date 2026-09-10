@@ -159,24 +159,27 @@ async function main() {
       continue;
     }
 
-    const [result] = await db.insert(products).values({
-      slug: p.slug,
-      sku: p.sku,
-      name: p.name,
-      shortDescription: p.shortDescription,
-      description: p.description,
-      brandId: BRAND_ID,
-      categoryId: CATEGORY_ID,
-      basePrice: p.basePrice,
-      currency: "LKR",
-      stockQuantity: 20,
-      isInStock: true,
-      isFeatured: false,
-      isBestSeller: p.isBestSeller ?? false,
-      isNew: false,
-      warrantyMonths: p.warrantyMonths,
-      specifications: p.specifications,
-    }).returning({ id: products.id });
+    const [result] = await db
+      .insert(products)
+      .values({
+        slug: p.slug,
+        sku: p.sku,
+        name: p.name,
+        shortDescription: p.shortDescription,
+        description: p.description,
+        brandId: BRAND_ID,
+        categoryId: CATEGORY_ID,
+        basePrice: p.basePrice,
+        currency: "LKR",
+        stockQuantity: 20,
+        isInStock: true,
+        isFeatured: false,
+        isBestSeller: p.isBestSeller ?? false,
+        isNew: false,
+        warrantyMonths: p.warrantyMonths,
+        specifications: p.specifications,
+      })
+      .returning({ id: products.id });
 
     const insertedId = result.id;
 

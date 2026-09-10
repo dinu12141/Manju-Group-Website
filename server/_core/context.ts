@@ -23,7 +23,7 @@ export async function createContext(
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.substring(7);
       const { data, error } = await supabase.auth.getUser(token);
-      
+
       if (!error && data?.user) {
         // Fetch full user record from our database using the Supabase auth ID
         const db = await getDb();
@@ -39,7 +39,10 @@ export async function createContext(
             await db.insert(users).values({
               openId: data.user.id,
               email: data.user.email,
-              name: data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "User",
+              name:
+                data.user.user_metadata?.full_name ||
+                data.user.email?.split("@")[0] ||
+                "User",
               loginMethod: "supabase",
               role: "user",
               lastSignedIn: new Date(),

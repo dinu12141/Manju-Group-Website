@@ -7,7 +7,7 @@ import {
   serial,
   text,
   timestamp,
-  varchar
+  varchar,
 } from "drizzle-orm/pg-core";
 
 // ─── Users ────────────────────────────────────────────────────────────────────
@@ -24,7 +24,10 @@ export const users = pgTable("users", {
   role: varchar("role", { length: 64 }).default("user").notNull(),
   avatarUrl: text("avatarUrl"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .$onUpdateFn(() => new Date())
+    .notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
@@ -45,7 +48,10 @@ export const brands = pgTable("brands", {
   sortOrder: integer("sortOrder").default(0),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .$onUpdateFn(() => new Date())
+    .notNull(),
 });
 
 export type Brand = typeof brands.$inferSelect;
@@ -94,7 +100,10 @@ export const products = pgTable("products", {
   sortOrder: integer("sortOrder").default(0),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .$onUpdateFn(() => new Date())
+    .notNull(),
 });
 
 export type Product = typeof products.$inferSelect;
@@ -135,7 +144,10 @@ export const carts = pgTable("carts", {
   userId: integer("userId"),
   sessionId: varchar("sessionId", { length: 128 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .$onUpdateFn(() => new Date())
+    .notNull(),
 });
 
 export type Cart = typeof carts.$inferSelect;
@@ -148,7 +160,10 @@ export const cartItems = pgTable("cart_items", {
   quantity: integer("quantity").default(1).notNull(),
   unitPrice: numeric("unitPrice", { precision: 12, scale: 2 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .$onUpdateFn(() => new Date())
+    .notNull(),
 });
 
 export type CartItem = typeof cartItems.$inferSelect;
@@ -168,9 +183,7 @@ export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
   orderNumber: varchar("orderNumber", { length: 32 }).notNull().unique(),
   userId: integer("userId"),
-  status: varchar("status", { length: 32 })
-    .default("pending")
-    .notNull(),
+  status: varchar("status", { length: 32 }).default("pending").notNull(),
   subtotal: numeric("subtotal", { precision: 12, scale: 2 }).notNull(),
   shippingFee: numeric("shippingFee", { precision: 12, scale: 2 })
     .default("0")
@@ -188,7 +201,10 @@ export const orders = pgTable("orders", {
   billingAddress: json("billingAddress"),
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .$onUpdateFn(() => new Date())
+    .notNull(),
 });
 
 export type Order = typeof orders.$inferSelect;
@@ -243,7 +259,10 @@ export const blogPosts = pgTable("blog_posts", {
   metaTitle: varchar("metaTitle", { length: 256 }),
   metaDescription: text("metaDescription"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .$onUpdateFn(() => new Date())
+    .notNull(),
 });
 
 export type BlogPost = typeof blogPosts.$inferSelect;
@@ -252,9 +271,7 @@ export type BlogPost = typeof blogPosts.$inferSelect;
 export const locations = pgTable("locations", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 128 }).notNull(),
-  type: varchar("type", { length: 64 })
-    .default("showroom")
-    .notNull(),
+  type: varchar("type", { length: 64 }).default("showroom").notNull(),
   address: text("address").notNull(),
   city: varchar("city", { length: 64 }).notNull(),
   province: varchar("province", { length: 64 }),
@@ -279,9 +296,7 @@ export const banners = pgTable("banners", {
   mobileImageUrl: text("mobileImageUrl"),
   linkUrl: text("linkUrl"),
   linkText: varchar("linkText", { length: 128 }),
-  placement: varchar("placement", { length: 64 })
-    .default("hero")
-    .notNull(),
+  placement: varchar("placement", { length: 64 }).default("hero").notNull(),
   bgColor: varchar("bgColor", { length: 32 }),
   textColor: varchar("textColor", { length: 32 }),
   sortOrder: integer("sortOrder").default(0),
@@ -328,7 +343,10 @@ export const siteSettings = pgTable("site_settings", {
   id: serial("id").primaryKey(),
   key: varchar("key", { length: 128 }).notNull().unique(),
   value: json("value").notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .$onUpdateFn(() => new Date())
+    .notNull(),
 });
 
 export type SiteSetting = typeof siteSettings.$inferSelect;

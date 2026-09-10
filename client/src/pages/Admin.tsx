@@ -48,6 +48,7 @@ import {
   Eye,
   EyeOff,
   Check,
+  Navigation,
 } from "lucide-react";
 import {
   AreaChart,
@@ -77,6 +78,10 @@ import {
   type SiteBankDetails,
   DEFAULT_CONTACTS,
   DEFAULT_BANK_DETAILS,
+  getMapEmbedUrl,
+  getDirectionsUrl,
+  parseCoordinatesInput,
+  extractEmbedUrl,
 } from "@/lib/siteSettings";
 import { MediaUploader } from "@/components/admin/MediaUploader";
 import { toast } from "sonner";
@@ -325,6 +330,57 @@ const BRAND_COLORS: Record<string, string> = {
   "Manju Dew Super": "#0D9488",
 };
 
+/** Generic inline error state used across admin data tables/lists. */
+function AdminQueryError({
+  label,
+  error,
+  onRetry,
+}: {
+  label: string;
+  error?: { message?: string } | null;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="p-8 text-center">
+      <AlertTriangle size={32} className="mx-auto mb-2 text-red-400" />
+      <p className="font-bold text-slate-700 text-sm">Failed to load {label}</p>
+      <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+        {error?.message ||
+          "An unexpected error occurred while contacting the server."}
+      </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs rounded-lg transition-all cursor-pointer"
+      >
+        <RefreshCw size={12} />
+        Retry
+      </button>
+    </div>
+  );
+}
+
+/** Table-row wrapped variant of AdminQueryError, for use inside <tbody>. */
+function AdminQueryErrorRow({
+  colSpan,
+  label,
+  error,
+  onRetry,
+}: {
+  colSpan: number;
+  label: string;
+  error?: { message?: string } | null;
+  onRetry: () => void;
+}) {
+  return (
+    <tr>
+      <td colSpan={colSpan} className="p-0">
+        <AdminQueryError label={label} error={error} onRetry={onRetry} />
+      </td>
+    </tr>
+  );
+}
+
 export default function Admin() {
   const [isAdmin, setIsAdmin] = useState<boolean>(() => {
     try {
@@ -381,11 +437,15 @@ export default function Admin() {
   const [customerPage, setCustomerPage] = useState(1);
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
 
-  const { data: usersData, isLoading: isLoadingUsers } =
-    trpc.admin.customers.useQuery(
-      { page: 1, limit: 100 },
-      { enabled: isAdmin }
-    );
+  const {
+    data: usersData,
+    isLoading: isLoadingUsers,
+    error: usersError,
+    refetch: refetchUsers,
+  } = trpc.admin.customers.useQuery(
+    { page: 1, limit: 100 },
+    { enabled: isAdmin }
+  );
 
   const utils = trpc.useUtils();
 
@@ -411,11 +471,15 @@ export default function Admin() {
     },
   });
 
-  const { data: customersData, isLoading: isLoadingCustomers } =
-    trpc.admin.customerDirectory.useQuery(
-      { page: customerPage, limit: 20, search: customerSearch || undefined },
-      { enabled: isAdmin }
-    );
+  const {
+    data: customersData,
+    isLoading: isLoadingCustomers,
+    error: customersError,
+    refetch: refetchCustomers,
+  } = trpc.admin.customerDirectory.useQuery(
+    { page: customerPage, limit: 20, search: customerSearch || undefined },
+    { enabled: isAdmin }
+  );
 
   // Real product catalog — backed by admin.products with instant fallback
   const {
@@ -465,8 +529,15 @@ export default function Admin() {
     if (productsData?.items && productsData.items.length > 0) {
       return productsData.items as unknown as AdminProduct[];
     }
-    return staticAdminProducts;
-  }, [productsData, staticAdminProducts]);
+    // Only fall back to the static demo catalog while the real query is
+    // still loading for the first time (no cached data yet) and hasn't
+    // errored. On a genuine error, show the error state instead of
+    // silently masking it with fake data.
+    if (!productsError && isLoadingProducts) {
+      return staticAdminProducts;
+    }
+    return [];
+  }, [productsData, productsError, isLoadingProducts, staticAdminProducts]);
 
   const totalGrossRevenue = useMemo(() => {
     if (ordersList && ordersList.length > 0) {
@@ -478,12 +549,20 @@ export default function Admin() {
     return 0;
   }, [ordersList]);
 
-  const { data: brandOptions } = trpc.admin.brandOptions.useQuery();
-  const { data: categoryOptions } = trpc.admin.categoryOptions.useQuery();
+  const {
+    data: brandOptions,
+    error: brandOptionsError,
+    refetch: refetchBrandOptions,
+  } = trpc.admin.brandOptions.useQuery();
+  const {
+    data: categoryOptions,
+    error: categoryOptionsError,
+    refetch: refetchCategoryOptions,
+  } = trpc.admin.categoryOptions.useQuery();
 
   // If token is expired or unauthorized, prompt admin to re-enter passcode
   useEffect(() => {
-    const err = productsError || ordersError;
+    const err = productsError || ordersError || usersError || customersError;
     if (err) {
       const errMsg = err.message || "";
       if (
@@ -500,7 +579,7 @@ export default function Admin() {
         setIsAdmin(false);
       }
     }
-  }, [productsError, ordersError]);
+  }, [productsError, ordersError, usersError, customersError]);
 
   const invalidateProductQueries = () => {
     utils.admin.products.invalidate();
@@ -542,15 +621,16 @@ export default function Admin() {
     },
   });
 
-  const toggleProductActiveMutation = trpc.admin.toggleProductActive.useMutation({
-    onSuccess: () => {
-      invalidateProductQueries();
-      toast.success("Product stock/active status updated");
-    },
-    onError: err => {
-      toast.error(err.message || "Failed to update product status");
-    },
-  });
+  const toggleProductActiveMutation =
+    trpc.admin.toggleProductActive.useMutation({
+      onSuccess: () => {
+        invalidateProductQueries();
+        toast.success("Product stock/active status updated");
+      },
+      onError: err => {
+        toast.error(err.message || "Failed to update product status");
+      },
+    });
 
   // Delete Target state for confirmation modal
   const [deleteTarget, setDeleteTarget] = useState<{
@@ -616,14 +696,46 @@ export default function Admin() {
     setLocalContacts(liveContacts);
   }, [liveContacts]);
 
+  const [mapQuickPaste, setMapQuickPaste] = useState("");
+
+  const handleApplyQuickMap = (rawText: string) => {
+    if (!rawText.trim()) return;
+    const coords = parseCoordinatesInput(rawText);
+    if (coords) {
+      setLocalContacts(prev => ({
+        ...prev,
+        mapLatitude: coords.latitude,
+        mapLongitude: coords.longitude,
+        mapEmbedUrl: "",
+      }));
+      setMapQuickPaste("");
+      toast.success(
+        `Coordinates applied: ${coords.latitude}, ${coords.longitude}`
+      );
+      return;
+    }
+    const embed = extractEmbedUrl(rawText);
+    if (embed) {
+      setLocalContacts(prev => ({
+        ...prev,
+        mapEmbedUrl: embed,
+      }));
+      setMapQuickPaste("");
+      toast.success("Google Maps Embed link detected and applied!");
+      return;
+    }
+    toast.error(
+      "Could not parse coordinates or Google Maps link. Try entering Latitude and Longitude directly."
+    );
+  };
+
   const {
     bankDetails: liveBankDetails,
     updateBankDetails: saveBankDetails,
     resetBankDetails: resetBankDetailsSetting,
     isSaving: isSavingBank,
   } = useSiteBankDetails();
-  const [localBank, setLocalBank] =
-    useState<SiteBankDetails>(liveBankDetails);
+  const [localBank, setLocalBank] = useState<SiteBankDetails>(liveBankDetails);
 
   useEffect(() => {
     setLocalBank(liveBankDetails);
@@ -636,19 +748,20 @@ export default function Admin() {
         saveContacts(localContacts),
         saveBankDetails(localBank),
       ]);
-      toast.success("🏢 Hotline & Bank Details Updated Live across website!");
+      toast.success(
+        "🏢 Hotline, Google Map & Bank Details Updated Live across website!"
+      );
     } catch (err: any) {
       toast.error(err.message || "Failed to update contact/bank settings");
     }
   };
 
   const handleResetContactsAndBank = async () => {
-    if (confirm("Reset contact numbers and bank transfer details to defaults?")) {
+    if (
+      confirm("Reset contact numbers and bank transfer details to defaults?")
+    ) {
       try {
-        await Promise.all([
-          resetContactsSetting(),
-          resetBankDetailsSetting(),
-        ]);
+        await Promise.all([resetContactsSetting(), resetBankDetailsSetting()]);
         setLocalContacts(DEFAULT_CONTACTS);
         setLocalBank(DEFAULT_BANK_DETAILS);
         toast.info("Contact numbers and bank details reset to defaults");
@@ -665,7 +778,9 @@ export default function Admin() {
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
   // Specifications Builder State
-  const [specRows, setSpecRows] = useState<{ key: string; value: string }[]>([]);
+  const [specRows, setSpecRows] = useState<{ key: string; value: string }[]>(
+    []
+  );
 
   const handleAddSpecRow = () => {
     setSpecRows(prev => [...prev, { key: "", value: "" }]);
@@ -740,7 +855,10 @@ export default function Admin() {
       rows = [
         { key: "Motor / Power", value: "" },
         { key: "Battery / Capacity", value: "" },
-        { key: "Warranty", value: `${p.warrantyMonths || 12} Months Official Warranty` },
+        {
+          key: "Warranty",
+          value: `${p.warrantyMonths || 12} Months Official Warranty`,
+        },
       ];
     }
     setSpecRows(rows);
@@ -784,11 +902,31 @@ export default function Admin() {
   const {
     data: adminReviewsData,
     isLoading: isLoadingReviews,
+    error: reviewsError,
     refetch: refetchAdminReviews,
   } = trpc.admin.reviewsList.useQuery(
     { page: reviewPage, limit: 20, search: reviewSearch || undefined },
     { enabled: isAdmin }
   );
+
+  // Reviews query can also surface an expired/invalid admin session.
+  useEffect(() => {
+    if (!reviewsError) return;
+    const errMsg = reviewsError.message || "";
+    if (
+      errMsg.includes("NOT_ADMIN") ||
+      errMsg.includes("unauthorized") ||
+      errMsg.includes("forbidden") ||
+      reviewsError.data?.code === "FORBIDDEN" ||
+      reviewsError.data?.code === "UNAUTHORIZED"
+    ) {
+      toast.error("Admin session expired. Please re-enter the passcode.");
+      try {
+        localStorage.removeItem("manju_admin_token");
+      } catch {}
+      setIsAdmin(false);
+    }
+  }, [reviewsError]);
 
   const updateReviewMutation = trpc.admin.updateReview.useMutation({
     onSuccess: () => {
@@ -948,7 +1086,8 @@ export default function Admin() {
     const matchesBrand = brandFilter === "all" || p.brandName === brandFilter;
     const catName = p.categoryName || p.category || "";
     const matchesCategory =
-      categoryFilter === "all" || catName.toLowerCase() === categoryFilter.toLowerCase();
+      categoryFilter === "all" ||
+      catName.toLowerCase() === categoryFilter.toLowerCase();
     return matchesSearch && matchesBrand && matchesCategory;
   });
 
@@ -1145,7 +1284,7 @@ export default function Admin() {
               },
               {
                 id: "contacts_bank",
-                label: "Hotline & Bank Settings",
+                label: "Hotlines, Map & Bank",
                 icon: PhoneCall,
                 badge: "Live",
               },
@@ -1220,6 +1359,40 @@ export default function Admin() {
           {/* TAB 1: EXECUTIVE DASHBOARD */}
           {activeTab === "dashboard" && (
             <div className="space-y-6">
+              {(ordersError || productsError) && (
+                <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle
+                      size={18}
+                      className="text-red-500 shrink-0 mt-0.5"
+                    />
+                    <div>
+                      <p className="text-sm font-black text-red-700">
+                        Dashboard figures may be incomplete
+                      </p>
+                      <p className="text-xs text-red-600 mt-0.5">
+                        {ordersError && productsError
+                          ? "Failed to load orders and products data."
+                          : ordersError
+                            ? `Failed to load orders data — ${ordersError.message || "unknown error"}.`
+                            : `Failed to load products data — ${productsError?.message || "unknown error"}.`}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (ordersError) refetchOrders();
+                      if (productsError) refetchProducts();
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs rounded-lg transition-all cursor-pointer shrink-0"
+                  >
+                    <RefreshCw size={12} />
+                    Retry
+                  </button>
+                </div>
+              )}
+
               {/* KPI Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
@@ -1233,7 +1406,9 @@ export default function Admin() {
                     {formatPrice(totalGrossRevenue)}
                   </div>
                   <span className="text-[11px] text-slate-500 font-bold mt-1 block">
-                    {totalGrossRevenue === 0 ? "Rs. 0.00 (No sales yet)" : `${ordersList.length} lifetime orders`}
+                    {totalGrossRevenue === 0
+                      ? "Rs. 0.00 (No sales yet)"
+                      : `${ordersList.length} lifetime orders`}
                   </span>
                 </div>
 
@@ -1465,7 +1640,9 @@ export default function Admin() {
                     onChange={e => setBrandFilter(e.target.value)}
                     className="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-700"
                   >
-                    <option value="all">All Brands ({productsList.length})</option>
+                    <option value="all">
+                      All Brands ({productsList.length})
+                    </option>
                     {(brandOptions && brandOptions.length > 0
                       ? brandOptions
                       : STATIC_BRANDS
@@ -1496,6 +1673,25 @@ export default function Admin() {
                       </option>
                     ))}
                   </select>
+
+                  {(brandOptionsError || categoryOptionsError) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (brandOptionsError) refetchBrandOptions();
+                        if (categoryOptionsError) refetchCategoryOptions();
+                      }}
+                      title={
+                        brandOptionsError?.message ||
+                        categoryOptionsError?.message ||
+                        "Failed to load filter options"
+                      }
+                      className="flex items-center gap-1 px-2 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold rounded-xl transition-all cursor-pointer"
+                    >
+                      <AlertTriangle size={12} />
+                      Filters failed to load — Retry
+                    </button>
+                  )}
 
                   <button
                     type="button"
@@ -1536,19 +1732,45 @@ export default function Admin() {
                     <tbody className="divide-y divide-slate-100">
                       {isLoadingProducts && !productsData ? (
                         <tr>
-                          <td colSpan={6} className="p-12 text-center text-slate-400">
-                            <Loader2 size={32} className="mx-auto mb-2 text-[#0052B4] animate-spin" />
-                            <p className="font-bold text-slate-700 text-sm">Loading inventory catalog…</p>
-                            <p className="text-xs text-slate-400 mt-1">Connecting to live database</p>
+                          <td
+                            colSpan={6}
+                            className="p-12 text-center text-slate-400"
+                          >
+                            <Loader2
+                              size={32}
+                              className="mx-auto mb-2 text-[#0052B4] animate-spin"
+                            />
+                            <p className="font-bold text-slate-700 text-sm">
+                              Loading inventory catalog…
+                            </p>
+                            <p className="text-xs text-slate-400 mt-1">
+                              Connecting to live database
+                            </p>
                           </td>
                         </tr>
+                      ) : productsError ? (
+                        <AdminQueryErrorRow
+                          colSpan={6}
+                          label="the product catalog"
+                          error={productsError}
+                          onRetry={() => refetchProducts()}
+                        />
                       ) : filteredProducts.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="p-8 text-center text-slate-400">
-                            <Package size={36} className="mx-auto mb-2 text-slate-300" />
-                            <p className="font-bold text-slate-600">No products match your filter criteria</p>
+                          <td
+                            colSpan={6}
+                            className="p-8 text-center text-slate-400"
+                          >
+                            <Package
+                              size={36}
+                              className="mx-auto mb-2 text-slate-300"
+                            />
+                            <p className="font-bold text-slate-600">
+                              No products match your filter criteria
+                            </p>
                             <p className="text-xs text-slate-400 mt-1">
-                              Try resetting the search keyword, brand, or category filter.
+                              Try resetting the search keyword, brand, or
+                              category filter.
                             </p>
                             <button
                               onClick={() => {
@@ -1564,94 +1786,97 @@ export default function Admin() {
                         </tr>
                       ) : (
                         filteredProducts.map(p => (
-                        <tr key={p.id} className="hover:bg-slate-50">
-                          <td className="p-3">
-                            <div className="flex items-center gap-3">
-                              <img
-                                src={p.imageUrl}
-                                alt={p.name}
-                                className="w-10 h-10 rounded-lg object-contain bg-slate-100 p-1 border border-slate-200"
-                              />
-                              <div>
-                                <strong className="font-bold text-slate-900 block">
-                                  {p.name}
-                                </strong>
-                                <span className="text-[10px] text-slate-500">
-                                  {p.warrantyMonths} Months Warranty
-                                </span>
+                          <tr key={p.id} className="hover:bg-slate-50">
+                            <td className="p-3">
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={p.imageUrl}
+                                  alt={p.name}
+                                  className="w-10 h-10 rounded-lg object-contain bg-slate-100 p-1 border border-slate-200"
+                                />
+                                <div>
+                                  <strong className="font-bold text-slate-900 block">
+                                    {p.name}
+                                  </strong>
+                                  <span className="text-[10px] text-slate-500">
+                                    {p.warrantyMonths} Months Warranty
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <span
-                              className="px-2 py-0.5 rounded-full text-[10px] font-black text-white"
-                              style={{
-                                backgroundColor:
-                                  (p.brandName && BRAND_COLORS[p.brandName]) || "#0052B4",
-                              }}
-                            >
-                              {p.brandName || "Manju Group"}
-                            </span>
-                            <span className="text-[10px] text-slate-500 block mt-0.5">
-                              {p.categoryName || p.category || "General"}
-                            </span>
-                          </td>
-                          <td className="p-3 font-mono text-slate-600">
-                            {p.sku}
-                          </td>
-                          <td className="p-3 font-black text-slate-900">
-                            {formatPrice(p.basePrice)}
-                          </td>
-                          <td className="p-3">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                toggleProductActiveMutation.mutate({
-                                  productId: p.id,
-                                  isActive: !(p.isActive && p.isInStock),
-                                })
-                              }
-                              className={`px-2.5 py-1 rounded-full text-[10px] font-black cursor-pointer transition-all hover:scale-105 flex items-center gap-1.5 ${
-                                p.isActive && p.isInStock
-                                  ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
-                                  : "bg-red-100 text-red-700 hover:bg-red-200"
-                              }`}
-                              title="Click to toggle Active / Stock status in live catalog"
-                            >
+                            </td>
+                            <td className="p-3">
                               <span
-                                className={`w-1.5 h-1.5 rounded-full ${
-                                  p.isActive && p.isInStock
-                                    ? "bg-emerald-600"
-                                    : "bg-red-600"
-                                }`}
-                              />
-                              <span>
-                                {p.isActive && p.isInStock
-                                  ? "In Stock / Active"
-                                  : "Out of Stock / Inactive"}
+                                className="px-2 py-0.5 rounded-full text-[10px] font-black text-white"
+                                style={{
+                                  backgroundColor:
+                                    (p.brandName &&
+                                      BRAND_COLORS[p.brandName]) ||
+                                    "#0052B4",
+                                }}
+                              >
+                                {p.brandName || "Manju Group"}
                               </span>
-                            </button>
-                          </td>
-                          <td className="p-3 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
+                              <span className="text-[10px] text-slate-500 block mt-0.5">
+                                {p.categoryName || p.category || "General"}
+                              </span>
+                            </td>
+                            <td className="p-3 font-mono text-slate-600">
+                              {p.sku}
+                            </td>
+                            <td className="p-3 font-black text-slate-900">
+                              {formatPrice(p.basePrice)}
+                            </td>
+                            <td className="p-3">
                               <button
-                                onClick={() => handleOpenEditProduct(p)}
-                                className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 cursor-pointer"
-                                title="Edit Product"
+                                type="button"
+                                onClick={() =>
+                                  toggleProductActiveMutation.mutate({
+                                    productId: p.id,
+                                    isActive: !(p.isActive && p.isInStock),
+                                  })
+                                }
+                                className={`px-2.5 py-1 rounded-full text-[10px] font-black cursor-pointer transition-all hover:scale-105 flex items-center gap-1.5 ${
+                                  p.isActive && p.isInStock
+                                    ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                                    : "bg-red-100 text-red-700 hover:bg-red-200"
+                                }`}
+                                title="Click to toggle Active / Stock status in live catalog"
                               >
-                                <Edit2 size={14} />
+                                <span
+                                  className={`w-1.5 h-1.5 rounded-full ${
+                                    p.isActive && p.isInStock
+                                      ? "bg-emerald-600"
+                                      : "bg-red-600"
+                                  }`}
+                                />
+                                <span>
+                                  {p.isActive && p.isInStock
+                                    ? "In Stock / Active"
+                                    : "Out of Stock / Inactive"}
+                                </span>
                               </button>
-                              <button
-                                onClick={() => handleDeleteProduct(p.id)}
-                                className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 cursor-pointer"
-                                title="Delete Product"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      )))}
+                            </td>
+                            <td className="p-3 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => handleOpenEditProduct(p)}
+                                  className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 cursor-pointer"
+                                  title="Edit Product"
+                                >
+                                  <Edit2 size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteProduct(p.id)}
+                                  className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 cursor-pointer"
+                                  title="Delete Product"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1686,95 +1911,126 @@ export default function Admin() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 gap-4">
-                {filteredOrders.map(order => (
-                  <div
-                    key={order.id}
-                    className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-black text-sm text-[#0052B4]">
-                          {order.orderNumber}
-                        </span>
-                        <span className="text-xs text-slate-400">•</span>
-                        <span className="text-xs text-slate-500">
-                          {new Date(order.createdAt).toLocaleString()}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-black uppercase">
-                          {order.paymentMethod}
-                        </span>
-                      </div>
-
-                      <div className="text-sm font-black text-slate-900">
-                        {order.shippingAddress
-                          ? `${order.shippingAddress.firstName || ""} ${order.shippingAddress.lastName || ""}`.trim() ||
-                            "Guest"
-                          : "Guest"}{" "}
-                        -{" "}
-                        <span className="text-slate-600 font-semibold">
-                          {order.shippingAddress?.phone}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500">
-                        {[
-                          order.shippingAddress?.addressLine1,
-                          order.shippingAddress?.city,
-                        ]
-                          .filter(Boolean)
-                          .join(", ")}
-                      </p>
-
-                      <div className="pt-2 text-xs font-medium text-slate-700">
-                        {order.items.map((it, idx) => (
-                          <span key={idx} className="mr-3">
-                            • {it.quantity}x {it.productName} (
-                            {formatPrice(Number(it.unitPrice))})
+              {isLoadingOrders && !ordersData ? (
+                <div className="bg-white p-12 rounded-2xl border border-slate-200 shadow-sm text-center text-slate-400">
+                  <Loader2
+                    size={32}
+                    className="mx-auto mb-2 text-[#0052B4] animate-spin"
+                  />
+                  <p className="font-bold text-slate-700 text-sm">
+                    Loading orders…
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Connecting to live database
+                  </p>
+                </div>
+              ) : ordersError ? (
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm">
+                  <AdminQueryError
+                    label="orders"
+                    error={ordersError}
+                    onRetry={() => refetchOrders()}
+                  />
+                </div>
+              ) : filteredOrders.length === 0 ? (
+                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm text-center text-slate-400">
+                  <ShoppingCart
+                    size={36}
+                    className="mx-auto mb-2 text-slate-300"
+                  />
+                  <p className="font-bold text-slate-600">No orders found</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {filteredOrders.map(order => (
+                    <div
+                      key={order.id}
+                      className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-black text-sm text-[#0052B4]">
+                            {order.orderNumber}
                           </span>
-                        ))}
+                          <span className="text-xs text-slate-400">•</span>
+                          <span className="text-xs text-slate-500">
+                            {new Date(order.createdAt).toLocaleString()}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-black uppercase">
+                            {order.paymentMethod}
+                          </span>
+                        </div>
+
+                        <div className="text-sm font-black text-slate-900">
+                          {order.shippingAddress
+                            ? `${order.shippingAddress.firstName || ""} ${order.shippingAddress.lastName || ""}`.trim() ||
+                              "Guest"
+                            : "Guest"}{" "}
+                          -{" "}
+                          <span className="text-slate-600 font-semibold">
+                            {order.shippingAddress?.phone}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500">
+                          {[
+                            order.shippingAddress?.addressLine1,
+                            order.shippingAddress?.city,
+                          ]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </p>
+
+                        <div className="pt-2 text-xs font-medium text-slate-700">
+                          {order.items.map((it, idx) => (
+                            <span key={idx} className="mr-3">
+                              • {it.quantity}x {it.productName} (
+                              {formatPrice(Number(it.unitPrice))})
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col md:items-end gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
+                        <div className="text-right">
+                          <span className="text-xs text-slate-500 block">
+                            Total Amount
+                          </span>
+                          <span className="text-lg font-black text-slate-900">
+                            {formatPrice(Number(order.total))}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={order.status}
+                            onChange={e =>
+                              handleUpdateOrderStatus(
+                                order.id,
+                                e.target.value as AdminOrder["status"]
+                              )
+                            }
+                            className="px-2.5 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-700 cursor-pointer"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+
+                          <button
+                            onClick={() => setSelectedOrder(order)}
+                            className="px-3 py-1 bg-[#0052B4] hover:bg-blue-700 text-white text-xs font-bold rounded-lg flex items-center gap-1 cursor-pointer transition-all shadow-xs"
+                          >
+                            <Printer size={13} />
+                            <span>Invoice</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="flex flex-col md:items-end gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
-                      <div className="text-right">
-                        <span className="text-xs text-slate-500 block">
-                          Total Amount
-                        </span>
-                        <span className="text-lg font-black text-slate-900">
-                          {formatPrice(Number(order.total))}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={order.status}
-                          onChange={e =>
-                            handleUpdateOrderStatus(
-                              order.id,
-                              e.target.value as AdminOrder["status"]
-                            )
-                          }
-                          className="px-2.5 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-700 cursor-pointer"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="processing">Processing</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="delivered">Delivered</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
-
-                        <button
-                          onClick={() => setSelectedOrder(order)}
-                          className="px-3 py-1 bg-[#0052B4] hover:bg-blue-700 text-white text-xs font-bold rounded-lg flex items-center gap-1 cursor-pointer transition-all shadow-xs"
-                        >
-                          <Printer size={13} />
-                          <span>Invoice</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -2152,28 +2408,28 @@ export default function Admin() {
                       }
                     />
                     <div className="flex flex-wrap gap-1 mt-1.5">
-                        {PRESET_AD_MEDIA.filter(m => m.type === "image").map(
-                          (m, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() =>
-                                setLocalAdConfig({
-                                  ...localAdConfig,
-                                  heroFlashSale: {
-                                    ...localAdConfig.heroFlashSale,
-                                    imageUrl: m.path,
-                                  },
-                                })
-                              }
-                              className="px-2 py-0.5 text-[10px] font-bold bg-slate-100 hover:bg-red-50 text-slate-700 hover:text-red-700 rounded-md cursor-pointer"
-                            >
-                              {m.label}
-                            </button>
-                          )
-                        )}
-                      </div>
+                      {PRESET_AD_MEDIA.filter(m => m.type === "image").map(
+                        (m, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() =>
+                              setLocalAdConfig({
+                                ...localAdConfig,
+                                heroFlashSale: {
+                                  ...localAdConfig.heroFlashSale,
+                                  imageUrl: m.path,
+                                },
+                              })
+                            }
+                            className="px-2 py-0.5 text-[10px] font-bold bg-slate-100 hover:bg-red-50 text-slate-700 hover:text-red-700 rounded-md cursor-pointer"
+                          >
+                            {m.label}
+                          </button>
+                        )
+                      )}
                     </div>
+                  </div>
 
                   {/* Preview */}
                   <div className="rounded-2xl bg-white border border-red-200 p-3 flex flex-col justify-between relative overflow-hidden min-h-[190px] shadow-sm">
@@ -2360,32 +2616,32 @@ export default function Admin() {
                         }}
                       />
                       <div className="flex flex-wrap gap-1 mt-1.5">
-                          {PRESET_AD_MEDIA.filter(m => m.type === "image").map(
-                            (m, mIdx) => (
-                              <button
-                                key={mIdx}
-                                type="button"
-                                onClick={() => {
-                                  const newBanners = [
-                                    ...localAdConfig.promoBanners,
-                                  ];
-                                  newBanners[bIdx] = {
-                                    ...banner,
-                                    imageUrl: m.path,
-                                  };
-                                  setLocalAdConfig({
-                                    ...localAdConfig,
-                                    promoBanners: newBanners,
-                                  });
-                                }}
-                                className="px-1.5 py-0.5 text-[9px] font-bold bg-white hover:bg-blue-100 text-slate-700 rounded border border-slate-200 cursor-pointer"
-                              >
-                                {m.label}
-                              </button>
-                            )
-                          )}
-                        </div>
+                        {PRESET_AD_MEDIA.filter(m => m.type === "image").map(
+                          (m, mIdx) => (
+                            <button
+                              key={mIdx}
+                              type="button"
+                              onClick={() => {
+                                const newBanners = [
+                                  ...localAdConfig.promoBanners,
+                                ];
+                                newBanners[bIdx] = {
+                                  ...banner,
+                                  imageUrl: m.path,
+                                };
+                                setLocalAdConfig({
+                                  ...localAdConfig,
+                                  promoBanners: newBanners,
+                                });
+                              }}
+                              className="px-1.5 py-0.5 text-[9px] font-bold bg-white hover:bg-blue-100 text-slate-700 rounded border border-slate-200 cursor-pointer"
+                            >
+                              {m.label}
+                            </button>
+                          )
+                        )}
                       </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -2435,10 +2691,12 @@ export default function Admin() {
                     </div>
                     <div>
                       <h2 className="text-lg font-black text-slate-900">
-                        Hotline, Support &amp; Bank Details Control
+                        Hotline, Support, Google Maps &amp; Bank Details Control
                       </h2>
                       <p className="text-xs text-slate-500">
-                        Manage company phone numbers, WhatsApp, email, and bank transfer credentials shown site-wide.
+                        Manage company phone numbers, Contact page Google Map
+                        location, WhatsApp, email, and bank transfer credentials
+                        shown site-wide.
                       </p>
                     </div>
                   </div>
@@ -2640,7 +2898,10 @@ export default function Admin() {
                       <div className="flex items-center gap-2">
                         <div className="inline-flex items-center gap-1.5 bg-blue-50 text-[#0052B4] px-3 py-1.5 rounded-full border border-blue-200 text-xs font-extrabold shadow-sm">
                           <PhoneCall size={13} />
-                          <span>Hotline: {localContacts.hotline || "+94 11 234 5678"}</span>
+                          <span>
+                            Hotline:{" "}
+                            {localContacts.hotline || "+94 11 234 5678"}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -2695,13 +2956,376 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* CARD 2: BANK TRANSFER DETAILS */}
+              {/* CARD 2: CONTACT PAGE GOOGLE MAPS & HEAD OFFICE LOCATION */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="text-[#0052B4]" size={18} />
+                    <h4 className="font-extrabold text-sm text-slate-900">
+                      2. Contact Page Google Maps &amp; Head Office Location
+                    </h4>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold text-[10px]">
+                    Live Contact Page Interactive Map &amp; Directions
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  {/* Left 7 cols: Configuration controls */}
+                  <div className="lg:col-span-7 space-y-4">
+                    {/* Smart Quick Paste / Auto Detect */}
+                    <div className="bg-blue-50/60 border border-blue-100 p-3.5 rounded-xl space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-black text-blue-900 flex items-center gap-1.5">
+                          <Sparkles size={14} className="text-[#0052B4]" />
+                          <span>
+                            Smart Auto-Detector (Coordinates or Google Maps
+                            Link)
+                          </span>
+                        </label>
+                        <span className="text-[10px] text-blue-600 font-bold">
+                          Quick Fill
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={mapQuickPaste}
+                          onChange={e => setMapQuickPaste(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleApplyQuickMap(mapQuickPaste);
+                            }
+                          }}
+                          placeholder="Paste coordinates (e.g. 6.9034, 79.8524) or Google Maps URL / iframe"
+                          className="flex-1 px-3 py-2 text-xs bg-white border border-blue-200 rounded-xl font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0052B4]/20"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleApplyQuickMap(mapQuickPaste)}
+                          className="px-3 py-2 bg-[#0052B4] hover:bg-blue-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shrink-0"
+                        >
+                          Auto Apply
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-blue-700/80 leading-tight">
+                        💡 Tip: Right-click any location on Google Maps and
+                        click the numbers to copy latitude &amp; longitude, or
+                        paste an embed iframe code!
+                      </p>
+                    </div>
+
+                    {/* Coordinates input grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">
+                          Latitude (e.g. 6.9034)
+                        </label>
+                        <input
+                          type="text"
+                          value={localContacts.mapLatitude ?? "6.9034"}
+                          onChange={e => {
+                            const val = e.target.value;
+                            const parsed = parseCoordinatesInput(val);
+                            if (parsed) {
+                              setLocalContacts({
+                                ...localContacts,
+                                mapLatitude: parsed.latitude,
+                                mapLongitude: parsed.longitude,
+                              });
+                            } else {
+                              setLocalContacts({
+                                ...localContacts,
+                                mapLatitude: val,
+                              });
+                            }
+                          }}
+                          placeholder="6.9034"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                        <span className="text-[10px] text-slate-400 mt-0.5 block">
+                          North / South coordinate
+                        </span>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">
+                          Longitude (e.g. 79.8524)
+                        </label>
+                        <input
+                          type="text"
+                          value={localContacts.mapLongitude ?? "79.8524"}
+                          onChange={e =>
+                            setLocalContacts({
+                              ...localContacts,
+                              mapLongitude: e.target.value,
+                            })
+                          }
+                          placeholder="79.8524"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                        <span className="text-[10px] text-slate-400 mt-0.5 block">
+                          East / West coordinate
+                        </span>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">
+                          Map Zoom Level ({localContacts.mapZoom || 15})
+                        </label>
+                        <select
+                          value={Number(localContacts.mapZoom || 15)}
+                          onChange={e =>
+                            setLocalContacts({
+                              ...localContacts,
+                              mapZoom: Number(e.target.value),
+                            })
+                          }
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        >
+                          <option value="12">12 - City View</option>
+                          <option value="14">14 - Area View</option>
+                          <option value="15">15 - Street View (Default)</option>
+                          <option value="16">16 - Close Street</option>
+                          <option value="17">17 - Block Level</option>
+                          <option value="18">18 - Building Level</option>
+                        </select>
+                        <span className="text-[10px] text-slate-400 mt-0.5 block">
+                          Embedded camera zoom
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Location Labels */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">
+                          Office / Building Badge Label
+                        </label>
+                        <input
+                          type="text"
+                          value={
+                            localContacts.locationTitle ??
+                            "Corporate Headquarters"
+                          }
+                          onChange={e =>
+                            setLocalContacts({
+                              ...localContacts,
+                              locationTitle: e.target.value,
+                            })
+                          }
+                          placeholder="Corporate Headquarters"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                        <span className="text-[10px] text-slate-400 mt-0.5 block">
+                          Badge shown above office title on Contact page
+                        </span>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">
+                          City / District Tag
+                        </label>
+                        <input
+                          type="text"
+                          value={localContacts.locationCity ?? "Colombo 03"}
+                          onChange={e =>
+                            setLocalContacts({
+                              ...localContacts,
+                              locationCity: e.target.value,
+                            })
+                          }
+                          placeholder="Colombo 03"
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                        <span className="text-[10px] text-slate-400 mt-0.5 block">
+                          Top-right location badge (e.g. Colombo 03, Kandy)
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Custom Embed URL / Iframe Code (Optional Override) */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-bold text-slate-700 block">
+                          Custom Google Maps Embed Code or URL (Optional
+                          Override)
+                        </label>
+                        {localContacts.mapEmbedUrl && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setLocalContacts({
+                                ...localContacts,
+                                mapEmbedUrl: "",
+                              })
+                            }
+                            className="text-[11px] text-red-600 hover:underline font-bold cursor-pointer"
+                          >
+                            Clear Custom Embed
+                          </button>
+                        )}
+                      </div>
+                      <textarea
+                        rows={2}
+                        value={localContacts.mapEmbedUrl || ""}
+                        onChange={e => {
+                          const val = e.target.value;
+                          const cleaned = extractEmbedUrl(val);
+                          setLocalContacts({
+                            ...localContacts,
+                            mapEmbedUrl: cleaned || val,
+                          });
+                        }}
+                        placeholder="Paste <iframe src='https://www.google.com/maps/embed?...'></iframe> or direct embed URL"
+                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-mono text-[11px] text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                      <span className="text-[10px] text-slate-400 mt-0.5 block">
+                        If provided, this embed URL overrides coordinate
+                        calculations. Leave empty to use coordinates above.
+                      </span>
+                    </div>
+
+                    {/* Action buttons to test links */}
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <a
+                        href={getDirectionsUrl(localContacts)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-[#0052B4] rounded-xl text-xs font-bold border border-blue-200 transition-colors"
+                      >
+                        <Navigation size={13} />
+                        <span>Test Live Directions Link</span>
+                        <ExternalLink size={12} />
+                      </a>
+
+                      <a
+                        href={`https://www.google.com/maps?q=${encodeURIComponent(localContacts.mapLatitude || "6.9034")},${encodeURIComponent(localContacts.mapLongitude || "79.8524")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold border border-slate-200 transition-colors"
+                      >
+                        <MapPin size={13} />
+                        <span>Open Pin in Google Maps</span>
+                        <ExternalLink size={12} />
+                      </a>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLocalContacts({
+                            ...localContacts,
+                            mapLatitude: "6.9034",
+                            mapLongitude: "79.8524",
+                            mapZoom: 15,
+                            mapEmbedUrl: "",
+                            locationTitle: "Corporate Headquarters",
+                            locationCity: "Colombo 03",
+                          });
+                          toast.info(
+                            "Map coordinates reset to Colombo 03 HQ default"
+                          );
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 text-slate-500 hover:text-slate-800 text-xs font-semibold hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                      >
+                        <RotateCcw size={12} />
+                        <span>Reset Coordinates</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right 5 cols: Live Customer-Facing Interactive Map Preview */}
+                  <div className="lg:col-span-5 flex flex-col justify-between bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                          <Eye size={14} className="text-[#0052B4]" />
+                          <span>Contact Page Live Preview</span>
+                        </h5>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                          Live Sync
+                        </span>
+                      </div>
+
+                      {/* Mini Contact Page Office Card */}
+                      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 text-slate-900 mb-3">
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 bg-blue-50 text-[#0052B4] rounded-full border border-blue-200">
+                            <Building2 size={11} />
+                            {localContacts.locationTitle ||
+                              "Corporate Headquarters"}
+                          </span>
+                          <span className="text-[11px] text-slate-500 font-bold">
+                            {localContacts.locationCity || "Colombo 03"}
+                          </span>
+                        </div>
+                        <h6 className="font-black text-sm text-slate-900 mb-2">
+                          Manju Group (Pvt) Ltd
+                        </h6>
+                        <div className="flex items-start gap-2 text-xs text-slate-600 mb-3">
+                          <MapPin
+                            size={14}
+                            className="text-[#0052B4] shrink-0 mt-0.5"
+                          />
+                          <span className="line-clamp-2">
+                            {localContacts.address || "No address entered"}
+                          </span>
+                        </div>
+                        <a
+                          href={getDirectionsUrl(localContacts)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-2 bg-[#0052B4] hover:bg-blue-700 text-white rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 shadow-sm transition-all"
+                        >
+                          <Navigation size={12} />
+                          <span>Get Live Directions</span>
+                          <ExternalLink size={10} />
+                        </a>
+                      </div>
+
+                      {/* Live Embedded Google Map Frame */}
+                      <div className="bg-white p-2 rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div className="w-full h-[220px] rounded-xl overflow-hidden relative bg-slate-100">
+                          <iframe
+                            key={`${localContacts.mapLatitude}-${localContacts.mapLongitude}-${localContacts.mapZoom}-${localContacts.mapEmbedUrl}`}
+                            src={getMapEmbedUrl(localContacts)}
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            title="Live Map Preview"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-[11px] text-slate-500 bg-white p-2.5 rounded-xl border border-slate-200/80">
+                      <strong>Coordinates active:</strong>{" "}
+                      <span className="font-mono text-slate-700">
+                        {localContacts.mapLatitude || "6.9034"},{" "}
+                        {localContacts.mapLongitude || "79.8524"}
+                      </span>
+                      {localContacts.mapEmbedUrl && (
+                        <span className="block text-emerald-700 font-bold mt-0.5">
+                          ✓ Custom embed URL override is active
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* CARD 3: BANK TRANSFER DETAILS */}
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div className="flex items-center gap-2">
                     <Building2 className="text-[#0052B4]" size={18} />
                     <h4 className="font-extrabold text-sm text-slate-900">
-                      2. Company Bank Account (Direct Bank Transfer)
+                      3. Company Bank Account (Direct Bank Transfer)
                     </h4>
                   </div>
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-[10px]">
@@ -2831,7 +3455,8 @@ export default function Admin() {
                       Checkout Screen Simulation
                     </h5>
                     <p className="text-[11px] text-slate-500">
-                      This is exactly what customers will see when selecting &ldquo;Direct Bank Transfer&rdquo; on the checkout screen:
+                      This is exactly what customers will see when selecting
+                      &ldquo;Direct Bank Transfer&rdquo; on the checkout screen:
                     </p>
 
                     <div className="bg-blue-50/90 border border-blue-200 rounded-2xl p-4 text-blue-900 space-y-2.5 shadow-sm">
@@ -2894,10 +3519,11 @@ export default function Admin() {
               <div className="bg-gradient-to-r from-[#001D4A] to-[#003882] p-5 rounded-2xl text-white flex items-center justify-between shadow-md">
                 <div>
                   <h4 className="font-extrabold text-sm">
-                    Publish Contact &amp; Bank Updates to Production
+                    Publish Contact, Google Map &amp; Bank Updates to Production
                   </h4>
                   <p className="text-xs text-blue-200 mt-0.5">
-                    Updates will sync instantly to all site visitors, checkout pages, and mobile apps.
+                    Updates will sync instantly to all site visitors, checkout
+                    pages, and mobile apps.
                   </p>
                 </div>
 
@@ -2982,6 +3608,13 @@ export default function Admin() {
                             Loading customers...
                           </td>
                         </tr>
+                      ) : customersError ? (
+                        <AdminQueryErrorRow
+                          colSpan={7}
+                          label="customers"
+                          error={customersError}
+                          onRetry={() => refetchCustomers()}
+                        />
                       ) : customersData?.items &&
                         customersData.items.length > 0 ? (
                         customersData.items.map((customer: any) => (
@@ -3123,6 +3756,13 @@ export default function Admin() {
                             Loading users...
                           </td>
                         </tr>
+                      ) : usersError ? (
+                        <AdminQueryErrorRow
+                          colSpan={6}
+                          label="users"
+                          error={usersError}
+                          onRetry={() => refetchUsers()}
+                        />
                       ) : usersData?.items && usersData.items.length > 0 ? (
                         usersData.items.map(user => (
                           <tr
@@ -3222,7 +3862,8 @@ export default function Admin() {
                     Customer Reviews &amp; Live Comments
                   </h2>
                   <p className="text-xs text-slate-500 mt-1 font-medium">
-                    Live feedback and ratings submitted by verified customers and visitors. Moderate, edit, or remove reviews.
+                    Live feedback and ratings submitted by verified customers
+                    and visitors. Moderate, edit, or remove reviews.
                   </p>
                 </div>
 
@@ -3282,7 +3923,8 @@ export default function Admin() {
                       Live / Approved
                     </div>
                     <div className="text-xl font-black text-slate-900">
-                      {adminReviewsData?.items?.filter(r => r.isApproved).length ?? 0}
+                      {adminReviewsData?.items?.filter(r => r.isApproved)
+                        .length ?? 0}
                     </div>
                   </div>
                 </div>
@@ -3320,14 +3962,28 @@ export default function Admin() {
                     <tbody className="divide-y divide-slate-100 font-medium">
                       {isLoadingReviews ? (
                         <tr>
-                          <td colSpan={7} className="p-8 text-center text-slate-400">
+                          <td
+                            colSpan={7}
+                            className="p-8 text-center text-slate-400"
+                          >
                             <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#0052B4]" />
                             Loading customer reviews...
                           </td>
                         </tr>
-                      ) : adminReviewsData?.items && adminReviewsData.items.length > 0 ? (
+                      ) : reviewsError ? (
+                        <AdminQueryErrorRow
+                          colSpan={7}
+                          label="customer reviews"
+                          error={reviewsError}
+                          onRetry={() => refetchAdminReviews()}
+                        />
+                      ) : adminReviewsData?.items &&
+                        adminReviewsData.items.length > 0 ? (
                         adminReviewsData.items.map(rev => (
-                          <tr key={rev.id} className="hover:bg-slate-50/60 transition-colors">
+                          <tr
+                            key={rev.id}
+                            className="hover:bg-slate-50/60 transition-colors"
+                          >
                             <td className="p-4">
                               <div className="font-bold text-slate-900 flex items-center gap-1.5">
                                 <span>{rev.authorName || "Customer"}</span>
@@ -3414,8 +4070,14 @@ export default function Admin() {
                                 </button>
                                 <button
                                   onClick={() => {
-                                    if (confirm("Are you sure you want to permanently delete this customer review?")) {
-                                      deleteReviewMutation.mutate({ reviewId: rev.id });
+                                    if (
+                                      confirm(
+                                        "Are you sure you want to permanently delete this customer review?"
+                                      )
+                                    ) {
+                                      deleteReviewMutation.mutate({
+                                        reviewId: rev.id,
+                                      });
                                     }
                                   }}
                                   className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 transition-colors cursor-pointer"
@@ -3429,7 +4091,10 @@ export default function Admin() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={7} className="p-12 text-center text-slate-400 font-medium">
+                          <td
+                            colSpan={7}
+                            className="p-12 text-center text-slate-400 font-medium"
+                          >
                             No customer reviews found matching your search.
                           </td>
                         </tr>
@@ -3868,7 +4533,9 @@ export default function Admin() {
                     Product Photo (Direct Device Upload &amp; Auto-Compression)
                   </label>
                   <p className="text-[11px] text-slate-500 mb-2">
-                    Upload product photo directly from your device. It will automatically convert to highly-compressed WebP for ultra-fast and smooth website loading.
+                    Upload product photo directly from your device. It will
+                    automatically convert to highly-compressed WebP for
+                    ultra-fast and smooth website loading.
                   </p>
                   <MediaUploader
                     label="Upload Product Photo"
@@ -3930,7 +4597,8 @@ export default function Admin() {
                         Technical Specifications &amp; Attributes
                       </label>
                       <p className="text-[11px] text-slate-500">
-                        Add custom key-value pairs (e.g. Motor, Battery, Speed, Range, Dimensions)
+                        Add custom key-value pairs (e.g. Motor, Battery, Speed,
+                        Range, Dimensions)
                       </p>
                     </div>
                     <button
@@ -3945,7 +4613,8 @@ export default function Admin() {
 
                   {specRows.length === 0 ? (
                     <p className="text-[11px] text-slate-400 italic text-center py-2">
-                      No custom specifications added yet. Click &quot;Add Spec Row&quot; above.
+                      No custom specifications added yet. Click &quot;Add Spec
+                      Row&quot; above.
                     </p>
                   ) : (
                     <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
@@ -4544,7 +5213,9 @@ export default function Admin() {
                     disabled={updateReviewMutation.isPending}
                     className="px-5 py-2 bg-[#0052B4] hover:bg-blue-700 text-white font-black rounded-xl shadow-md cursor-pointer disabled:opacity-50"
                   >
-                    {updateReviewMutation.isPending ? "Saving..." : "Save Review Changes"}
+                    {updateReviewMutation.isPending
+                      ? "Saving..."
+                      : "Save Review Changes"}
                   </button>
                 </div>
               </form>

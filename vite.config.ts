@@ -4,11 +4,7 @@ import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { defineConfig } from "vite";
 
-const plugins = [
-  react(),
-  tailwindcss(),
-  jsxLocPlugin(),
-];
+const plugins = [react(), tailwindcss(), jsxLocPlugin()];
 
 export default defineConfig({
   plugins,
@@ -31,7 +27,12 @@ export default defineConfig({
           "vendor-react": ["react", "react-dom", "wouter"],
           "vendor-three": ["three"],
           "vendor-framer": ["framer-motion"],
-          "vendor-trpc": ["@trpc/client", "@trpc/react-query", "@tanstack/react-query", "superjson"],
+          "vendor-trpc": [
+            "@trpc/client",
+            "@trpc/react-query",
+            "@tanstack/react-query",
+            "superjson",
+          ],
           "vendor-icons": ["lucide-react"],
         },
       },

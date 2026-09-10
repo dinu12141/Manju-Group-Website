@@ -20,7 +20,10 @@ import {
 } from "../../drizzle/schema";
 import { nanoid } from "nanoid";
 import { eq, desc, asc, sql, and, like, or, inArray } from "drizzle-orm";
-import { STATIC_PRODUCTS, STATIC_BRANDS } from "../../client/src/lib/staticData";
+import {
+  STATIC_PRODUCTS,
+  STATIC_BRANDS,
+} from "../../client/src/lib/staticData";
 import { verifyAdminPasscode, issueAdminToken } from "../_core/adminPasscode";
 
 // Kebab-case slug generation matching the convention already used by real
@@ -81,15 +84,15 @@ export const adminRouter = router({
             revenue: sql<number>`coalesce(sum(total), 0)`,
           })
           .from(orders),
-        db
-          .select({ count: sql<number>`count(*)` })
-          .from(products),
+        db.select({ count: sql<number>`count(*)` }).from(products),
         db.select({ count: sql<number>`count(*)` }).from(users),
       ]);
 
       const totalRevenue = Number(orderStats[0]?.revenue ?? 0);
       const totalOrders = Number(orderStats[0]?.count ?? 0);
-      const totalProducts = Number(productCount[0]?.count ?? STATIC_PRODUCTS.length);
+      const totalProducts = Number(
+        productCount[0]?.count ?? STATIC_PRODUCTS.length
+      );
       const totalCustomers = Number(customerCount[0]?.count ?? 0);
 
       return {
@@ -99,10 +102,26 @@ export const adminRouter = router({
         totalCustomers,
         lowStockCount: 0,
         brandBreakdown: [
-          { brand: "Dew Motors", revenue: Math.round(totalRevenue * 0.45), orders: Math.round(totalOrders * 0.4) },
-          { brand: "Dew Plus", revenue: Math.round(totalRevenue * 0.3), orders: Math.round(totalOrders * 0.3) },
-          { brand: "DEW+ AC", revenue: Math.round(totalRevenue * 0.15), orders: Math.round(totalOrders * 0.2) },
-          { brand: "Manju Dew Super", revenue: Math.round(totalRevenue * 0.1), orders: Math.round(totalOrders * 0.1) },
+          {
+            brand: "Dew Motors",
+            revenue: Math.round(totalRevenue * 0.45),
+            orders: Math.round(totalOrders * 0.4),
+          },
+          {
+            brand: "Dew Plus",
+            revenue: Math.round(totalRevenue * 0.3),
+            orders: Math.round(totalOrders * 0.3),
+          },
+          {
+            brand: "DEW+ AC",
+            revenue: Math.round(totalRevenue * 0.15),
+            orders: Math.round(totalOrders * 0.2),
+          },
+          {
+            brand: "Manju Dew Super",
+            revenue: Math.round(totalRevenue * 0.1),
+            orders: Math.round(totalOrders * 0.1),
+          },
         ],
         weeklyTrend: [
           { day: "Mon", revenue: 0, orders: 0 },
@@ -114,29 +133,12 @@ export const adminRouter = router({
           { day: "Sun", revenue: totalRevenue, orders: totalOrders },
         ],
       };
-    } catch (err) {
-      return {
-        totalOrders: 0,
-        totalRevenue: 0,
-        totalProducts: STATIC_PRODUCTS.length,
-        totalCustomers: 0,
-        lowStockCount: 0,
-        brandBreakdown: [
-          { brand: "Dew Motors", revenue: 0, orders: 0 },
-          { brand: "Dew Plus", revenue: 0, orders: 0 },
-          { brand: "DEW+ AC", revenue: 0, orders: 0 },
-          { brand: "Manju Dew Super", revenue: 0, orders: 0 },
-        ],
-        weeklyTrend: [
-          { day: "Mon", revenue: 2100000, orders: 5 },
-          { day: "Tue", revenue: 2800000, orders: 7 },
-          { day: "Wed", revenue: 1950000, orders: 4 },
-          { day: "Thu", revenue: 3400000, orders: 9 },
-          { day: "Fri", revenue: 4100000, orders: 11 },
-          { day: "Sat", revenue: 2900000, orders: 8 },
-          { day: "Sun", revenue: 1200000, orders: 4 },
-        ],
-      };
+    } catch (err: any) {
+      console.error("Failed to fetch admin stats:", err);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: err.message || "Failed to fetch admin dashboard stats",
+      });
     }
   }),
 
@@ -164,15 +166,22 @@ export const adminRouter = router({
           .from(orders)
           .orderBy(desc(orders.createdAt))
           .limit(input.limit);
-      } catch (e) {
-        return [];
+      } catch (e: any) {
+        console.error("Failed to fetch recent orders:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to fetch recent orders",
+        });
       }
     }),
 
   // All orders
   orders: adminProcedure
     .input(
-      z.object({ page: z.number().int().min(1).default(1), limit: z.number().int().min(1).max(100).default(20) })
+      z.object({
+        page: z.number().int().min(1).default(1),
+        limit: z.number().int().min(1).max(100).default(20),
+      })
     )
     .query(async ({ input }) => {
       try {
@@ -189,8 +198,12 @@ export const adminRouter = router({
           db.select({ count: sql<number>`count(*)` }).from(orders),
         ]);
         return { items, total: Number(countResult[0]?.count ?? 0) };
-      } catch (e) {
-        return { items: [], total: 0 };
+      } catch (e: any) {
+        console.error("Failed to fetch orders:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to fetch orders",
+        });
       }
     }),
 
@@ -219,8 +232,12 @@ export const adminRouter = router({
           .set({ status: input.status })
           .where(eq(orders.id, input.orderId));
         return { success: true };
-      } catch (e) {
-        return { success: true };
+      } catch (e: any) {
+        console.error("Failed to update order status:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to update order status",
+        });
       }
     }),
 
@@ -231,7 +248,15 @@ export const adminRouter = router({
         page: z.number().int().min(1).default(1),
         limit: z.number().int().min(1).max(100).default(20),
         status: z
-          .enum(["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "refunded"])
+          .enum([
+            "pending",
+            "confirmed",
+            "processing",
+            "shipped",
+            "delivered",
+            "cancelled",
+            "refunded",
+          ])
           .optional(),
       })
     )
@@ -241,7 +266,9 @@ export const adminRouter = router({
         if (!db) return { items: [], total: 0 };
 
         const offset = (input.page - 1) * input.limit;
-        const whereClause = input.status ? eq(orders.status, input.status) : undefined;
+        const whereClause = input.status
+          ? eq(orders.status, input.status)
+          : undefined;
 
         const [orderRows, countResult] = await Promise.all([
           db
@@ -272,7 +299,18 @@ export const adminRouter = router({
         ]);
 
         const orderIds = orderRows.map(o => o.id);
-        let itemsByOrder: Record<number, { productName: string; variantName: string | null; sku: string | null; quantity: number; unitPrice: string; subtotal: string; imageUrl: string | null }[]> = {};
+        let itemsByOrder: Record<
+          number,
+          {
+            productName: string;
+            variantName: string | null;
+            sku: string | null;
+            quantity: number;
+            unitPrice: string;
+            subtotal: string;
+            imageUrl: string | null;
+          }[]
+        > = {};
 
         if (orderIds.length > 0) {
           const items = await db
@@ -290,7 +328,11 @@ export const adminRouter = router({
             .where(inArray(orderItems.orderId, orderIds));
 
           const productIds = Array.from(
-            new Set(items.map(i => Number(i.productId)).filter(id => !isNaN(id) && id > 0))
+            new Set(
+              items
+                .map(i => Number(i.productId))
+                .filter(id => !isNaN(id) && id > 0)
+            )
           );
 
           let imageMap: Record<number, string> = {};
@@ -323,13 +365,22 @@ export const adminRouter = router({
         const enrichedItems = orderRows.map(order => ({
           ...order,
           items: itemsByOrder[order.id] || [],
-          itemCount: (itemsByOrder[order.id] || []).reduce((sum, i) => sum + i.quantity, 0),
+          itemCount: (itemsByOrder[order.id] || []).reduce(
+            (sum, i) => sum + i.quantity,
+            0
+          ),
         }));
 
-        return { items: enrichedItems, total: Number(countResult[0]?.count ?? 0) };
-      } catch (e) {
+        return {
+          items: enrichedItems,
+          total: Number(countResult[0]?.count ?? 0),
+        };
+      } catch (e: any) {
         console.error("Failed to fetch admin orders list:", e);
-        return { items: [], total: 0 };
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to fetch orders list",
+        });
       }
     }),
 
@@ -347,104 +398,120 @@ export const adminRouter = router({
         const db = await getDb();
         if (!db) return { items: [], total: 0 };
 
-        const allOrders = await db
-          .select({
-            id: orders.id,
-            orderNumber: orders.orderNumber,
-            status: orders.status,
-            total: orders.total,
-            shippingAddress: orders.shippingAddress,
-            createdAt: orders.createdAt,
-          })
-          .from(orders)
-          .orderBy(desc(orders.createdAt));
-
-        type CustomerAgg = {
-          key: string;
-          name: string;
-          phone: string;
-          email: string;
-          address: string;
-          city: string;
-          totalOrders: number;
-          totalSpent: number;
-          lastOrderDate: Date;
-          orderHistory: { orderNumber: string; date: Date; total: number; status: string }[];
-        };
-
-        const customerMap = new Map<string, CustomerAgg>();
-
-        for (const order of allOrders) {
-          const addr = (order.shippingAddress || {}) as Record<string, unknown>;
-          const rawPhone = String(addr.phone || "").replace(/\D/g, "");
-          const rawEmail = String(addr.email || "").trim().toLowerCase();
-          const key = rawPhone || rawEmail;
-
-          if (!key) continue; // no way to identify this customer, skip
-
-          const firstName = String(addr.firstName || "").trim();
-          const lastName = String(addr.lastName || "").trim();
-          const name = `${firstName} ${lastName}`.trim() || "Unknown";
-          const addressLine = [addr.addressLine1, addr.addressLine2].filter(Boolean).join(", ");
-          const city = String(addr.city || "");
-          const orderTotal = Number(order.total) || 0;
-
-          const existing = customerMap.get(key);
-          if (existing) {
-            existing.totalOrders += 1;
-            existing.totalSpent += orderTotal;
-            existing.orderHistory.push({
-              orderNumber: order.orderNumber,
-              date: order.createdAt,
-              total: orderTotal,
-              status: order.status,
-            });
-            // orders are already sorted desc by createdAt, so first-seen order is most recent
-          } else {
-            customerMap.set(key, {
-              key,
-              name,
-              phone: String(addr.phone || ""),
-              email: String(addr.email || ""),
-              address: addressLine,
-              city,
-              totalOrders: 1,
-              totalSpent: orderTotal,
-              lastOrderDate: order.createdAt,
-              orderHistory: [
-                {
-                  orderNumber: order.orderNumber,
-                  date: order.createdAt,
-                  total: orderTotal,
-                  status: order.status,
-                },
-              ],
-            });
-          }
-        }
-
-        let allCustomers = Array.from(customerMap.values()).sort(
-          (a, b) => new Date(b.lastOrderDate).getTime() - new Date(a.lastOrderDate).getTime()
-        );
-
-        if (input.search) {
-          const q = input.search.trim().toLowerCase();
-          allCustomers = allCustomers.filter(
-            c =>
-              c.name.toLowerCase().includes(q) ||
-              c.phone.toLowerCase().includes(q) ||
-              c.email.toLowerCase().includes(q)
-          );
-        }
-
-        const total = allCustomers.length;
         const offset = (input.page - 1) * input.limit;
-        const items = allCustomers.slice(offset, offset + input.limit);
+        const searchTerm = input.search?.trim();
+        const searchPattern = searchTerm
+          ? `%${searchTerm.toLowerCase()}%`
+          : null;
+
+        // Aggregate per-customer stats directly in SQL instead of pulling
+        // every order row into JS: orders don't have a normalized customer
+        // id (mostly guest checkout), so the identity key (cleaned phone
+        // digits, falling back to lowercased email) is derived from the
+        // shippingAddress JSON column inside the CTE, then grouped there.
+        // jsonb_agg builds the per-customer orderHistory array in the same
+        // pass so the client-facing shape is unchanged.
+        const result = await db.execute(sql`
+          WITH order_identity AS (
+            SELECT
+              id,
+              "orderNumber",
+              status,
+              total,
+              "createdAt",
+              NULLIF(regexp_replace(COALESCE("shippingAddress"->>'phone', ''), '\\D', '', 'g'), '') AS clean_phone,
+              lower(trim(COALESCE("shippingAddress"->>'email', ''))) AS clean_email,
+              trim(concat_ws(' ', "shippingAddress"->>'firstName', "shippingAddress"->>'lastName')) AS full_name,
+              COALESCE("shippingAddress"->>'phone', '') AS phone,
+              COALESCE("shippingAddress"->>'email', '') AS email,
+              trim(both ', ' from concat_ws(', ', "shippingAddress"->>'addressLine1', "shippingAddress"->>'addressLine2')) AS address_line,
+              COALESCE("shippingAddress"->>'city', '') AS city
+            FROM orders
+          ),
+          order_keyed AS (
+            SELECT
+              *,
+              COALESCE(clean_phone, NULLIF(clean_email, '')) AS customer_key
+            FROM order_identity
+            WHERE COALESCE(clean_phone, NULLIF(clean_email, '')) IS NOT NULL
+          ),
+          customer_agg AS (
+            SELECT
+              customer_key AS key,
+              (array_agg(full_name ORDER BY "createdAt" DESC))[1] AS name,
+              (array_agg(phone ORDER BY "createdAt" DESC))[1] AS phone,
+              (array_agg(email ORDER BY "createdAt" DESC))[1] AS email,
+              (array_agg(address_line ORDER BY "createdAt" DESC))[1] AS address,
+              (array_agg(city ORDER BY "createdAt" DESC))[1] AS city,
+              count(*)::int AS "totalOrders",
+              sum(total)::numeric AS "totalSpent",
+              max("createdAt") AS "lastOrderDate",
+              jsonb_agg(
+                jsonb_build_object(
+                  'orderNumber', "orderNumber",
+                  'date', "createdAt",
+                  'total', total,
+                  'status', status
+                ) ORDER BY "createdAt" DESC
+              ) AS "orderHistory"
+            FROM order_keyed
+            GROUP BY customer_key
+          )
+          SELECT *, count(*) OVER()::int AS "totalCount"
+          FROM customer_agg
+          WHERE
+            ${searchPattern ? sql`(lower(name) LIKE ${searchPattern} OR lower(phone) LIKE ${searchPattern} OR lower(email) LIKE ${searchPattern})` : sql`TRUE`}
+          ORDER BY "lastOrderDate" DESC
+          LIMIT ${input.limit}
+          OFFSET ${offset}
+        `);
+
+        const rows = result as unknown as Array<{
+          key: string;
+          name: string | null;
+          phone: string | null;
+          email: string | null;
+          address: string | null;
+          city: string | null;
+          totalOrders: number;
+          totalSpent: string | number;
+          lastOrderDate: Date;
+          orderHistory: {
+            orderNumber: string;
+            date: Date;
+            total: string | number;
+            status: string;
+          }[];
+          totalCount: number;
+        }>;
+
+        const items = rows.map(r => ({
+          key: r.key,
+          name: r.name?.trim() || "Unknown",
+          phone: r.phone ?? "",
+          email: r.email ?? "",
+          address: r.address ?? "",
+          city: r.city ?? "",
+          totalOrders: Number(r.totalOrders),
+          totalSpent: Number(r.totalSpent),
+          lastOrderDate: r.lastOrderDate,
+          orderHistory: r.orderHistory.map(h => ({
+            orderNumber: h.orderNumber,
+            date: h.date,
+            total: Number(h.total),
+            status: h.status,
+          })),
+        }));
+
+        const total = rows.length > 0 ? Number(rows[0].totalCount) : 0;
 
         return { items, total };
-      } catch (e) {
+      } catch (e: any) {
         console.error("Failed to build customer directory:", e);
-        return { items: [], total: 0 };
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to build customer directory",
+        });
       }
     }),
 
@@ -579,34 +646,16 @@ export const adminRouter = router({
           };
         }
 
-        return { items: enrichedItems, total: Number(countResult[0]?.count ?? 0) };
-      } catch (e) {
         return {
-          items: STATIC_PRODUCTS.map(p => ({
-            id: p.id,
-            slug: p.slug,
-            sku: p.sku,
-            name: p.name,
-            shortDescription: p.shortDescription,
-            description: p.description,
-            brandId: 1,
-            categoryId: p.categoryId,
-            basePrice: String(p.basePrice),
-            salePrice: p.salePrice ? String(p.salePrice) : null,
-            stockQuantity: 15,
-            isInStock: p.isInStock,
-            isFeatured: p.isFeatured,
-            isBestSeller: p.isBestSeller,
-            isNew: p.isNew ?? false,
-            isActive: true,
-            warrantyMonths: p.warrantyMonths ?? 12,
-            brandName: p.brandName,
-            categoryName: p.category,
-            imageUrl: p.imageUrl,
-            createdAt: new Date().toISOString(),
-          })),
-          total: STATIC_PRODUCTS.length,
+          items: enrichedItems,
+          total: Number(countResult[0]?.count ?? 0),
         };
+      } catch (e: any) {
+        console.error("Failed to fetch admin products:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to fetch admin products",
+        });
       }
     }),
 
@@ -643,9 +692,15 @@ export const adminRouter = router({
         .select({ id: brands.id, name: brands.name })
         .from(brands)
         .orderBy(asc(brands.sortOrder), asc(brands.name));
-      return rows.length > 0 ? rows : STATIC_BRANDS.map(b => ({ id: b.id, name: b.name }));
-    } catch (e) {
-      return STATIC_BRANDS.map(b => ({ id: b.id, name: b.name }));
+      return rows.length > 0
+        ? rows
+        : STATIC_BRANDS.map(b => ({ id: b.id, name: b.name }));
+    } catch (e: any) {
+      console.error("Failed to fetch brand options:", e);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: e.message || "Failed to fetch brand options",
+      });
     }
   }),
 
@@ -664,8 +719,12 @@ export const adminRouter = router({
         .from(categories)
         .orderBy(asc(categories.sortOrder), asc(categories.name));
       return rows.length > 0 ? rows : fallbackCategories;
-    } catch (e) {
-      return fallbackCategories;
+    } catch (e: any) {
+      console.error("Failed to fetch category options:", e);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: e.message || "Failed to fetch category options",
+      });
     }
   }),
 
@@ -681,9 +740,12 @@ export const adminRouter = router({
           .where(eq(products.id, input.productId))
           .limit(1);
         return rows[0] ?? null;
-      } catch (e) {
+      } catch (e: any) {
         console.error("Failed to fetch product by id:", e);
-        return null;
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to fetch product",
+        });
       }
     }),
 
@@ -718,7 +780,8 @@ export const adminRouter = router({
       }
 
       try {
-        const baseSlug = slugify(input.name) || slugify(input.sku) || `product-${Date.now()}`;
+        const baseSlug =
+          slugify(input.name) || slugify(input.sku) || `product-${Date.now()}`;
         let slug = baseSlug;
         let suffix = 1;
         // Ensure slug uniqueness against real products table.
@@ -757,7 +820,8 @@ export const adminRouter = router({
             brandId: input.brandId,
             categoryId: input.categoryId,
             basePrice: input.basePrice.toString(),
-            salePrice: input.salePrice != null ? input.salePrice.toString() : null,
+            salePrice:
+              input.salePrice != null ? input.salePrice.toString() : null,
             stockQuantity: input.stockQuantity,
             isInStock: input.stockQuantity > 0,
             isFeatured: input.isFeatured,
@@ -844,7 +908,8 @@ export const adminRouter = router({
           shortDescription: input.shortDescription ?? null,
           description: input.description ?? null,
           basePrice: input.basePrice.toString(),
-          salePrice: input.salePrice != null ? input.salePrice.toString() : null,
+          salePrice:
+            input.salePrice != null ? input.salePrice.toString() : null,
           stockQuantity: input.stockQuantity,
           isInStock: input.stockQuantity > 0,
           isFeatured: input.isFeatured,
@@ -870,7 +935,8 @@ export const adminRouter = router({
             .from(productImages)
             .where(eq(productImages.productId, input.productId));
           if (existingImages.length > 0) {
-            const primary = existingImages.find(img => img.isPrimary) ?? existingImages[0];
+            const primary =
+              existingImages.find(img => img.isPrimary) ?? existingImages[0];
             await db
               .update(productImages)
               .set({ url: input.imageUrl, altText: input.name })
@@ -915,8 +981,12 @@ export const adminRouter = router({
 
       try {
         await db.transaction(async tx => {
-          await tx.delete(productImages).where(eq(productImages.productId, input.productId));
-          await tx.delete(productVariants).where(eq(productVariants.productId, input.productId));
+          await tx
+            .delete(productImages)
+            .where(eq(productImages.productId, input.productId));
+          await tx
+            .delete(productVariants)
+            .where(eq(productVariants.productId, input.productId));
           await tx.delete(products).where(eq(products.id, input.productId));
         });
 
@@ -962,7 +1032,11 @@ export const adminRouter = router({
           .where(eq(orderItems.orderId, order.id));
 
         const productIds = Array.from(
-          new Set(items.map(i => Number(i.productId)).filter(id => !isNaN(id) && id > 0))
+          new Set(
+            items
+              .map(i => Number(i.productId))
+              .filter(id => !isNaN(id) && id > 0)
+          )
         );
 
         let imageMap: Record<number, string> = {};
@@ -993,9 +1067,12 @@ export const adminRouter = router({
           items: enrichedItems,
           itemCount: enrichedItems.reduce((sum, i) => sum + i.quantity, 0),
         };
-      } catch (e) {
+      } catch (e: any) {
         console.error("Failed to fetch order by id:", e);
-        return null;
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to fetch order",
+        });
       }
     }),
 
@@ -1024,9 +1101,12 @@ export const adminRouter = router({
           .where(eq(siteSettings.key, input.key))
           .limit(1);
         return { key: input.key, value: rows[0]?.value ?? null };
-      } catch (e) {
+      } catch (e: any) {
         console.error("Failed to fetch site setting:", e);
-        return { key: input.key, value: null };
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to fetch site setting",
+        });
       }
     }),
 
@@ -1063,14 +1143,17 @@ export const adminRouter = router({
   // Customers
   customers: adminProcedure
     .input(
-      z.object({ page: z.number().int().min(1).default(1), limit: z.number().int().min(1).max(100).default(20) })
+      z.object({
+        page: z.number().int().min(1).default(1),
+        limit: z.number().int().min(1).max(100).default(20),
+      })
     )
     .query(async ({ input }) => {
       try {
         const db = await getDb();
         if (!db) return { items: [], total: 0 };
         const offset = (input.page - 1) * input.limit;
-        
+
         const [items, countResult] = await Promise.all([
           db
             .select({
@@ -1088,11 +1171,14 @@ export const adminRouter = router({
             .offset(offset),
           db.select({ count: sql<number>`count(*)` }).from(users),
         ]);
-        
+
         return { items, total: Number(countResult[0]?.count ?? 0) };
-      } catch (e) {
+      } catch (e: any) {
         console.error("Failed to fetch customers:", e);
-        return { items: [], total: 0 };
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to fetch customers",
+        });
       }
     }),
 
@@ -1113,7 +1199,8 @@ export const adminRouter = router({
         if (ctx.user && ctx.user.id === input.userId) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: "You cannot delete your own active user account while logged in.",
+            message:
+              "You cannot delete your own active user account while logged in.",
           });
         }
 
@@ -1158,7 +1245,8 @@ export const adminRouter = router({
 
         return {
           success: true,
-          message: "User account and associated profile data deleted successfully",
+          message:
+            "User account and associated profile data deleted successfully",
         };
       } catch (e: any) {
         if (e instanceof TRPCError) throw e;
@@ -1201,7 +1289,9 @@ export const adminRouter = router({
         for (const order of allOrders) {
           const addr = (order.shippingAddress || {}) as Record<string, unknown>;
           const rawPhone = String(addr.phone || "").replace(/\D/g, "");
-          const rawEmail = String(addr.email || "").trim().toLowerCase();
+          const rawEmail = String(addr.email || "")
+            .trim()
+            .toLowerCase();
           const key = rawPhone || rawEmail;
 
           if (
@@ -1215,7 +1305,9 @@ export const adminRouter = router({
 
         if (matchingOrderIds.length > 0) {
           // Delete child order items first
-          await db.delete(orderItems).where(inArray(orderItems.orderId, matchingOrderIds));
+          await db
+            .delete(orderItems)
+            .where(inArray(orderItems.orderId, matchingOrderIds));
 
           // Delete parent orders
           await db.delete(orders).where(inArray(orders.id, matchingOrderIds));

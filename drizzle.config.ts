@@ -5,7 +5,9 @@ if (!connectionString) {
   throw new Error("DATABASE_URL is required to run drizzle commands");
 }
 
-const isCloud = !connectionString.includes("localhost") && !connectionString.includes("127.0.0.1");
+const isCloud =
+  !connectionString.includes("localhost") &&
+  !connectionString.includes("127.0.0.1");
 
 export default defineConfig({
   schema: "./drizzle/schema.ts",

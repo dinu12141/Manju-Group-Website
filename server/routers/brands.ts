@@ -4,7 +4,11 @@ import { getDb } from "../db";
 import { brands, products } from "../../drizzle/schema";
 import { and, asc, eq, notInArray, sql } from "drizzle-orm";
 
-const EXCLUDED_BRAND_SLUGS = ["manju-exercise-books", "exercise-books", "stationery"];
+const EXCLUDED_BRAND_SLUGS = [
+  "manju-exercise-books",
+  "exercise-books",
+  "stationery",
+];
 
 function mapBrand(b: typeof brands.$inferSelect) {
   return {
@@ -29,7 +33,12 @@ export const brandsRouter = router({
     const rows = await db
       .select()
       .from(brands)
-      .where(and(eq(brands.isActive, true), notInArray(brands.slug, EXCLUDED_BRAND_SLUGS)))
+      .where(
+        and(
+          eq(brands.isActive, true),
+          notInArray(brands.slug, EXCLUDED_BRAND_SLUGS)
+        )
+      )
       .orderBy(asc(brands.sortOrder));
 
     return rows
@@ -55,7 +64,12 @@ export const brandsRouter = router({
         products,
         and(eq(products.brandId, brands.id), eq(products.isActive, true))
       )
-      .where(and(eq(brands.isActive, true), notInArray(brands.slug, EXCLUDED_BRAND_SLUGS)))
+      .where(
+        and(
+          eq(brands.isActive, true),
+          notInArray(brands.slug, EXCLUDED_BRAND_SLUGS)
+        )
+      )
       .groupBy(brands.id)
       .orderBy(asc(brands.sortOrder));
 

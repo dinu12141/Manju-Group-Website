@@ -41,12 +41,54 @@ function isSinhalaOrSinglish(text: string): boolean {
 
   // Check for common Singlish words
   const singlishTokens = [
-    "mata", "monada", "buy", "ganna", "puluwan", "puluwanda", "kiyada", "kiyanna",
-    "mokakda", "kohomada", "thiyenawada", "karanna", "karannada", "oyala", "reccomend",
-    "recommend", "sinhala", "sinhalen", "ganan", "mila", "nayata", "gewanna", "masika",
-    "warika", "duwanna", "genath", "denawada", "koheda", "thiyenne", "branch", "showroom",
-    "wistara", "hondama", "honda", "eka", "eke", "ekak", "danna", "ow", "na", "neha", "neda",
-    "ayubowan", "subha", "machan", "sahodaraya", "sir", "madam"
+    "mata",
+    "monada",
+    "buy",
+    "ganna",
+    "puluwan",
+    "puluwanda",
+    "kiyada",
+    "kiyanna",
+    "mokakda",
+    "kohomada",
+    "thiyenawada",
+    "karanna",
+    "karannada",
+    "oyala",
+    "reccomend",
+    "recommend",
+    "sinhala",
+    "sinhalen",
+    "ganan",
+    "mila",
+    "nayata",
+    "gewanna",
+    "masika",
+    "warika",
+    "duwanna",
+    "genath",
+    "denawada",
+    "koheda",
+    "thiyenne",
+    "branch",
+    "showroom",
+    "wistara",
+    "hondama",
+    "honda",
+    "eka",
+    "eke",
+    "ekak",
+    "danna",
+    "ow",
+    "na",
+    "neha",
+    "neda",
+    "ayubowan",
+    "subha",
+    "machan",
+    "sahodaraya",
+    "sir",
+    "madam",
   ];
 
   return singlishTokens.some(token => t.includes(token));
@@ -75,7 +117,8 @@ function generateExpertResponse(userQuery: string): string {
     (query.includes("mata") && query.includes("ganna"))
   ) {
     if (isLocalLang) {
-      return `ආයුබෝවන්! 🙏 **Manju Group** වෙත ඔබව ඉතාම සාදරයෙන් පිළිගනිමු.\n\n` +
+      return (
+        `ආයුබෝවන්! 🙏 **Manju Group** වෙත ඔබව ඉතාම සාදරයෙන් පිළිගනිමු.\n\n` +
         `ඔව්, වසර 22 කට වැඩි විශ්වාසනීය විශිෂ්ටත්වයක් සහිත Manju Group වෙතින් ඔබගේ නිවසට සහ එදිනෙදා ජීවිතයට අවශ්‍ය උසස්ම තත්ත්වයේ නිෂ්පාදන සහ **පහසු මාසික වාරික ක්‍රම (Easy Installments)** රැසක් අප සතුව ඇත. අපගේ ප්‍රධාන නිෂ්පාදන 4 සහ ඔබ වෙනුවෙන් හොඳම නිර්දේශ මෙන්න:\n\n` +
         `1. ⚡ **Dew Motors Electric Bikes & Scooters (විදුලි යතුරුපැදි)**:\n` +
         `   • මාසිකව පෙට්‍රල් සඳහා යන රු. 12,000+ කට වඩා ඉතිරි කරගන්න කදිම විසඳුම.\n` +
@@ -95,17 +138,20 @@ function generateExpertResponse(userQuery: string): string {
         `   • ක්ෂාරීය පිරිසිදු පානීය ජලය ලබාදෙන 6-Stage RO Water Filter (රු. 69,900 | මූලික ගෙවීම රු. 14,900 + මසකට රු. 6,000 x මාස 11).\n` +
         `   • උණුසුම් සහ සිසිල් ජලය සහිත Instant Hot & Cool Dispensers.\n\n` +
         `🚚 **දිවයින පුරා පැය 24-48 න් නිවසටම බෙදාහැරීම සහ Credit Card 0% Interest පහසුකම් ඇත.**\n\n` +
-        `ඔබට වැඩිදුර විස්තර අවශ්‍ය කුමන නිෂ්පාදනය පිළිබඳවද? මට කියන්න, මම සම්පූර්ණ තොරතුරු ලබා දෙන්නම්! 📞 Hotline: **+94 11 234 5678**`;
+        `ඔබට වැඩිදුර විස්තර අවශ්‍ය කුමන නිෂ්පාදනය පිළිබඳවද? මට කියන්න, මම සම්පූර්ණ තොරතුරු ලබා දෙන්නම්! 📞 Hotline: **+94 11 234 5678**`
+      );
     }
 
-    return `Hello and welcome to **Manju Group**! 👋\n\n` +
+    return (
+      `Hello and welcome to **Manju Group**! 👋\n\n` +
       `With over 22 years of trusted manufacturing excellence in Sri Lanka, we proudly manufacture and distribute 4 industry-leading product categories:\n\n` +
       `1. ⚡ **Dew Motors Electric Bikes** (EM005 2400W & YW06 2000W) — Save over Rs. 12,000/mo on petrol with up to 100km range!\n` +
       `2. 📺 **Dew Plus 4K Smart TVs** (32", 43", 55", 65", 75", 98") — Android 12, frameless cinema screen with 2-year warranty and 1-to-1 replacement.\n` +
       `3. ❄️ **DEW+ Inverter Air Conditioners** (1.0 Ton, 1.5 Ton, 2.0 Ton) — 4-Star energy saving, 10-year compressor warranty & Free Installation.\n` +
       `4. 💧 **Manju Dew Super RO Water Filters & Dispensers** — 6-Stage Alkaline RO purifiers and Hot/Cold Standing dispensers.\n\n` +
       `💳 All products are backed by flexible **Monthly Installment Plans** and **Island-wide 24-48h Delivery**!\n\n` +
-      `Which product category would you like to explore in detail? 📞 Hotline: **+94 11 234 5678**`;
+      `Which product category would you like to explore in detail? 📞 Hotline: **+94 11 234 5678**`
+    );
   }
 
   // 2. ELECTRIC BIKES / SCOOTERS
@@ -125,7 +171,8 @@ function generateExpertResponse(userQuery: string): string {
     query.includes("පැට්‍රල්")
   ) {
     if (isLocalLang) {
-      return `⚡ **Dew Motors Electric Bikes & Scooters (විදුලි යතුරුපැදි)**:\n\n` +
+      return (
+        `⚡ **Dew Motors Electric Bikes & Scooters (විදුලි යතුරුපැදි)**:\n\n` +
         `1. **Dew Motors EM005 2400W High-Performance E-Bike**:\n` +
         `   • **මිල**: රු. 680,000 (LKR)\n` +
         `   • **මෝටරය**: 2400W High-Torque Brushless Motor\n` +
@@ -136,16 +183,19 @@ function generateExpertResponse(userQuery: string): string {
         `   • **මිල**: රු. 630,000 (LKR)\n` +
         `   • **මෝටරය**: 2000W | 72V 30Ah Battery | කි.මී. 70-90 ක පරාසයක් | USB Mobile Charger\n\n` +
         `💡 **විශේෂ වාසි**: මාසිකව පෙට්‍රල් සඳහා වැයවන රු. 12,000+ කට වැඩි මුදලක් සම්පූර්ණයෙන්ම ඉතිරි කරගත හැක!\n\n` +
-        `📞 වැඩිදුර විස්තර සහ Test Ride එකක් සඳහා අපගේ **+94 11 234 5678** අංකය අමතන්න!`;
+        `📞 වැඩිදුර විස්තර සහ Test Ride එකක් සඳහා අපගේ **+94 11 234 5678** අංකය අමතන්න!`
+      );
     }
 
-    return `⚡ **Dew Motors Electric Mobility Range**:\n\n` +
+    return (
+      `⚡ **Dew Motors Electric Mobility Range**:\n\n` +
       `1. **Dew Motors EM005 2400W** — **Rs. 680,000**\n` +
       `   • 80-100km range | 80 km/h speed | 72V 35Ah Lithium Battery | Dual Disc Brakes\n\n` +
       `2. **Dew Motors YW06 2000W** — **Rs. 630,000**\n` +
       `   • 70-90km range | 65 km/h speed | 72V 30Ah Battery | USB Phone Charger\n\n` +
       `✅ 2-Year Warranty on Motor & Battery, Zero Petrol Cost, Easy monthly installments available!\n\n` +
-      `📞 Call **+94 11 234 5678** to book a showroom test ride.`;
+      `📞 Call **+94 11 234 5678** to book a showroom test ride.`
+    );
   }
 
   // 3. SMART TVS
@@ -162,7 +212,8 @@ function generateExpertResponse(userQuery: string): string {
     query.includes("98")
   ) {
     if (isLocalLang) {
-      return `📺 **Dew Plus 4K Android Smart TV පෙළගැස්ම සහ මිල ගණන්**:\n\n` +
+      return (
+        `📺 **Dew Plus 4K Android Smart TV පෙළගැස්ම සහ මිල ගණන්**:\n\n` +
         `• **32" Smart TV**: රු. 74,400 *(මූලික ගෙවීම රු. 10,000 + මසකට රු. 6,200 x මාස 12)*\n` +
         `• **43" 4K Ultra HD Smart TV**: රු. 99,800 *(මූලික ගෙවීම රු. 15,000 + මසකට රු. 9,150 x මාස 12)*\n` +
         `• **55" 4K HDR Smart TV**: රු. 169,500 *(මූලික ගෙවීම රු. 25,000 + මසකට රු. 14,550 x මාස 12)*\n` +
@@ -170,15 +221,18 @@ function generateExpertResponse(userQuery: string): string {
         `• **75" 4K Ultra Large TV**: රු. 385,000 (Gaming Mode, Metallic Frame)\n` +
         `• **98" 4K Flagship Giant Display**: රු. 890,000 (120Hz Quantum Display)\n\n` +
         `✨ **විශේෂත්වය**: Android 12, YouTube, Netflix, Bluetooth 5.0 සහ **පළමු වසරේ 1-to-1 Replacement Guarantee** සහිත වසර 2 ක පූර්ණ වොරන්ටි!\n\n` +
-        `ඇණවුම් කිරීමට හෝ විස්තර සඳහා අමතන්න: 📞 **+94 11 234 5678**`;
+        `ඇණවුම් කිරීමට හෝ විස්තර සඳහා අමතන්න: 📞 **+94 11 234 5678**`
+      );
     }
 
-    return `📺 **Dew Plus 4K Android Smart TV Range**:\n\n` +
+    return (
+      `📺 **Dew Plus 4K Android Smart TV Range**:\n\n` +
       `• **32" Smart TV**: Rs. 74,400 *(Installment: Rs. 10k down + Rs. 6,200/mo)*\n` +
       `• **43" 4K Smart TV**: Rs. 99,800 *(Installment: Rs. 15k down + Rs. 9,150/mo)*\n` +
       `• **55" 4K Smart TV**: Rs. 169,500 *(Installment: Rs. 25k down + Rs. 14,550/mo)*\n` +
       `• **65" 4K Smart TV**: Rs. 235,000 | **75" 4K TV**: Rs. 385,000 | **98" 4K TV**: Rs. 890,000\n\n` +
-      `✨ Includes: 2-Year Warranty with 1-to-1 replacement in the 1st year, Android 12, Netflix, YouTube & Island-wide Delivery!`;
+      `✨ Includes: 2-Year Warranty with 1-to-1 replacement in the 1st year, Android 12, Netflix, YouTube & Island-wide Delivery!`
+    );
   }
 
   // 4. AIR CONDITIONERS
@@ -192,7 +246,8 @@ function generateExpertResponse(userQuery: string): string {
     query.includes("ඒසී")
   ) {
     if (isLocalLang) {
-      return `❄️ **DEW+ Inverter Split Air Conditioners (R32 Eco Gas)**:\n\n` +
+      return (
+        `❄️ **DEW+ Inverter Split Air Conditioners (R32 Eco Gas)**:\n\n` +
         `1. **DEW+ 1.0 Ton Inverter AC (12,000 BTU)** — **රු. 165,000**\n` +
         `   • වර්ග අඩි 120 දක්වා කාමර සඳහා සුදුසුයි. 4-Star Energy Saving.\n\n` +
         `2. **DEW+ 1.5 Ton Inverter AC (18,000 BTU)** — **රු. 195,000**\n` +
@@ -200,14 +255,17 @@ function generateExpertResponse(userQuery: string): string {
         `3. **DEW+ 2.0 Ton Inverter AC (24,000 BTU)** — **රු. 255,000**\n` +
         `   • විශාල විසිත්ත කාමර සහ කාර්යාල සඳහා (වර්ග අඩි 200 - 350).\n\n` +
         `🎁 **විශේෂ දීමනාව**: වසර 10 ක කොම්ප්‍රෙසර් වොරන්ටි + මීටර් 3 ක තඹ බට සහිත **නොමිලේ සවිකරදීම (Free Installation)** සහ දිවයින පුරා බෙදාහැරීම!\n\n` +
-        `📞 ඇණවුම් කිරීමට: **+94 11 234 5678**`;
+        `📞 ඇණවුම් කිරීමට: **+94 11 234 5678**`
+      );
     }
 
-    return `❄️ **DEW+ Inverter Split ACs (R32 Eco Gas)**:\n\n` +
+    return (
+      `❄️ **DEW+ Inverter Split ACs (R32 Eco Gas)**:\n\n` +
       `1. **DEW+ 1.0 Ton Inverter (12k BTU)**: **Rs. 165,000** (Up to 120 sq.ft)\n` +
       `2. **DEW+ 1.5 Ton Inverter (18k BTU)**: **Rs. 195,000** (120 - 200 sq.ft)\n` +
       `3. **DEW+ 2.0 Ton Inverter (24k BTU)**: **Rs. 255,000** (200 - 350 sq.ft)\n\n` +
-      `🎁 10-Year Compressor Warranty + **FREE Installation** (up to 3m copper tubing) + Island-wide delivery!`;
+      `🎁 10-Year Compressor Warranty + **FREE Installation** (up to 3m copper tubing) + Island-wide delivery!`
+    );
   }
 
   // 5. WATER PURIFIERS
@@ -224,7 +282,8 @@ function generateExpertResponse(userQuery: string): string {
     query.includes("ෆිල්ටර්")
   ) {
     if (isLocalLang) {
-      return `💧 **Manju Dew Super ජල පෙරණ පද්ධති සහ Dispensers**:\n\n` +
+      return (
+        `💧 **Manju Dew Super ජල පෙරණ පද්ධති සහ Dispensers**:\n\n` +
         `🏠 **නිවසේ භාවිතය සඳහා (Residential Purifiers)**:\n` +
         `• **Dew Super RO Water Filter (100L/day)**: **රු. 69,900**\n` +
         `  *(6-Stage RO + Alkaline Mineralizer + UV, මූලික ගෙවීම රු. 14,900 + මසකට රු. 6,000 x මාස 11)*\n` +
@@ -234,16 +293,19 @@ function generateExpertResponse(userQuery: string): string {
         `• **Dew Super Hot, Cool & Normal Dispenser**: **රු. 89,900** (Ice Cold, Steaming Hot සහ Normal 3-Tap)\n\n` +
         `🏭 **වාණිජ හා කර්මාන්තශාලා සඳහා (Commercial RO)**:\n` +
         `• 500 Liters/Day (රු. 175,000) | 2500L/Day (රු. 315,000) | 3000L/Day (රු. 400,000)\n\n` +
-        `✨ **නොමිලේ ජල පරීක්ෂාව (Water Testing), නොමිලේ සවිකිරීම, වසර 2 ක වොරන්ටි සහ අමතර කොටස් සහිතයි.** 📞 Hotline: **+94 11 234 5678**`;
+        `✨ **නොමිලේ ජල පරීක්ෂාව (Water Testing), නොමිලේ සවිකිරීම, වසර 2 ක වොරන්ටි සහ අමතර කොටස් සහිතයි.** 📞 Hotline: **+94 11 234 5678**`
+      );
     }
 
-    return `💧 **Manju Dew Super Water Filtration Systems**:\n\n` +
+    return (
+      `💧 **Manju Dew Super Water Filtration Systems**:\n\n` +
       `• **Dew Super RO Water Filter (100L/day)**: **Rs. 69,900** *(Down payment Rs. 14,900 + Rs. 6,000/mo)*\n` +
       `• **Dew Super RO+ Filter**: **Rs. 74,900**\n` +
       `• **Hot & Normal Dispenser**: **Rs. 86,900**\n` +
       `• **Hot, Cool & Normal Dispenser**: **Rs. 89,900**\n` +
       `• **Commercial RO Plants**: 500L (Rs. 175k) | 2500L (Rs. 315k) | 3000L (Rs. 400k)\n\n` +
-      `✨ Free Water Testing, Free Installation, 2-Year Warranty & Island-wide Delivery!`;
+      `✨ Free Water Testing, Free Installation, 2-Year Warranty & Island-wide Delivery!`
+    );
   }
 
   // 6. INSTALLMENTS / PRICING
@@ -260,23 +322,27 @@ function generateExpertResponse(userQuery: string): string {
     query.includes("ganan")
   ) {
     if (isLocalLang) {
-      return `💳 **Manju Group පහසු මාසික වාරික ක්‍රම (Easy Installments)**:\n\n` +
+      return (
+        `💳 **Manju Group පහසු මාසික වාරික ක්‍රම (Easy Installments)**:\n\n` +
         `අවම ලියකියවිලි සහිතව ඔබට පහසු මාසික වාරික ක්‍රමයට භාණ්ඩ ලබාගත හැක:\n\n` +
         `1. **Water Filters**: මූලික ගෙවීම රු. 14,900 + මසකට රු. 6,000 (මාස 11)\n` +
         `2. **32" Smart TV**: මූලික ගෙවීම රු. 10,000 + මසකට රු. 6,200 (මාස 12)\n` +
         `3. **43" 4K Smart TV**: මූලික ගෙවීම රු. 15,000 + මසකට රු. 9,150 (මාස 12)\n` +
         `4. **55" 4K Smart TV**: මූලික ගෙවීම රු. 25,000 + මසකට රු. 14,550 (මාස 12)\n` +
         `5. **Credit Card 0% Plans**: Commercial Bank, Sampath, HNB, Seylan, BOC කාඩ්පත් සඳහා 0% පොලී රහිත වාරික පහසුකම් ඇත.\n\n` +
-        `📞 ඔබගේ වාරික සැලැස්ම සකස් කරගැනීමට අමතන්න: **+94 11 234 5678**`;
+        `📞 ඔබගේ වාරික සැලැස්ම සකස් කරගැනීමට අමතන්න: **+94 11 234 5678**`
+      );
     }
 
-    return `💳 **Manju Group Easy Monthly Installments**:\n\n` +
+    return (
+      `💳 **Manju Group Easy Monthly Installments**:\n\n` +
       `• **Water Filters**: Down payment Rs. 14,900 + Rs. 6,000/mo (11 mo)\n` +
       `• **32" Smart TV**: Down payment Rs. 10,000 + Rs. 6,200/mo (12 mo)\n` +
       `• **43" 4K Smart TV**: Down payment Rs. 15,000 + Rs. 9,150/mo (12 mo)\n` +
       `• **55" 4K Smart TV**: Down payment Rs. 25,000 + Rs. 14,550/mo (12 mo)\n` +
       `• **0% Credit Card Installments**: Available for major Sri Lankan banks.\n\n` +
-      `📞 Call **+94 11 234 5678** for fast installment approval!`;
+      `📞 Call **+94 11 234 5678** for fast installment approval!`
+    );
   }
 
   // 7. SHOWROOMS, BRANCHES, CONTACT
@@ -297,46 +363,54 @@ function generateExpertResponse(userQuery: string): string {
     query.includes("කොහෙද")
   ) {
     if (isLocalLang) {
-      return `🏢 **Manju Group of Companies (Manju Enterprises)**\n\n` +
+      return (
+        `🏢 **Manju Group of Companies (Manju Enterprises)**\n\n` +
         `ශ්‍රී ලංකාවේ වසර **22+ කට වැඩි** විශ්වාසනීය නිෂ්පාදන හා බෙදාහැරීමේ විශිෂ්ටත්වය!\n\n` +
         `📞 **Hotline**: +94 11 234 5678 / +94 77 123 4567\n` +
         `✉️ **Email**: info@manjugroup.lk\n` +
         `🚚 **Delivery**: පැය 24 - 48 න් දිවයින පුරා නිවසටම බෙදාහැරීම\n` +
         `📍 **Showrooms**: කොළඹ (ප්‍රධාන කාර්යාලය), මහනුවර, ගාල්ල, කුරුණෑගල, මීගමුව, මාතර, අනුරාධපුරය, යාපනය\n` +
         `🛡️ **Warranties**: Smart TVs සහ Water Filters සඳහා වසර 2 ක්, AC Compressors සඳහා වසර 10 ක්, Electric Bikes සඳහා වසර 2 ක්.\n\n` +
-        `ඔබට අවශ්‍ය ඕනෑම සහයක් සඳහා අප සූදානම්! 📞 **+94 11 234 5678**`;
+        `ඔබට අවශ්‍ය ඕනෑම සහයක් සඳහා අප සූදානම්! 📞 **+94 11 234 5678**`
+      );
     }
 
-    return `🏢 **Manju Group of Companies (Manju Enterprises)**\n\n` +
+    return (
+      `🏢 **Manju Group of Companies (Manju Enterprises)**\n\n` +
       `Over **22+ years** of trusted excellence in Sri Lanka!\n\n` +
       `📞 **Hotline**: +94 11 234 5678 / +94 77 123 4567\n` +
       `✉️ **Email**: info@manjugroup.lk\n` +
       `🚚 **Delivery**: Island-wide delivery in 24-48 hours\n` +
       `📍 **Showrooms**: Colombo (HQ), Kandy, Galle, Kurunegala, Negombo, Matara, Anuradhapura, Jaffna\n` +
       `🛡️ **Warranties**: 2-10 Years genuine warranty with after-sales service.\n\n` +
-      `How can we assist you further today?`;
+      `How can we assist you further today?`
+    );
   }
 
   // 8. DEFAULT FRIENDLY GREETING (English / Sinhala)
   if (isLocalLang) {
-    return `👋 **ආයුබෝවන්! Manju Group AI සහයක වෙත ඔබව සාදරයෙන් පිළිගනිමු.**\n\n` +
+    return (
+      `👋 **ආයුබෝවන්! Manju Group AI සහයක වෙත ඔබව සාදරයෙන් පිළිගනිමු.**\n\n` +
       `අපගේ උසස් තත්ත්වයේ නිෂ්පාදන සහ මිල ගණන් පිළිබඳව ඔබට අවශ්‍ය ඕනෑම තොරතුරක් ලබාදීමට මම සූදානම්:\n\n` +
       `1. ⚡ **Dew Motors Electric Bikes** (EM005 2400W & YW06 2000W)\n` +
       `2. 📺 **Dew Plus 4K Smart TVs** (32", 43", 55", 65", 75", 98")\n` +
       `3. ❄️ **DEW+ Inverter ACs** (1.0 Ton, 1.5 Ton, 2.0 Ton)\n` +
       `4. 💧 **Manju Dew Super Water Purifiers & Dispensers** (RO, Hot & Cold)\n` +
       `5. 💳 **පහසු මාසික වාරික ක්‍රම (Monthly Installment Plans)**\n\n` +
-      `ඔබට දැනගැනීමට අවශ්‍ය වන්නේ කුමන භාණ්ඩය පිළිබඳවද? සිංහලෙන් හෝ English වලින් විමසන්න! 📞 Hotline: **+94 11 234 5678**`;
+      `ඔබට දැනගැනීමට අවශ්‍ය වන්නේ කුමන භාණ්ඩය පිළිබඳවද? සිංහලෙන් හෝ English වලින් විමසන්න! 📞 Hotline: **+94 11 234 5678**`
+    );
   }
 
-  return `👋 **Hello! Welcome to Manju Group Assistant.**\n\n` +
+  return (
+    `👋 **Hello! Welcome to Manju Group Assistant.**\n\n` +
     `I can help you with exact prices, technical specifications, installment plans, and warranties for all our genuine products:\n\n` +
     `1. ⚡ **Dew Motors Electric Bikes** (EM005 2400W & YW06 2000W)\n` +
     `2. 📺 **Dew Plus 4K Smart TVs** (32", 43", 55", 65", 75", 98")\n` +
     `3. ❄️ **DEW+ Inverter ACs** (1.0 Ton, 1.5 Ton, 2.0 Ton)\n` +
     `4. 💧 **Manju Dew Super Water Filters & Dispensers** (RO, Hot/Cold)\n` +
     `5. 💳 **Easy Monthly Installment Plans & 0% Bank Schemes**\n\n` +
-    `What product or information would you like to know more about? You can ask me in **English, සිංහල, or Singlish**! 📞 Hotline: **+94 11 234 5678**`;
+    `What product or information would you like to know more about? You can ask me in **English, සිංහල, or Singlish**! 📞 Hotline: **+94 11 234 5678**`
+  );
 }
 
 export const aiRouter = router({

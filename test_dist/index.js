@@ -19,7 +19,7 @@ import "dotenv/config";
 // server/_core/env.ts
 var REQUIRED_VARS = [
   ["cookieSecret", "JWT_SECRET"],
-  ["databaseUrl", "DATABASE_URL"]
+  ["databaseUrl", "DATABASE_URL"],
 ];
 var ENV = {
   appId: process.env.VITE_APP_ID ?? "",
@@ -32,7 +32,7 @@ var ENV = {
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
   googleClientId: process.env.GOOGLE_CLIENT_ID ?? "",
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-  clientOrigin: process.env.CLIENT_ORIGIN ?? ""
+  clientOrigin: process.env.CLIENT_ORIGIN ?? "",
 };
 function validateEnv() {
   const missing = REQUIRED_VARS.filter(([key]) => !ENV[key]);
@@ -66,8 +66,10 @@ function isSecureRequest(req) {
   if (req.protocol === "https") return true;
   const forwardedProto = req.headers["x-forwarded-proto"];
   if (!forwardedProto) return false;
-  const protoList = Array.isArray(forwardedProto) ? forwardedProto : forwardedProto.split(",");
-  return protoList.some((proto) => proto.trim().toLowerCase() === "https");
+  const protoList = Array.isArray(forwardedProto)
+    ? forwardedProto
+    : forwardedProto.split(",");
+  return protoList.some(proto => proto.trim().toLowerCase() === "https");
 }
 function getSessionCookieOptions(req) {
   const secure = isSecureRequest(req);
@@ -79,7 +81,7 @@ function getSessionCookieOptions(req) {
     // Fall back to "Lax" in that case — it still survives the top-level
     // redirect navigations used by the OAuth callback flows.
     sameSite: secure ? "none" : "lax",
-    secure
+    secure,
   };
 }
 
@@ -91,7 +93,7 @@ var HttpError = class extends Error {
     this.name = "HttpError";
   }
 };
-var ForbiddenError = (msg) => new HttpError(403, msg);
+var ForbiddenError = msg => new HttpError(403, msg);
 
 // server/_core/sdk.ts
 import axios from "axios";
@@ -113,7 +115,7 @@ import {
   mysqlTable,
   text,
   timestamp,
-  varchar
+  varchar,
 } from "drizzle-orm/mysql-core";
 var users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -127,7 +129,7 @@ var users = mysqlTable("users", {
   avatarUrl: text("avatarUrl"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull()
+  lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 var brands = mysqlTable("brands", {
   id: int("id").autoincrement().primaryKey(),
@@ -142,7 +144,7 @@ var brands = mysqlTable("brands", {
   sortOrder: int("sortOrder").default(0),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull()
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 var categories = mysqlTable("categories", {
   id: int("id").autoincrement().primaryKey(),
@@ -153,7 +155,7 @@ var categories = mysqlTable("categories", {
   parentId: int("parentId"),
   sortOrder: int("sortOrder").default(0),
   isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull()
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 var products = mysqlTable("products", {
   id: int("id").autoincrement().primaryKey(),
@@ -181,7 +183,7 @@ var products = mysqlTable("products", {
   sortOrder: int("sortOrder").default(0),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull()
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 var productImages = mysqlTable("product_images", {
   id: int("id").autoincrement().primaryKey(),
@@ -190,7 +192,7 @@ var productImages = mysqlTable("product_images", {
   altText: varchar("altText", { length: 256 }),
   isPrimary: boolean("isPrimary").default(false).notNull(),
   sortOrder: int("sortOrder").default(0),
-  createdAt: timestamp("createdAt").defaultNow().notNull()
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 var productVariants = mysqlTable("product_variants", {
   id: int("id").autoincrement().primaryKey(),
@@ -202,14 +204,14 @@ var productVariants = mysqlTable("product_variants", {
   salePrice: decimal("salePrice", { precision: 12, scale: 2 }),
   stockQuantity: int("stockQuantity").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull()
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 var carts = mysqlTable("carts", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId"),
   sessionId: varchar("sessionId", { length: 128 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull()
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 var cartItems = mysqlTable("cart_items", {
   id: int("id").autoincrement().primaryKey(),
@@ -219,13 +221,13 @@ var cartItems = mysqlTable("cart_items", {
   quantity: int("quantity").default(1).notNull(),
   unitPrice: decimal("unitPrice", { precision: 12, scale: 2 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull()
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 var wishlists = mysqlTable("wishlists", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   productId: varchar("productId", { length: 256 }).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull()
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 var orders = mysqlTable("orders", {
   id: int("id").autoincrement().primaryKey(),
@@ -238,11 +240,17 @@ var orders = mysqlTable("orders", {
     "shipped",
     "delivered",
     "cancelled",
-    "refunded"
-  ]).default("pending").notNull(),
+    "refunded",
+  ])
+    .default("pending")
+    .notNull(),
   subtotal: decimal("subtotal", { precision: 12, scale: 2 }).notNull(),
-  shippingFee: decimal("shippingFee", { precision: 12, scale: 2 }).default("0").notNull(),
-  discount: decimal("discount", { precision: 12, scale: 2 }).default("0").notNull(),
+  shippingFee: decimal("shippingFee", { precision: 12, scale: 2 })
+    .default("0")
+    .notNull(),
+  discount: decimal("discount", { precision: 12, scale: 2 })
+    .default("0")
+    .notNull(),
   total: decimal("total", { precision: 12, scale: 2 }).notNull(),
   currency: varchar("currency", { length: 8 }).default("LKR").notNull(),
   paymentMethod: varchar("paymentMethod", { length: 64 }),
@@ -250,13 +258,15 @@ var orders = mysqlTable("orders", {
     "pending",
     "paid",
     "failed",
-    "refunded"
-  ]).default("pending").notNull(),
+    "refunded",
+  ])
+    .default("pending")
+    .notNull(),
   shippingAddress: json("shippingAddress"),
   billingAddress: json("billingAddress"),
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull()
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 var orderItems = mysqlTable("order_items", {
   id: int("id").autoincrement().primaryKey(),
@@ -269,7 +279,7 @@ var orderItems = mysqlTable("order_items", {
   quantity: int("quantity").notNull(),
   unitPrice: decimal("unitPrice", { precision: 12, scale: 2 }).notNull(),
   subtotal: decimal("subtotal", { precision: 12, scale: 2 }).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull()
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 var reviews = mysqlTable("reviews", {
   id: int("id").autoincrement().primaryKey(),
@@ -280,7 +290,7 @@ var reviews = mysqlTable("reviews", {
   body: text("body"),
   isVerified: boolean("isVerified").default(false).notNull(),
   isApproved: boolean("isApproved").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull()
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 var blogPosts = mysqlTable("blog_posts", {
   id: int("id").autoincrement().primaryKey(),
@@ -298,12 +308,14 @@ var blogPosts = mysqlTable("blog_posts", {
   metaTitle: varchar("metaTitle", { length: 256 }),
   metaDescription: text("metaDescription"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull()
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 var locations = mysqlTable("locations", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 128 }).notNull(),
-  type: mysqlEnum("type", ["showroom", "service_center", "warehouse", "office"]).default("showroom").notNull(),
+  type: mysqlEnum("type", ["showroom", "service_center", "warehouse", "office"])
+    .default("showroom")
+    .notNull(),
   address: text("address").notNull(),
   city: varchar("city", { length: 64 }).notNull(),
   province: varchar("province", { length: 64 }),
@@ -314,7 +326,7 @@ var locations = mysqlTable("locations", {
   openingHours: json("openingHours"),
   isActive: boolean("isActive").default(true).notNull(),
   sortOrder: int("sortOrder").default(0),
-  createdAt: timestamp("createdAt").defaultNow().notNull()
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 var banners = mysqlTable("banners", {
   id: int("id").autoincrement().primaryKey(),
@@ -324,14 +336,16 @@ var banners = mysqlTable("banners", {
   mobileImageUrl: text("mobileImageUrl"),
   linkUrl: text("linkUrl"),
   linkText: varchar("linkText", { length: 128 }),
-  placement: mysqlEnum("placement", ["hero", "promotional", "brand", "sidebar"]).default("hero").notNull(),
+  placement: mysqlEnum("placement", ["hero", "promotional", "brand", "sidebar"])
+    .default("hero")
+    .notNull(),
   bgColor: varchar("bgColor", { length: 32 }),
   textColor: varchar("textColor", { length: 32 }),
   sortOrder: int("sortOrder").default(0),
   isActive: boolean("isActive").default(true).notNull(),
   startsAt: timestamp("startsAt"),
   endsAt: timestamp("endsAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull()
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 var faqs = mysqlTable("faqs", {
   id: int("id").autoincrement().primaryKey(),
@@ -340,7 +354,7 @@ var faqs = mysqlTable("faqs", {
   category: varchar("category", { length: 64 }),
   sortOrder: int("sortOrder").default(0),
   isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull()
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 var contactMessages = mysqlTable("contact_messages", {
   id: int("id").autoincrement().primaryKey(),
@@ -350,7 +364,7 @@ var contactMessages = mysqlTable("contact_messages", {
   subject: varchar("subject", { length: 256 }),
   message: text("message").notNull(),
   isRead: boolean("isRead").default(false).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull()
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
 // server/db.ts
@@ -383,7 +397,7 @@ async function upsertUser(user) {
   }
   try {
     const values = {
-      openId: user.openId
+      openId: user.openId,
     };
     const updateSet = {};
     const textFields = [
@@ -392,9 +406,9 @@ async function upsertUser(user) {
       "phone",
       "loginMethod",
       "passwordHash",
-      "avatarUrl"
+      "avatarUrl",
     ];
-    const assignNullable = (field) => {
+    const assignNullable = field => {
       const value = user[field];
       if (value === void 0) return;
       const normalized = value ?? null;
@@ -420,7 +434,7 @@ async function upsertUser(user) {
       updateSet.lastSignedIn = /* @__PURE__ */ new Date();
     }
     await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet
+      set: updateSet,
     });
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
@@ -433,7 +447,11 @@ async function getUserByOpenId(openId) {
     console.warn("[Database] Cannot get user: database not available");
     return void 0;
   }
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.openId, openId))
+    .limit(1);
   return result.length > 0 ? result[0] : void 0;
 }
 async function getUserByEmail(email) {
@@ -442,12 +460,16 @@ async function getUserByEmail(email) {
     console.warn("[Database] Cannot get user: database not available");
     return void 0;
   }
-  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
   return result.length > 0 ? result[0] : void 0;
 }
 
 // server/_core/sdk.ts
-var isNonEmptyString = (value) => typeof value === "string" && value.length > 0;
+var isNonEmptyString = value => typeof value === "string" && value.length > 0;
 var EXCHANGE_TOKEN_PATH = `/webdev.v1.WebDevAuthPublicService/ExchangeToken`;
 var GET_USER_INFO_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserInfo`;
 var GET_USER_INFO_WITH_JWT_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserInfoWithJwt`;
@@ -470,28 +492,23 @@ var OAuthService = class {
       clientId: ENV.appId,
       grantType: "authorization_code",
       code,
-      redirectUri: this.decodeState(state)
+      redirectUri: this.decodeState(state),
     };
-    const { data } = await this.client.post(
-      EXCHANGE_TOKEN_PATH,
-      payload
-    );
+    const { data } = await this.client.post(EXCHANGE_TOKEN_PATH, payload);
     return data;
   }
   async getUserInfoByToken(token) {
-    const { data } = await this.client.post(
-      GET_USER_INFO_PATH,
-      {
-        accessToken: token.accessToken
-      }
-    );
+    const { data } = await this.client.post(GET_USER_INFO_PATH, {
+      accessToken: token.accessToken,
+    });
     return data;
   }
 };
-var createOAuthHttpClient = () => axios.create({
-  baseURL: ENV.oAuthServerUrl,
-  timeout: AXIOS_TIMEOUT_MS
-});
+var createOAuthHttpClient = () =>
+  axios.create({
+    baseURL: ENV.oAuthServerUrl,
+    timeout: AXIOS_TIMEOUT_MS,
+  });
 var SDKServer = class {
   client;
   oauthService;
@@ -502,13 +519,14 @@ var SDKServer = class {
   deriveLoginMethod(platforms, fallback) {
     if (fallback && fallback.length > 0) return fallback;
     if (!Array.isArray(platforms) || platforms.length === 0) return null;
-    const set = new Set(
-      platforms.filter((p) => typeof p === "string")
-    );
+    const set = new Set(platforms.filter(p => typeof p === "string"));
     if (set.has("REGISTERED_PLATFORM_EMAIL")) return "email";
     if (set.has("REGISTERED_PLATFORM_GOOGLE")) return "google";
     if (set.has("REGISTERED_PLATFORM_APPLE")) return "apple";
-    if (set.has("REGISTERED_PLATFORM_MICROSOFT") || set.has("REGISTERED_PLATFORM_AZURE"))
+    if (
+      set.has("REGISTERED_PLATFORM_MICROSOFT") ||
+      set.has("REGISTERED_PLATFORM_AZURE")
+    )
       return "microsoft";
     if (set.has("REGISTERED_PLATFORM_GITHUB")) return "github";
     const first = Array.from(set)[0];
@@ -529,7 +547,7 @@ var SDKServer = class {
    */
   async getUserInfo(accessToken) {
     const data = await this.oauthService.getUserInfoByToken({
-      accessToken
+      accessToken,
     });
     const loginMethod = this.deriveLoginMethod(
       data?.platforms,
@@ -538,7 +556,7 @@ var SDKServer = class {
     return {
       ...data,
       platform: loginMethod,
-      loginMethod
+      loginMethod,
     };
   }
   parseCookies(cookieHeader) {
@@ -549,7 +567,10 @@ var SDKServer = class {
     return new Map(Object.entries(parsed));
   }
   getSessionSecret() {
-    const secret = ENV.cookieSecret || process.env.JWT_SECRET || "manju-group-jwt-secret-key-32-chars-length-2026";
+    const secret =
+      ENV.cookieSecret ||
+      process.env.JWT_SECRET ||
+      "manju-group-jwt-secret-key-32-chars-length-2026";
     return new TextEncoder().encode(secret);
   }
   /**
@@ -562,7 +583,7 @@ var SDKServer = class {
       {
         openId,
         appId: ENV.appId,
-        name: options.name || ""
+        name: options.name || "",
       },
       options
     );
@@ -575,8 +596,11 @@ var SDKServer = class {
     return new SignJWT({
       openId: payload.openId,
       appId: payload.appId,
-      name: payload.name
-    }).setProtectedHeader({ alg: "HS256", typ: "JWT" }).setExpirationTime(expirationSeconds).sign(secretKey);
+      name: payload.name,
+    })
+      .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+      .setExpirationTime(expirationSeconds)
+      .sign(secretKey);
   }
   async verifySession(cookieValue) {
     if (!cookieValue) {
@@ -586,17 +610,21 @@ var SDKServer = class {
     try {
       const secretKey = this.getSessionSecret();
       const { payload } = await jwtVerify(cookieValue, secretKey, {
-        algorithms: ["HS256"]
+        algorithms: ["HS256"],
       });
       const { openId, appId, name } = payload;
-      if (!isNonEmptyString(openId) || !isNonEmptyString(appId) || !isNonEmptyString(name)) {
+      if (
+        !isNonEmptyString(openId) ||
+        !isNonEmptyString(appId) ||
+        !isNonEmptyString(name)
+      ) {
         console.warn("[Auth] Session payload missing required fields");
         return null;
       }
       return {
         openId,
         appId,
-        name
+        name,
       };
     } catch (error) {
       console.warn("[Auth] Session verification failed", String(error));
@@ -606,7 +634,7 @@ var SDKServer = class {
   async getUserInfoWithJwt(jwtToken) {
     const payload = {
       jwtToken,
-      projectId: ENV.appId
+      projectId: ENV.appId,
     };
     const { data } = await this.client.post(
       GET_USER_INFO_WITH_JWT_PATH,
@@ -619,7 +647,7 @@ var SDKServer = class {
     return {
       ...data,
       platform: loginMethod,
-      loginMethod
+      loginMethod,
     };
   }
   async authenticateRequest(req) {
@@ -654,7 +682,7 @@ var SDKServer = class {
           name: userInfo.name || null,
           email: userInfo.email ?? null,
           loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
-          lastSignedIn: signedInAt
+          lastSignedIn: signedInAt,
         });
         user = await getUserByOpenId(userInfo.openId);
       } catch (error) {
@@ -667,7 +695,7 @@ var SDKServer = class {
     }
     await upsertUser({
       openId: user.openId,
-      lastSignedIn: signedInAt
+      lastSignedIn: signedInAt,
     });
     return user;
   }
@@ -686,7 +714,7 @@ function buildCronUser(userInfo) {
     updatedAt: now,
     lastSignedIn: now,
     taskUid: userInfo.taskUid ?? void 0,
-    isCron: true
+    isCron: true,
   };
 }
 var sdk = new SDKServer();
@@ -701,26 +729,27 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 var TITLE_MAX_LENGTH = 1200;
 var CONTENT_MAX_LENGTH = 2e4;
-var trimValue = (value) => value.trim();
-var isNonEmptyString2 = (value) => typeof value === "string" && value.trim().length > 0;
-var buildEndpointUrl = (baseUrl) => {
+var trimValue = value => value.trim();
+var isNonEmptyString2 = value =>
+  typeof value === "string" && value.trim().length > 0;
+var buildEndpointUrl = baseUrl => {
   const normalizedBase = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
   return new URL(
     "webdevtoken.v1.WebDevService/SendNotification",
     normalizedBase
   ).toString();
 };
-var validatePayload = (input) => {
+var validatePayload = input => {
   if (!isNonEmptyString2(input.title)) {
     throw new TRPCError({
       code: "BAD_REQUEST",
-      message: "Notification title is required."
+      message: "Notification title is required.",
     });
   }
   if (!isNonEmptyString2(input.content)) {
     throw new TRPCError({
       code: "BAD_REQUEST",
-      message: "Notification content is required."
+      message: "Notification content is required.",
     });
   }
   const title = trimValue(input.title);
@@ -728,13 +757,13 @@ var validatePayload = (input) => {
   if (title.length > TITLE_MAX_LENGTH) {
     throw new TRPCError({
       code: "BAD_REQUEST",
-      message: `Notification title must be at most ${TITLE_MAX_LENGTH} characters.`
+      message: `Notification title must be at most ${TITLE_MAX_LENGTH} characters.`,
     });
   }
   if (content.length > CONTENT_MAX_LENGTH) {
     throw new TRPCError({
       code: "BAD_REQUEST",
-      message: `Notification content must be at most ${CONTENT_MAX_LENGTH} characters.`
+      message: `Notification content must be at most ${CONTENT_MAX_LENGTH} characters.`,
     });
   }
   return { title, content };
@@ -744,13 +773,13 @@ async function notifyOwner(payload) {
   if (!ENV.forgeApiUrl) {
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
-      message: "Notification service URL is not configured."
+      message: "Notification service URL is not configured.",
     });
   }
   if (!ENV.forgeApiKey) {
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
-      message: "Notification service API key is not configured."
+      message: "Notification service API key is not configured.",
     });
   }
   const endpoint = buildEndpointUrl(ENV.forgeApiUrl);
@@ -761,9 +790,9 @@ async function notifyOwner(payload) {
         accept: "application/json",
         authorization: `Bearer ${ENV.forgeApiKey}`,
         "content-type": "application/json",
-        "connect-protocol-version": "1"
+        "connect-protocol-version": "1",
       },
-      body: JSON.stringify({ title, content })
+      body: JSON.stringify({ title, content }),
     });
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
@@ -783,11 +812,11 @@ async function notifyOwner(payload) {
 import { initTRPC, TRPCError as TRPCError2 } from "@trpc/server";
 import superjson from "superjson";
 var t = initTRPC.context().create({
-  transformer: superjson
+  transformer: superjson,
 });
 var router = t.router;
 var publicProcedure = t.procedure;
-var requireUser = t.middleware(async (opts) => {
+var requireUser = t.middleware(async opts => {
   const { ctx, next } = opts;
   if (!ctx.user) {
     throw new TRPCError2({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
@@ -795,13 +824,13 @@ var requireUser = t.middleware(async (opts) => {
   return next({
     ctx: {
       ...ctx,
-      user: ctx.user
-    }
+      user: ctx.user,
+    },
   });
 });
 var protectedProcedure = t.procedure.use(requireUser);
 var adminProcedure = t.procedure.use(
-  t.middleware(async (opts) => {
+  t.middleware(async opts => {
     const { ctx, next } = opts;
     if (!ctx.user || ctx.user.role !== "admin") {
       throw new TRPCError2({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
@@ -809,32 +838,36 @@ var adminProcedure = t.procedure.use(
     return next({
       ctx: {
         ...ctx,
-        user: ctx.user
-      }
+        user: ctx.user,
+      },
     });
   })
 );
 
 // server/_core/systemRouter.ts
 var systemRouter = router({
-  health: publicProcedure.input(
-    z.object({
-      timestamp: z.number().min(0, "timestamp cannot be negative")
-    })
-  ).query(() => ({
-    ok: true
-  })),
-  notifyOwner: adminProcedure.input(
-    z.object({
-      title: z.string().min(1, "title is required"),
-      content: z.string().min(1, "content is required")
-    })
-  ).mutation(async ({ input }) => {
-    const delivered = await notifyOwner(input);
-    return {
-      success: delivered
-    };
-  })
+  health: publicProcedure
+    .input(
+      z.object({
+        timestamp: z.number().min(0, "timestamp cannot be negative"),
+      })
+    )
+    .query(() => ({
+      ok: true,
+    })),
+  notifyOwner: adminProcedure
+    .input(
+      z.object({
+        title: z.string().min(1, "title is required"),
+        content: z.string().min(1, "content is required"),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const delivered = await notifyOwner(input);
+      return {
+        success: delivered,
+      };
+    }),
 });
 
 // server/routers/products.ts
@@ -850,7 +883,7 @@ import {
   like,
   notLike,
   or,
-  sql as sql2
+  sql as sql2,
 } from "drizzle-orm";
 function mapProductRow(row, images, variants) {
   const { product, brand, category } = row;
@@ -886,14 +919,14 @@ function mapProductRow(row, images, variants) {
     categorySlug: category?.slug ?? "uncategorized",
     createdAt: product.createdAt,
     imageUrl: primaryImage?.url ?? null,
-    images: sortedImages.map((img) => ({
+    images: sortedImages.map(img => ({
       id: img.id,
       productId: img.productId,
       url: img.url,
       isPrimary: img.isPrimary,
-      sortOrder: img.sortOrder ?? 0
+      sortOrder: img.sortOrder ?? 0,
     })),
-    variants: variants.map((v) => ({
+    variants: variants.map(v => ({
       id: v.id,
       productId: v.productId,
       sku: v.sku,
@@ -902,9 +935,9 @@ function mapProductRow(row, images, variants) {
       price: Number(v.price),
       salePrice: v.salePrice ? Number(v.salePrice) : null,
       stockQuantity: v.stockQuantity,
-      isActive: v.isActive
+      isActive: v.isActive,
     })),
-    reviews: []
+    reviews: [],
   };
 }
 async function loadImagesAndVariants(db, productIds) {
@@ -914,8 +947,14 @@ async function loadImagesAndVariants(db, productIds) {
     return { imagesByProduct, variantsByProduct };
   }
   const [allImages, allVariants] = await Promise.all([
-    db.select().from(productImages).where(or(...productIds.map((id) => eq2(productImages.productId, id)))),
-    db.select().from(productVariants).where(or(...productIds.map((id) => eq2(productVariants.productId, id))))
+    db
+      .select()
+      .from(productImages)
+      .where(or(...productIds.map(id => eq2(productImages.productId, id)))),
+    db
+      .select()
+      .from(productVariants)
+      .where(or(...productIds.map(id => eq2(productVariants.productId, id)))),
   ]);
   for (const img of allImages) {
     const list = imagesByProduct.get(img.productId) ?? [];
@@ -930,13 +969,13 @@ async function loadImagesAndVariants(db, productIds) {
   return { imagesByProduct, variantsByProduct };
 }
 async function hydrateRows(db, rows) {
-  const ids = rows.map((r) => r.product.id);
+  const ids = rows.map(r => r.product.id);
   const { imagesByProduct, variantsByProduct } = await loadImagesAndVariants(
     db,
     ids
   );
-  return rows.map(
-    (row) => mapProductRow(
+  return rows.map(row =>
+    mapProductRow(
       row,
       imagesByProduct.get(row.product.id) ?? [],
       variantsByProduct.get(row.product.id) ?? []
@@ -944,169 +983,246 @@ async function hydrateRows(db, rows) {
   );
 }
 var productsRouter = router({
-  list: publicProcedure.input(
-    z2.object({
-      page: z2.number().int().min(1).default(1),
-      limit: z2.number().int().min(1).max(100).default(12),
-      brandId: z2.union([z2.number(), z2.string()]).optional(),
-      categoryId: z2.union([z2.number(), z2.string()]).optional(),
-      minPrice: z2.number().optional(),
-      maxPrice: z2.number().optional(),
-      inStockOnly: z2.boolean().optional(),
-      search: z2.string().optional(),
-      sortBy: z2.enum(["newest", "price_asc", "price_desc", "popular"]).default("newest"),
-      isFeatured: z2.boolean().optional(),
-      isBestSeller: z2.boolean().optional(),
-      isNew: z2.boolean().optional()
-    })
-  ).query(async ({ input }) => {
-    const db = await getDb();
-    if (!db) return { items: [], total: 0 };
-    const conditions = [
-      eq2(products.isActive, true),
-      ne(products.categoryId, 5),
-      ne(products.brandId, 5),
-      notLike(products.name, "%Exercise Book%"),
-      notLike(products.name, "%Drawing Book%"),
-      notLike(products.name, "%Ruled%")
-    ];
-    if (input.brandId) {
-      conditions.push(eq2(products.brandId, Number(input.brandId)));
-    }
-    if (input.categoryId) {
-      conditions.push(eq2(products.categoryId, Number(input.categoryId)));
-    }
-    if (input.minPrice !== void 0) {
-      conditions.push(gte(products.basePrice, String(input.minPrice)));
-    }
-    if (input.maxPrice !== void 0) {
-      conditions.push(lte(products.basePrice, String(input.maxPrice)));
-    }
-    if (input.inStockOnly) {
-      conditions.push(eq2(products.isInStock, true));
-    }
-    if (input.isFeatured !== void 0) {
-      conditions.push(eq2(products.isFeatured, input.isFeatured));
-    }
-    if (input.isBestSeller !== void 0) {
-      conditions.push(eq2(products.isBestSeller, input.isBestSeller));
-    }
-    if (input.isNew !== void 0) {
-      conditions.push(eq2(products.isNew, input.isNew));
-    }
-    if (input.search && input.search.trim()) {
-      const rawSearch = input.search.trim();
-      const words = rawSearch.split(/\s+/).filter(Boolean);
-      const searchConditions = words.map((w) => {
-        const t2 = `%${w}%`;
-        return or(
-          like(products.name, t2),
-          like(products.shortDescription, t2),
-          like(products.description, t2),
-          like(products.slug, t2),
-          like(products.sku, t2),
-          like(products.tags, t2)
-        );
-      });
-      conditions.push(and(...searchConditions));
-    }
-    const whereClause = and(...conditions);
-    let orderBy;
-    switch (input.sortBy) {
-      case "price_asc":
-        orderBy = asc(products.basePrice);
-        break;
-      case "price_desc":
-        orderBy = desc(products.basePrice);
-        break;
-      case "popular":
-        orderBy = desc(products.isBestSeller);
-        break;
-      case "newest":
-      default:
-        orderBy = desc(products.createdAt);
-        break;
-    }
-    const offset = (input.page - 1) * input.limit;
-    const [rows, totalRows] = await Promise.all([
-      db.select({ product: products, brand: brands, category: categories }).from(products).leftJoin(brands, eq2(products.brandId, brands.id)).leftJoin(categories, eq2(products.categoryId, categories.id)).where(whereClause).orderBy(orderBy).limit(input.limit).offset(offset),
-      db.select({ count: sql2`count(*)` }).from(products).where(whereClause)
-    ]);
-    const items = await hydrateRows(db, rows);
-    const total = Number(totalRows[0]?.count ?? 0);
-    return { items, total };
-  }),
-  bySlug: publicProcedure.input(z2.object({ slug: z2.string() })).query(async ({ input }) => {
-    const db = await getDb();
-    if (!db) return null;
-    let rows = await db.select({ product: products, brand: brands, category: categories }).from(products).leftJoin(brands, eq2(products.brandId, brands.id)).leftJoin(categories, eq2(products.categoryId, categories.id)).where(eq2(products.slug, input.slug)).limit(1);
-    if (rows.length === 0) {
-      const isNum = !isNaN(Number(input.slug));
-      const conds = [
-        eq2(products.sku, input.slug),
-        like(products.slug, `%${input.slug.replace(/-\d+$/, "")}%`)
-      ];
-      if (isNum) {
-        conds.push(eq2(products.id, Number(input.slug)));
-      }
-      rows = await db.select({ product: products, brand: brands, category: categories }).from(products).leftJoin(brands, eq2(products.brandId, brands.id)).leftJoin(categories, eq2(products.categoryId, categories.id)).where(or(...conds)).limit(1);
-    }
-    if (rows.length === 0) return null;
-    const [hydrated] = await hydrateRows(db, rows);
-    return hydrated ?? null;
-  }),
-  related: publicProcedure.input(
-    z2.object({
-      productId: z2.union([z2.number(), z2.string()]),
-      brandId: z2.union([z2.number(), z2.string()]).optional(),
-      categoryId: z2.union([z2.number(), z2.string()]).optional(),
-      limit: z2.number().int().min(1).max(100).default(4)
-    })
-  ).query(async ({ input }) => {
-    const db = await getDb();
-    if (!db) return [];
-    const conditions = [
-      eq2(products.isActive, true),
-      sql2`${products.id} != ${Number(input.productId)}`
-    ];
-    if (input.categoryId) {
-      conditions.push(eq2(products.categoryId, Number(input.categoryId)));
-    } else if (input.brandId) {
-      conditions.push(eq2(products.brandId, Number(input.brandId)));
-    }
-    const rows = await db.select({ product: products, brand: brands, category: categories }).from(products).leftJoin(brands, eq2(products.brandId, brands.id)).leftJoin(categories, eq2(products.categoryId, categories.id)).where(and(...conditions)).orderBy(desc(products.createdAt)).limit(input.limit);
-    return hydrateRows(db, rows);
-  }),
-  getFeatured: publicProcedure.input(z2.object({ limit: z2.number().int().min(1).max(100).default(8) }).optional()).query(async ({ input }) => {
-    const db = await getDb();
-    if (!db) return [];
-    const rows = await db.select({ product: products, brand: brands, category: categories }).from(products).leftJoin(brands, eq2(products.brandId, brands.id)).leftJoin(categories, eq2(products.categoryId, categories.id)).where(and(eq2(products.isActive, true), eq2(products.isFeatured, true))).orderBy(desc(products.createdAt)).limit(input?.limit ?? 8);
-    return hydrateRows(db, rows);
-  }),
-  search: publicProcedure.input(z2.object({ query: z2.string(), limit: z2.number().int().min(1).max(100).default(8) })).query(async ({ input }) => {
-    const db = await getDb();
-    if (!db) return [];
-    if (!input.query.trim()) return [];
-    const term = `%${input.query.trim()}%`;
-    const rows = await db.select({ product: products, brand: brands, category: categories }).from(products).leftJoin(brands, eq2(products.brandId, brands.id)).leftJoin(categories, eq2(products.categoryId, categories.id)).where(
-      and(
+  list: publicProcedure
+    .input(
+      z2.object({
+        page: z2.number().int().min(1).default(1),
+        limit: z2.number().int().min(1).max(100).default(12),
+        brandId: z2.union([z2.number(), z2.string()]).optional(),
+        categoryId: z2.union([z2.number(), z2.string()]).optional(),
+        minPrice: z2.number().optional(),
+        maxPrice: z2.number().optional(),
+        inStockOnly: z2.boolean().optional(),
+        search: z2.string().optional(),
+        sortBy: z2
+          .enum(["newest", "price_asc", "price_desc", "popular"])
+          .default("newest"),
+        isFeatured: z2.boolean().optional(),
+        isBestSeller: z2.boolean().optional(),
+        isNew: z2.boolean().optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { items: [], total: 0 };
+      const conditions = [
         eq2(products.isActive, true),
-        or(
-          like(products.name, term),
-          like(products.shortDescription, term),
-          like(products.description, term),
-          like(products.sku, term)
+        ne(products.categoryId, 5),
+        ne(products.brandId, 5),
+        notLike(products.name, "%Exercise Book%"),
+        notLike(products.name, "%Drawing Book%"),
+        notLike(products.name, "%Ruled%"),
+      ];
+      if (input.brandId) {
+        conditions.push(eq2(products.brandId, Number(input.brandId)));
+      }
+      if (input.categoryId) {
+        conditions.push(eq2(products.categoryId, Number(input.categoryId)));
+      }
+      if (input.minPrice !== void 0) {
+        conditions.push(gte(products.basePrice, String(input.minPrice)));
+      }
+      if (input.maxPrice !== void 0) {
+        conditions.push(lte(products.basePrice, String(input.maxPrice)));
+      }
+      if (input.inStockOnly) {
+        conditions.push(eq2(products.isInStock, true));
+      }
+      if (input.isFeatured !== void 0) {
+        conditions.push(eq2(products.isFeatured, input.isFeatured));
+      }
+      if (input.isBestSeller !== void 0) {
+        conditions.push(eq2(products.isBestSeller, input.isBestSeller));
+      }
+      if (input.isNew !== void 0) {
+        conditions.push(eq2(products.isNew, input.isNew));
+      }
+      if (input.search && input.search.trim()) {
+        const rawSearch = input.search.trim();
+        const words = rawSearch.split(/\s+/).filter(Boolean);
+        const searchConditions = words.map(w => {
+          const t2 = `%${w}%`;
+          return or(
+            like(products.name, t2),
+            like(products.shortDescription, t2),
+            like(products.description, t2),
+            like(products.slug, t2),
+            like(products.sku, t2),
+            like(products.tags, t2)
+          );
+        });
+        conditions.push(and(...searchConditions));
+      }
+      const whereClause = and(...conditions);
+      let orderBy;
+      switch (input.sortBy) {
+        case "price_asc":
+          orderBy = asc(products.basePrice);
+          break;
+        case "price_desc":
+          orderBy = desc(products.basePrice);
+          break;
+        case "popular":
+          orderBy = desc(products.isBestSeller);
+          break;
+        case "newest":
+        default:
+          orderBy = desc(products.createdAt);
+          break;
+      }
+      const offset = (input.page - 1) * input.limit;
+      const [rows, totalRows] = await Promise.all([
+        db
+          .select({ product: products, brand: brands, category: categories })
+          .from(products)
+          .leftJoin(brands, eq2(products.brandId, brands.id))
+          .leftJoin(categories, eq2(products.categoryId, categories.id))
+          .where(whereClause)
+          .orderBy(orderBy)
+          .limit(input.limit)
+          .offset(offset),
+        db
+          .select({ count: sql2`count(*)` })
+          .from(products)
+          .where(whereClause),
+      ]);
+      const items = await hydrateRows(db, rows);
+      const total = Number(totalRows[0]?.count ?? 0);
+      return { items, total };
+    }),
+  bySlug: publicProcedure
+    .input(z2.object({ slug: z2.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return null;
+      let rows = await db
+        .select({ product: products, brand: brands, category: categories })
+        .from(products)
+        .leftJoin(brands, eq2(products.brandId, brands.id))
+        .leftJoin(categories, eq2(products.categoryId, categories.id))
+        .where(eq2(products.slug, input.slug))
+        .limit(1);
+      if (rows.length === 0) {
+        const isNum = !isNaN(Number(input.slug));
+        const conds = [
+          eq2(products.sku, input.slug),
+          like(products.slug, `%${input.slug.replace(/-\d+$/, "")}%`),
+        ];
+        if (isNum) {
+          conds.push(eq2(products.id, Number(input.slug)));
+        }
+        rows = await db
+          .select({ product: products, brand: brands, category: categories })
+          .from(products)
+          .leftJoin(brands, eq2(products.brandId, brands.id))
+          .leftJoin(categories, eq2(products.categoryId, categories.id))
+          .where(or(...conds))
+          .limit(1);
+      }
+      if (rows.length === 0) return null;
+      const [hydrated] = await hydrateRows(db, rows);
+      return hydrated ?? null;
+    }),
+  related: publicProcedure
+    .input(
+      z2.object({
+        productId: z2.union([z2.number(), z2.string()]),
+        brandId: z2.union([z2.number(), z2.string()]).optional(),
+        categoryId: z2.union([z2.number(), z2.string()]).optional(),
+        limit: z2.number().int().min(1).max(100).default(4),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const conditions = [
+        eq2(products.isActive, true),
+        sql2`${products.id} != ${Number(input.productId)}`,
+      ];
+      if (input.categoryId) {
+        conditions.push(eq2(products.categoryId, Number(input.categoryId)));
+      } else if (input.brandId) {
+        conditions.push(eq2(products.brandId, Number(input.brandId)));
+      }
+      const rows = await db
+        .select({ product: products, brand: brands, category: categories })
+        .from(products)
+        .leftJoin(brands, eq2(products.brandId, brands.id))
+        .leftJoin(categories, eq2(products.categoryId, categories.id))
+        .where(and(...conditions))
+        .orderBy(desc(products.createdAt))
+        .limit(input.limit);
+      return hydrateRows(db, rows);
+    }),
+  getFeatured: publicProcedure
+    .input(
+      z2
+        .object({ limit: z2.number().int().min(1).max(100).default(8) })
+        .optional()
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db
+        .select({ product: products, brand: brands, category: categories })
+        .from(products)
+        .leftJoin(brands, eq2(products.brandId, brands.id))
+        .leftJoin(categories, eq2(products.categoryId, categories.id))
+        .where(
+          and(eq2(products.isActive, true), eq2(products.isFeatured, true))
         )
-      )
-    ).orderBy(desc(products.isFeatured), desc(products.createdAt)).limit(input.limit);
-    return hydrateRows(db, rows);
-  })
+        .orderBy(desc(products.createdAt))
+        .limit(input?.limit ?? 8);
+      return hydrateRows(db, rows);
+    }),
+  search: publicProcedure
+    .input(
+      z2.object({
+        query: z2.string(),
+        limit: z2.number().int().min(1).max(100).default(8),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      if (!input.query.trim()) return [];
+      const term = `%${input.query.trim()}%`;
+      const rows = await db
+        .select({ product: products, brand: brands, category: categories })
+        .from(products)
+        .leftJoin(brands, eq2(products.brandId, brands.id))
+        .leftJoin(categories, eq2(products.categoryId, categories.id))
+        .where(
+          and(
+            eq2(products.isActive, true),
+            or(
+              like(products.name, term),
+              like(products.shortDescription, term),
+              like(products.description, term),
+              like(products.sku, term)
+            )
+          )
+        )
+        .orderBy(desc(products.isFeatured), desc(products.createdAt))
+        .limit(input.limit);
+      return hydrateRows(db, rows);
+    }),
 });
 
 // server/routers/brands.ts
 import { z as z3 } from "zod";
-import { and as and2, asc as asc2, eq as eq3, notInArray, sql as sql3 } from "drizzle-orm";
-var EXCLUDED_BRAND_SLUGS = ["manju-exercise-books", "exercise-books", "stationery"];
+import {
+  and as and2,
+  asc as asc2,
+  eq as eq3,
+  notInArray,
+  sql as sql3,
+} from "drizzle-orm";
+var EXCLUDED_BRAND_SLUGS = [
+  "manju-exercise-books",
+  "exercise-books",
+  "stationery",
+];
 function mapBrand(b) {
   return {
     id: b.id,
@@ -1118,48 +1234,91 @@ function mapBrand(b) {
     coverUrl: b.bannerUrl,
     sortOrder: b.sortOrder ?? 0,
     isActive: b.isActive,
-    createdAt: b.createdAt
+    createdAt: b.createdAt,
   };
 }
 var brandsRouter = router({
   list: publicProcedure.query(async () => {
     const db = await getDb();
     if (!db) return [];
-    const rows = await db.select().from(brands).where(and2(eq3(brands.isActive, true), notInArray(brands.slug, EXCLUDED_BRAND_SLUGS))).orderBy(asc2(brands.sortOrder));
-    return rows.filter(
-      (r) => !EXCLUDED_BRAND_SLUGS.includes(r.slug.toLowerCase()) && !r.name.toLowerCase().includes("exercise")
-    ).map(mapBrand);
+    const rows = await db
+      .select()
+      .from(brands)
+      .where(
+        and2(
+          eq3(brands.isActive, true),
+          notInArray(brands.slug, EXCLUDED_BRAND_SLUGS)
+        )
+      )
+      .orderBy(asc2(brands.sortOrder));
+    return rows
+      .filter(
+        r =>
+          !EXCLUDED_BRAND_SLUGS.includes(r.slug.toLowerCase()) &&
+          !r.name.toLowerCase().includes("exercise")
+      )
+      .map(mapBrand);
   }),
   getAll: publicProcedure.query(async () => {
     const db = await getDb();
     if (!db) return [];
-    const rows = await db.select({
-      brand: brands,
-      productCount: sql3`count(${products.id})`
-    }).from(brands).leftJoin(
-      products,
-      and2(eq3(products.brandId, brands.id), eq3(products.isActive, true))
-    ).where(and2(eq3(brands.isActive, true), notInArray(brands.slug, EXCLUDED_BRAND_SLUGS))).groupBy(brands.id).orderBy(asc2(brands.sortOrder));
-    return rows.filter(
-      (row) => !EXCLUDED_BRAND_SLUGS.includes(row.brand.slug.toLowerCase()) && !row.brand.name.toLowerCase().includes("exercise")
-    ).map((row) => ({
-      ...mapBrand(row.brand),
-      productCount: Number(row.productCount ?? 0)
-    }));
+    const rows = await db
+      .select({
+        brand: brands,
+        productCount: sql3`count(${products.id})`,
+      })
+      .from(brands)
+      .leftJoin(
+        products,
+        and2(eq3(products.brandId, brands.id), eq3(products.isActive, true))
+      )
+      .where(
+        and2(
+          eq3(brands.isActive, true),
+          notInArray(brands.slug, EXCLUDED_BRAND_SLUGS)
+        )
+      )
+      .groupBy(brands.id)
+      .orderBy(asc2(brands.sortOrder));
+    return rows
+      .filter(
+        row =>
+          !EXCLUDED_BRAND_SLUGS.includes(row.brand.slug.toLowerCase()) &&
+          !row.brand.name.toLowerCase().includes("exercise")
+      )
+      .map(row => ({
+        ...mapBrand(row.brand),
+        productCount: Number(row.productCount ?? 0),
+      }));
   }),
-  bySlug: publicProcedure.input(z3.object({ slug: z3.string() })).query(async ({ input }) => {
-    if (EXCLUDED_BRAND_SLUGS.includes(input.slug.toLowerCase())) return null;
-    const db = await getDb();
-    if (!db) return null;
-    const [row] = await db.select().from(brands).where(eq3(brands.slug, input.slug)).limit(1);
-    return row ? mapBrand(row) : null;
-  })
+  bySlug: publicProcedure
+    .input(z3.object({ slug: z3.string() }))
+    .query(async ({ input }) => {
+      if (EXCLUDED_BRAND_SLUGS.includes(input.slug.toLowerCase())) return null;
+      const db = await getDb();
+      if (!db) return null;
+      const [row] = await db
+        .select()
+        .from(brands)
+        .where(eq3(brands.slug, input.slug))
+        .limit(1);
+      return row ? mapBrand(row) : null;
+    }),
 });
 
 // server/routers/categories.ts
 import { z as z4 } from "zod";
-import { and as and3, asc as asc3, eq as eq4, notInArray as notInArray2 } from "drizzle-orm";
-var EXCLUDED_CATEGORY_SLUGS = ["stationery", "exercise-books", "manju-exercise-books"];
+import {
+  and as and3,
+  asc as asc3,
+  eq as eq4,
+  notInArray as notInArray2,
+} from "drizzle-orm";
+var EXCLUDED_CATEGORY_SLUGS = [
+  "stationery",
+  "exercise-books",
+  "manju-exercise-books",
+];
 function mapCategory(c) {
   return {
     id: c.id,
@@ -1168,33 +1327,68 @@ function mapCategory(c) {
     description: c.description,
     imageUrl: c.imageUrl,
     parentId: c.parentId,
-    sortOrder: c.sortOrder ?? 0
+    sortOrder: c.sortOrder ?? 0,
   };
 }
 var categoriesRouter = router({
   list: publicProcedure.query(async () => {
     const db = await getDb();
     if (!db) return [];
-    const rows = await db.select().from(categories).where(and3(eq4(categories.isActive, true), notInArray2(categories.slug, EXCLUDED_CATEGORY_SLUGS))).orderBy(asc3(categories.sortOrder));
-    return rows.filter(
-      (r) => !EXCLUDED_CATEGORY_SLUGS.includes(r.slug.toLowerCase()) && !r.name.toLowerCase().includes("stationery") && !r.name.toLowerCase().includes("exercise")
-    ).map(mapCategory);
+    const rows = await db
+      .select()
+      .from(categories)
+      .where(
+        and3(
+          eq4(categories.isActive, true),
+          notInArray2(categories.slug, EXCLUDED_CATEGORY_SLUGS)
+        )
+      )
+      .orderBy(asc3(categories.sortOrder));
+    return rows
+      .filter(
+        r =>
+          !EXCLUDED_CATEGORY_SLUGS.includes(r.slug.toLowerCase()) &&
+          !r.name.toLowerCase().includes("stationery") &&
+          !r.name.toLowerCase().includes("exercise")
+      )
+      .map(mapCategory);
   }),
   getAll: publicProcedure.query(async () => {
     const db = await getDb();
     if (!db) return [];
-    const rows = await db.select().from(categories).where(and3(eq4(categories.isActive, true), notInArray2(categories.slug, EXCLUDED_CATEGORY_SLUGS))).orderBy(asc3(categories.sortOrder));
-    return rows.filter(
-      (r) => !EXCLUDED_CATEGORY_SLUGS.includes(r.slug.toLowerCase()) && !r.name.toLowerCase().includes("stationery") && !r.name.toLowerCase().includes("exercise")
-    ).map(mapCategory);
+    const rows = await db
+      .select()
+      .from(categories)
+      .where(
+        and3(
+          eq4(categories.isActive, true),
+          notInArray2(categories.slug, EXCLUDED_CATEGORY_SLUGS)
+        )
+      )
+      .orderBy(asc3(categories.sortOrder));
+    return rows
+      .filter(
+        r =>
+          !EXCLUDED_CATEGORY_SLUGS.includes(r.slug.toLowerCase()) &&
+          !r.name.toLowerCase().includes("stationery") &&
+          !r.name.toLowerCase().includes("exercise")
+      )
+      .map(mapCategory);
   }),
-  bySlug: publicProcedure.input(z4.object({ slug: z4.string() })).query(async ({ input }) => {
-    if (EXCLUDED_CATEGORY_SLUGS.includes(input.slug.toLowerCase())) return null;
-    const db = await getDb();
-    if (!db) return null;
-    const [row] = await db.select().from(categories).where(eq4(categories.slug, input.slug)).limit(1);
-    return row ? mapCategory(row) : null;
-  })
+  bySlug: publicProcedure
+    .input(z4.object({ slug: z4.string() }))
+    .query(async ({ input }) => {
+      if (EXCLUDED_CATEGORY_SLUGS.includes(input.slug.toLowerCase()))
+        return null;
+      const db = await getDb();
+      if (!db) return null;
+      const [row] = await db
+        .select()
+        .from(categories)
+        .where(eq4(categories.slug, input.slug))
+        .limit(1);
+      return row ? mapCategory(row) : null;
+    }),
 });
 
 // server/routers/cart.ts
@@ -1206,8 +1400,8 @@ var MOCK_CART_ITEMS = [];
 var mockCartIdCounter = 1;
 var mockCartItemIdCounter = 1;
 async function getOrCreateMockCart(userId, sessionId) {
-  let cart = MOCK_CARTS.find(
-    (c) => userId ? c.userId === userId : c.sessionId === sessionId
+  let cart = MOCK_CARTS.find(c =>
+    userId ? c.userId === userId : c.sessionId === sessionId
   );
   if (!cart) {
     cart = { id: mockCartIdCounter++, userId, sessionId };
@@ -1217,246 +1411,365 @@ async function getOrCreateMockCart(userId, sessionId) {
 }
 async function getOrCreateCart(db, userId, sessionId) {
   if (userId) {
-    const [existing] = await db.select().from(carts).where(eq5(carts.userId, userId)).limit(1);
+    const [existing] = await db
+      .select()
+      .from(carts)
+      .where(eq5(carts.userId, userId))
+      .limit(1);
     if (existing) return existing;
     await db.insert(carts).values({ userId });
-    const [created] = await db.select().from(carts).where(eq5(carts.userId, userId)).limit(1);
+    const [created] = await db
+      .select()
+      .from(carts)
+      .where(eq5(carts.userId, userId))
+      .limit(1);
     return created;
   }
   if (sessionId) {
-    const [existing] = await db.select().from(carts).where(eq5(carts.sessionId, sessionId)).limit(1);
+    const [existing] = await db
+      .select()
+      .from(carts)
+      .where(eq5(carts.sessionId, sessionId))
+      .limit(1);
     if (existing) return existing;
     await db.insert(carts).values({ sessionId });
-    const [created] = await db.select().from(carts).where(eq5(carts.sessionId, sessionId)).limit(1);
+    const [created] = await db
+      .select()
+      .from(carts)
+      .where(eq5(carts.sessionId, sessionId))
+      .limit(1);
     return created;
   }
   throw new Error("No userId or sessionId provided for cart");
 }
 var cartRouter = router({
-  get: publicProcedure.input(z5.object({ sessionId: z5.string().optional() })).query(async ({ ctx, input }) => {
-    const db = await getDb();
-    const userId = ctx.user?.id;
-    const sessionId = input.sessionId;
-    if (!userId && !sessionId) {
-      return { items: [], total: 0, itemCount: 0 };
-    }
-    let cart;
-    let rawItems = [];
-    try {
-      if (!db) {
-        cart = await getOrCreateMockCart(userId, sessionId);
-        rawItems = MOCK_CART_ITEMS.filter((i) => i.cartId === cart.id);
-      } else {
-        cart = await getOrCreateCart(db, userId, sessionId);
-        rawItems = await db.select().from(cartItems).where(eq5(cartItems.cartId, cart.id));
+  get: publicProcedure
+    .input(z5.object({ sessionId: z5.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      const userId = ctx.user?.id;
+      const sessionId = input.sessionId;
+      if (!userId && !sessionId) {
+        return { items: [], total: 0, itemCount: 0 };
       }
-    } catch (err) {
-      console.warn("DB cart lookup failed, using memory fallback:", err);
-      cart = await getOrCreateMockCart(userId, sessionId);
-      rawItems = MOCK_CART_ITEMS.filter((i) => i.cartId === cart.id);
-    }
-    if (rawItems.length === 0) {
-      return { items: [], total: 0, itemCount: 0 };
-    }
-    const enriched = await Promise.all(
-      rawItems.map(async (item) => {
-        const numId = Number(item.productId);
-        let p = null;
-        let pBrand = null;
-        let pImage = null;
-        if (db && !isNaN(numId)) {
-          const [pRow] = await db.select({
-            product: products,
-            brand: brands
-          }).from(products).leftJoin(brands, eq5(products.brandId, brands.id)).where(eq5(products.id, numId)).limit(1);
-          if (pRow) {
-            p = pRow.product;
-            pBrand = pRow.brand;
-            const [imgRow] = await db.select().from(productImages).where(eq5(productImages.productId, numId)).orderBy(productImages.sortOrder).limit(1);
-            pImage = imgRow?.url ?? null;
-          }
-        }
-        const fallbackPrice = Number(item.unitPrice) || (p?.salePrice ? Number(p.salePrice) : Number(p?.basePrice)) || 0;
-        return {
-          id: item.id,
-          cartId: item.cartId,
-          productId: item.productId,
-          variantId: item.variantId,
-          quantity: item.quantity,
-          unitPrice: fallbackPrice,
-          productName: p?.name ?? `Product #${item.productId}`,
-          productSlug: p?.slug ?? "products",
-          brandName: pBrand?.name ?? "Manju Group",
-          isInStock: p ? p.isInStock : true,
-          imageUrl: pImage
-        };
-      })
-    );
-    const total = enriched.reduce(
-      (sum, i) => sum + Number(i.unitPrice) * i.quantity,
-      0
-    );
-    const itemCount = enriched.reduce((sum, i) => sum + i.quantity, 0);
-    return { items: enriched, total, itemCount };
-  }),
-  addItem: publicProcedure.input(
-    z5.object({
-      productId: z5.union([z5.string(), z5.number()]),
-      variantId: z5.union([z5.string(), z5.number()]).optional(),
-      quantity: z5.number().min(1).default(1),
-      unitPrice: z5.number(),
-      sessionId: z5.string().optional()
-    })
-  ).mutation(async ({ ctx, input }) => {
-    const db = await getDb();
-    const userId = ctx.user?.id;
-    const sessionId = input.sessionId;
-    if (!userId && !sessionId) {
-      throw new Error("Missing user session for cart");
-    }
-    const prodIdStr = String(input.productId);
-    try {
-      if (!db) {
-        const cart2 = await getOrCreateMockCart(userId, sessionId);
-        const existing2 = MOCK_CART_ITEMS.find(
-          (i) => i.cartId === cart2.id && i.productId === prodIdStr
-        );
-        if (existing2) {
-          existing2.quantity += input.quantity;
+      let cart;
+      let rawItems = [];
+      try {
+        if (!db) {
+          cart = await getOrCreateMockCart(userId, sessionId);
+          rawItems = MOCK_CART_ITEMS.filter(i => i.cartId === cart.id);
         } else {
-          MOCK_CART_ITEMS.push({
-            id: mockCartItemIdCounter++,
-            cartId: cart2.id,
+          cart = await getOrCreateCart(db, userId, sessionId);
+          rawItems = await db
+            .select()
+            .from(cartItems)
+            .where(eq5(cartItems.cartId, cart.id));
+        }
+      } catch (err) {
+        console.warn("DB cart lookup failed, using memory fallback:", err);
+        cart = await getOrCreateMockCart(userId, sessionId);
+        rawItems = MOCK_CART_ITEMS.filter(i => i.cartId === cart.id);
+      }
+      if (rawItems.length === 0) {
+        return { items: [], total: 0, itemCount: 0 };
+      }
+      const enriched = await Promise.all(
+        rawItems.map(async item => {
+          const numId = Number(item.productId);
+          let p = null;
+          let pBrand = null;
+          let pImage = null;
+          if (db && !isNaN(numId)) {
+            const [pRow] = await db
+              .select({
+                product: products,
+                brand: brands,
+              })
+              .from(products)
+              .leftJoin(brands, eq5(products.brandId, brands.id))
+              .where(eq5(products.id, numId))
+              .limit(1);
+            if (pRow) {
+              p = pRow.product;
+              pBrand = pRow.brand;
+              const [imgRow] = await db
+                .select()
+                .from(productImages)
+                .where(eq5(productImages.productId, numId))
+                .orderBy(productImages.sortOrder)
+                .limit(1);
+              pImage = imgRow?.url ?? null;
+            }
+          }
+          const fallbackPrice =
+            Number(item.unitPrice) ||
+            (p?.salePrice ? Number(p.salePrice) : Number(p?.basePrice)) ||
+            0;
+          return {
+            id: item.id,
+            cartId: item.cartId,
+            productId: item.productId,
+            variantId: item.variantId,
+            quantity: item.quantity,
+            unitPrice: fallbackPrice,
+            productName: p?.name ?? `Product #${item.productId}`,
+            productSlug: p?.slug ?? "products",
+            brandName: pBrand?.name ?? "Manju Group",
+            isInStock: p ? p.isInStock : true,
+            imageUrl: pImage,
+          };
+        })
+      );
+      const total = enriched.reduce(
+        (sum, i) => sum + Number(i.unitPrice) * i.quantity,
+        0
+      );
+      const itemCount = enriched.reduce((sum, i) => sum + i.quantity, 0);
+      return { items: enriched, total, itemCount };
+    }),
+  addItem: publicProcedure
+    .input(
+      z5.object({
+        productId: z5.union([z5.string(), z5.number()]),
+        variantId: z5.union([z5.string(), z5.number()]).optional(),
+        quantity: z5.number().min(1).default(1),
+        unitPrice: z5.number(),
+        sessionId: z5.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      const userId = ctx.user?.id;
+      const sessionId = input.sessionId;
+      if (!userId && !sessionId) {
+        throw new Error("Missing user session for cart");
+      }
+      const prodIdStr = String(input.productId);
+      try {
+        if (!db) {
+          const cart2 = await getOrCreateMockCart(userId, sessionId);
+          const existing2 = MOCK_CART_ITEMS.find(
+            i => i.cartId === cart2.id && i.productId === prodIdStr
+          );
+          if (existing2) {
+            existing2.quantity += input.quantity;
+          } else {
+            MOCK_CART_ITEMS.push({
+              id: mockCartItemIdCounter++,
+              cartId: cart2.id,
+              productId: prodIdStr,
+              variantId: input.variantId ? String(input.variantId) : null,
+              quantity: input.quantity,
+              unitPrice: String(input.unitPrice),
+            });
+          }
+          return { success: true };
+        }
+        const cart = await getOrCreateCart(db, userId, sessionId);
+        const [existing] = await db
+          .select()
+          .from(cartItems)
+          .where(
+            and4(
+              eq5(cartItems.cartId, cart.id),
+              eq5(cartItems.productId, prodIdStr)
+            )
+          )
+          .limit(1);
+        if (existing) {
+          await db
+            .update(cartItems)
+            .set({ quantity: existing.quantity + input.quantity })
+            .where(eq5(cartItems.id, existing.id));
+        } else {
+          await db.insert(cartItems).values({
+            cartId: cart.id,
             productId: prodIdStr,
             variantId: input.variantId ? String(input.variantId) : null,
             quantity: input.quantity,
-            unitPrice: String(input.unitPrice)
+            unitPrice: String(input.unitPrice),
           });
+        }
+      } catch (err) {
+        console.warn("DB addItem failed, falling back to mock cart:", err);
+        const cart = await getOrCreateMockCart(userId, sessionId);
+        const existing = MOCK_CART_ITEMS.find(
+          i => i.cartId === cart.id && i.productId === prodIdStr
+        );
+        if (existing) {
+          existing.quantity += input.quantity;
+        } else {
+          MOCK_CART_ITEMS.push({
+            id: mockCartItemIdCounter++,
+            cartId: cart.id,
+            productId: prodIdStr,
+            variantId: input.variantId ? String(input.variantId) : null,
+            quantity: input.quantity,
+            unitPrice: String(input.unitPrice),
+          });
+        }
+      }
+      return { success: true };
+    }),
+  // Finding #2 fix: verify cart item belongs to the caller's cart before mutating
+  updateItem: publicProcedure
+    .input(
+      z5.object({
+        itemId: z5.number(),
+        quantity: z5.number().min(0),
+        sessionId: z5.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      const userId = ctx.user?.id;
+      const sessionId = input.sessionId;
+      if (!db) {
+        const item2 = MOCK_CART_ITEMS.find(i => i.id === input.itemId);
+        if (item2) {
+          const cart2 = MOCK_CARTS.find(c => c.id === item2.cartId);
+          if (cart2 && userId && cart2.userId !== userId) {
+            throw new TRPCError3({
+              code: "FORBIDDEN",
+              message: "Cart item not found",
+            });
+          }
+          if (cart2 && !userId && sessionId && cart2.sessionId !== sessionId) {
+            throw new TRPCError3({
+              code: "FORBIDDEN",
+              message: "Cart item not found",
+            });
+          }
+          if (input.quantity <= 0) {
+            MOCK_CART_ITEMS = MOCK_CART_ITEMS.filter(
+              i => i.id !== input.itemId
+            );
+          } else {
+            item2.quantity = input.quantity;
+          }
         }
         return { success: true };
       }
-      const cart = await getOrCreateCart(db, userId, sessionId);
-      const [existing] = await db.select().from(cartItems).where(
-        and4(eq5(cartItems.cartId, cart.id), eq5(cartItems.productId, prodIdStr))
-      ).limit(1);
-      if (existing) {
-        await db.update(cartItems).set({ quantity: existing.quantity + input.quantity }).where(eq5(cartItems.id, existing.id));
-      } else {
-        await db.insert(cartItems).values({
-          cartId: cart.id,
-          productId: prodIdStr,
-          variantId: input.variantId ? String(input.variantId) : null,
-          quantity: input.quantity,
-          unitPrice: String(input.unitPrice)
+      const [item] = await db
+        .select()
+        .from(cartItems)
+        .where(eq5(cartItems.id, input.itemId))
+        .limit(1);
+      if (!item) return { success: true };
+      const [cart] = userId
+        ? await db
+            .select()
+            .from(carts)
+            .where(eq5(carts.userId, userId))
+            .limit(1)
+        : sessionId
+          ? await db
+              .select()
+              .from(carts)
+              .where(eq5(carts.sessionId, sessionId))
+              .limit(1)
+          : [];
+      if (!cart || cart.id !== item.cartId) {
+        throw new TRPCError3({
+          code: "FORBIDDEN",
+          message: "Cart item not found",
         });
       }
-    } catch (err) {
-      console.warn("DB addItem failed, falling back to mock cart:", err);
-      const cart = await getOrCreateMockCart(userId, sessionId);
-      const existing = MOCK_CART_ITEMS.find(
-        (i) => i.cartId === cart.id && i.productId === prodIdStr
-      );
-      if (existing) {
-        existing.quantity += input.quantity;
+      if (input.quantity <= 0) {
+        await db.delete(cartItems).where(eq5(cartItems.id, input.itemId));
       } else {
-        MOCK_CART_ITEMS.push({
-          id: mockCartItemIdCounter++,
-          cartId: cart.id,
-          productId: prodIdStr,
-          variantId: input.variantId ? String(input.variantId) : null,
-          quantity: input.quantity,
-          unitPrice: String(input.unitPrice)
-        });
-      }
-    }
-    return { success: true };
-  }),
-  // Finding #2 fix: verify cart item belongs to the caller's cart before mutating
-  updateItem: publicProcedure.input(
-    z5.object({
-      itemId: z5.number(),
-      quantity: z5.number().min(0),
-      sessionId: z5.string().optional()
-    })
-  ).mutation(async ({ ctx, input }) => {
-    const db = await getDb();
-    const userId = ctx.user?.id;
-    const sessionId = input.sessionId;
-    if (!db) {
-      const item2 = MOCK_CART_ITEMS.find((i) => i.id === input.itemId);
-      if (item2) {
-        const cart2 = MOCK_CARTS.find((c) => c.id === item2.cartId);
-        if (cart2 && userId && cart2.userId !== userId) {
-          throw new TRPCError3({ code: "FORBIDDEN", message: "Cart item not found" });
-        }
-        if (cart2 && !userId && sessionId && cart2.sessionId !== sessionId) {
-          throw new TRPCError3({ code: "FORBIDDEN", message: "Cart item not found" });
-        }
-        if (input.quantity <= 0) {
-          MOCK_CART_ITEMS = MOCK_CART_ITEMS.filter((i) => i.id !== input.itemId);
-        } else {
-          item2.quantity = input.quantity;
-        }
+        await db
+          .update(cartItems)
+          .set({ quantity: input.quantity })
+          .where(eq5(cartItems.id, input.itemId));
       }
       return { success: true };
-    }
-    const [item] = await db.select().from(cartItems).where(eq5(cartItems.id, input.itemId)).limit(1);
-    if (!item) return { success: true };
-    const [cart] = userId ? await db.select().from(carts).where(eq5(carts.userId, userId)).limit(1) : sessionId ? await db.select().from(carts).where(eq5(carts.sessionId, sessionId)).limit(1) : [];
-    if (!cart || cart.id !== item.cartId) {
-      throw new TRPCError3({ code: "FORBIDDEN", message: "Cart item not found" });
-    }
-    if (input.quantity <= 0) {
-      await db.delete(cartItems).where(eq5(cartItems.id, input.itemId));
-    } else {
-      await db.update(cartItems).set({ quantity: input.quantity }).where(eq5(cartItems.id, input.itemId));
-    }
-    return { success: true };
-  }),
+    }),
   // Finding #2 fix: verify cart item belongs to the caller's cart before deleting
-  removeItem: publicProcedure.input(z5.object({ itemId: z5.number(), sessionId: z5.string().optional() })).mutation(async ({ ctx, input }) => {
-    const db = await getDb();
-    const userId = ctx.user?.id;
-    const sessionId = input.sessionId;
-    if (!db) {
-      const item2 = MOCK_CART_ITEMS.find((i) => i.id === input.itemId);
-      if (item2) {
-        const cart2 = MOCK_CARTS.find((c) => c.id === item2.cartId);
-        if (cart2 && userId && cart2.userId !== userId) {
-          throw new TRPCError3({ code: "FORBIDDEN", message: "Cart item not found" });
+  removeItem: publicProcedure
+    .input(
+      z5.object({ itemId: z5.number(), sessionId: z5.string().optional() })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      const userId = ctx.user?.id;
+      const sessionId = input.sessionId;
+      if (!db) {
+        const item2 = MOCK_CART_ITEMS.find(i => i.id === input.itemId);
+        if (item2) {
+          const cart2 = MOCK_CARTS.find(c => c.id === item2.cartId);
+          if (cart2 && userId && cart2.userId !== userId) {
+            throw new TRPCError3({
+              code: "FORBIDDEN",
+              message: "Cart item not found",
+            });
+          }
+          if (cart2 && !userId && sessionId && cart2.sessionId !== sessionId) {
+            throw new TRPCError3({
+              code: "FORBIDDEN",
+              message: "Cart item not found",
+            });
+          }
+          MOCK_CART_ITEMS = MOCK_CART_ITEMS.filter(i => i.id !== input.itemId);
         }
-        if (cart2 && !userId && sessionId && cart2.sessionId !== sessionId) {
-          throw new TRPCError3({ code: "FORBIDDEN", message: "Cart item not found" });
-        }
-        MOCK_CART_ITEMS = MOCK_CART_ITEMS.filter((i) => i.id !== input.itemId);
+        return { success: true };
+      }
+      const [item] = await db
+        .select()
+        .from(cartItems)
+        .where(eq5(cartItems.id, input.itemId))
+        .limit(1);
+      if (!item) return { success: true };
+      const [cart] = userId
+        ? await db
+            .select()
+            .from(carts)
+            .where(eq5(carts.userId, userId))
+            .limit(1)
+        : sessionId
+          ? await db
+              .select()
+              .from(carts)
+              .where(eq5(carts.sessionId, sessionId))
+              .limit(1)
+          : [];
+      if (!cart || cart.id !== item.cartId) {
+        throw new TRPCError3({
+          code: "FORBIDDEN",
+          message: "Cart item not found",
+        });
+      }
+      await db.delete(cartItems).where(eq5(cartItems.id, input.itemId));
+      return { success: true };
+    }),
+  clear: publicProcedure
+    .input(z5.object({ sessionId: z5.string().optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      const userId = ctx.user?.id;
+      const sessionId = input.sessionId;
+      if (!userId && !sessionId) return { success: true };
+      if (!db) {
+        const cart2 = await getOrCreateMockCart(userId, sessionId);
+        MOCK_CART_ITEMS = MOCK_CART_ITEMS.filter(i => i.cartId !== cart2.id);
+        return { success: true };
+      }
+      const [cart] = userId
+        ? await db
+            .select()
+            .from(carts)
+            .where(eq5(carts.userId, userId))
+            .limit(1)
+        : await db
+            .select()
+            .from(carts)
+            .where(eq5(carts.sessionId, sessionId))
+            .limit(1);
+      if (cart) {
+        await db.delete(cartItems).where(eq5(cartItems.cartId, cart.id));
       }
       return { success: true };
-    }
-    const [item] = await db.select().from(cartItems).where(eq5(cartItems.id, input.itemId)).limit(1);
-    if (!item) return { success: true };
-    const [cart] = userId ? await db.select().from(carts).where(eq5(carts.userId, userId)).limit(1) : sessionId ? await db.select().from(carts).where(eq5(carts.sessionId, sessionId)).limit(1) : [];
-    if (!cart || cart.id !== item.cartId) {
-      throw new TRPCError3({ code: "FORBIDDEN", message: "Cart item not found" });
-    }
-    await db.delete(cartItems).where(eq5(cartItems.id, input.itemId));
-    return { success: true };
-  }),
-  clear: publicProcedure.input(z5.object({ sessionId: z5.string().optional() })).mutation(async ({ ctx, input }) => {
-    const db = await getDb();
-    const userId = ctx.user?.id;
-    const sessionId = input.sessionId;
-    if (!userId && !sessionId) return { success: true };
-    if (!db) {
-      const cart2 = await getOrCreateMockCart(userId, sessionId);
-      MOCK_CART_ITEMS = MOCK_CART_ITEMS.filter((i) => i.cartId !== cart2.id);
-      return { success: true };
-    }
-    const [cart] = userId ? await db.select().from(carts).where(eq5(carts.userId, userId)).limit(1) : await db.select().from(carts).where(eq5(carts.sessionId, sessionId)).limit(1);
-    if (cart) {
-      await db.delete(cartItems).where(eq5(cartItems.cartId, cart.id));
-    }
-    return { success: true };
-  })
+    }),
 });
 
 // server/routers/orders.ts
@@ -1468,227 +1781,295 @@ var MOCK_ORDERS = [];
 var mockOrderIdCounter = 1;
 var ordersRouter = router({
   // Finding #9 fix: require auth; no client-supplied email lookup (prevents unauthenticated order enumeration)
-  list: publicProcedure.input(z6.object({}).optional()).query(async ({ ctx }) => {
-    const db = await getDb();
-    const userId = ctx.user?.id;
-    if (!userId) {
-      return [];
-    }
-    if (!db) {
-      return MOCK_ORDERS.filter((o) => o.userId === userId).sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  list: publicProcedure
+    .input(z6.object({}).optional())
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      const userId = ctx.user?.id;
+      if (!userId) {
+        return [];
+      }
+      if (!db) {
+        return MOCK_ORDERS.filter(o => o.userId === userId).sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      }
+      let userOrders = [];
+      userOrders = await db
+        .select()
+        .from(orders)
+        .where(eq6(orders.userId, userId))
+        .orderBy(desc2(orders.createdAt));
+      if (userOrders.length === 0) {
+        return [];
+      }
+      const orderIds = userOrders.map(o => o.id);
+      const items = await db
+        .select()
+        .from(orderItems)
+        .where(inArray(orderItems.orderId, orderIds));
+      const productIds = Array.from(
+        new Set(
+          items.map(i => Number(i.productId)).filter(id => !isNaN(id) && id > 0)
+        )
       );
-    }
-    let userOrders = [];
-    userOrders = await db.select().from(orders).where(eq6(orders.userId, userId)).orderBy(desc2(orders.createdAt));
-    if (userOrders.length === 0) {
-      return [];
-    }
-    const orderIds = userOrders.map((o) => o.id);
-    const items = await db.select().from(orderItems).where(inArray(orderItems.orderId, orderIds));
-    const productIds = Array.from(
-      new Set(
-        items.map((i) => Number(i.productId)).filter((id) => !isNaN(id) && id > 0)
-      )
-    );
-    let imageMap = {};
-    if (productIds.length > 0) {
-      const pImages = await db.select().from(productImages).where(inArray(productImages.productId, productIds));
-      for (const img of pImages) {
-        if (!imageMap[img.productId]) {
-          imageMap[img.productId] = img.url;
+      let imageMap = {};
+      if (productIds.length > 0) {
+        const pImages = await db
+          .select()
+          .from(productImages)
+          .where(inArray(productImages.productId, productIds));
+        for (const img of pImages) {
+          if (!imageMap[img.productId]) {
+            imageMap[img.productId] = img.url;
+          }
         }
       }
-    }
-    return userOrders.map((order) => {
-      const orderItemsList = items.filter((item) => item.orderId === order.id).map((item) => ({
-        ...item,
-        imageUrl: imageMap[Number(item.productId)] || null
-      }));
+      return userOrders.map(order => {
+        const orderItemsList = items
+          .filter(item => item.orderId === order.id)
+          .map(item => ({
+            ...item,
+            imageUrl: imageMap[Number(item.productId)] || null,
+          }));
+        return {
+          ...order,
+          totalAmount: order.total,
+          items: orderItemsList,
+        };
+      });
+    }),
+  // Finding #1 fix: require auth + verify order belongs to the authenticated user
+  byId: protectedProcedure
+    .input(z6.object({ id: z6.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      const userId = ctx.user.id;
+      if (!db) {
+        const mock = MOCK_ORDERS.find(
+          o => o.id === input.id && o.userId === userId
+        );
+        return mock || null;
+      }
+      const [order] = await db
+        .select()
+        .from(orders)
+        .where(eq6(orders.id, input.id))
+        .limit(1);
+      if (!order) return null;
+      if (order.userId !== userId) {
+        throw new TRPCError4({ code: "FORBIDDEN", message: "Order not found" });
+      }
+      const items = await db
+        .select()
+        .from(orderItems)
+        .where(eq6(orderItems.orderId, order.id));
       return {
         ...order,
         totalAmount: order.total,
-        items: orderItemsList
+        items,
       };
-    });
-  }),
-  // Finding #1 fix: require auth + verify order belongs to the authenticated user
-  byId: protectedProcedure.input(z6.object({ id: z6.number() })).query(async ({ ctx, input }) => {
-    const db = await getDb();
-    const userId = ctx.user.id;
-    if (!db) {
-      const mock = MOCK_ORDERS.find((o) => o.id === input.id && o.userId === userId);
-      return mock || null;
-    }
-    const [order] = await db.select().from(orders).where(eq6(orders.id, input.id)).limit(1);
-    if (!order) return null;
-    if (order.userId !== userId) {
-      throw new TRPCError4({ code: "FORBIDDEN", message: "Order not found" });
-    }
-    const items = await db.select().from(orderItems).where(eq6(orderItems.orderId, order.id));
-    return {
-      ...order,
-      totalAmount: order.total,
-      items
-    };
-  }),
+    }),
   // Finding #13 fix: emailOrPhone is required and must match the order's shippingAddress
-  track: publicProcedure.input(
-    z6.object({
-      orderNumber: z6.string(),
-      emailOrPhone: z6.string().min(1)
-    })
-  ).query(async ({ input }) => {
-    const db = await getDb();
-    const cleanNum = input.orderNumber.trim().toUpperCase();
-    const credential = input.emailOrPhone.trim().toLowerCase();
-    if (!db) {
-      const found = MOCK_ORDERS.find((o) => {
-        if (o.orderNumber.toUpperCase() !== cleanNum) return false;
-        const addr2 = o.shippingAddress || {};
-        return String(addr2.email || "").toLowerCase() === credential || String(addr2.phone || "").replace(/\D/g, "") === credential.replace(/\D/g, "");
-      });
-      return found || null;
-    }
-    const [order] = await db.select().from(orders).where(eq6(orders.orderNumber, cleanNum)).limit(1);
-    if (!order) return null;
-    const addr = order.shippingAddress || {};
-    const emailMatch = String(addr.email || "").toLowerCase() === credential;
-    const phoneMatch = String(addr.phone || "").replace(/\D/g, "") === credential.replace(/\D/g, "");
-    if (!emailMatch && !phoneMatch) return null;
-    const items = await db.select().from(orderItems).where(eq6(orderItems.orderId, order.id));
-    return {
-      ...order,
-      totalAmount: order.total,
-      items
-    };
-  }),
-  create: publicProcedure.input(
-    z6.object({
-      items: z6.array(
-        z6.object({
-          productId: z6.union([z6.string(), z6.number()]),
-          variantId: z6.union([z6.string(), z6.number()]).optional().nullable(),
-          productName: z6.string().max(300),
-          variantName: z6.string().max(200).optional(),
-          sku: z6.string().max(100).optional(),
-          quantity: z6.number().int().min(1).max(1e3),
-          unitPrice: z6.number(),
-          imageUrl: z6.string().max(500).optional().nullable()
+  track: publicProcedure
+    .input(
+      z6.object({
+        orderNumber: z6.string(),
+        emailOrPhone: z6.string().min(1),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      const cleanNum = input.orderNumber.trim().toUpperCase();
+      const credential = input.emailOrPhone.trim().toLowerCase();
+      if (!db) {
+        const found = MOCK_ORDERS.find(o => {
+          if (o.orderNumber.toUpperCase() !== cleanNum) return false;
+          const addr2 = o.shippingAddress || {};
+          return (
+            String(addr2.email || "").toLowerCase() === credential ||
+            String(addr2.phone || "").replace(/\D/g, "") ===
+              credential.replace(/\D/g, "")
+          );
+        });
+        return found || null;
+      }
+      const [order] = await db
+        .select()
+        .from(orders)
+        .where(eq6(orders.orderNumber, cleanNum))
+        .limit(1);
+      if (!order) return null;
+      const addr = order.shippingAddress || {};
+      const emailMatch = String(addr.email || "").toLowerCase() === credential;
+      const phoneMatch =
+        String(addr.phone || "").replace(/\D/g, "") ===
+        credential.replace(/\D/g, "");
+      if (!emailMatch && !phoneMatch) return null;
+      const items = await db
+        .select()
+        .from(orderItems)
+        .where(eq6(orderItems.orderId, order.id));
+      return {
+        ...order,
+        totalAmount: order.total,
+        items,
+      };
+    }),
+  create: publicProcedure
+    .input(
+      z6.object({
+        items: z6
+          .array(
+            z6.object({
+              productId: z6.union([z6.string(), z6.number()]),
+              variantId: z6
+                .union([z6.string(), z6.number()])
+                .optional()
+                .nullable(),
+              productName: z6.string().max(300),
+              variantName: z6.string().max(200).optional(),
+              sku: z6.string().max(100).optional(),
+              quantity: z6.number().int().min(1).max(1e3),
+              unitPrice: z6.number(),
+              imageUrl: z6.string().max(500).optional().nullable(),
+            })
+          )
+          .max(100),
+        subtotal: z6.number(),
+        shippingFee: z6.number().default(0),
+        discount: z6.number().default(0),
+        total: z6.number(),
+        paymentMethod: z6.string().max(50),
+        shippingAddress: z6.record(z6.string(), z6.unknown()),
+        billingAddress: z6.record(z6.string(), z6.unknown()).optional(),
+        notes: z6.string().max(1e3).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      const userId = ctx.user?.id || null;
+      const orderNumber = `MG-${Date.now().toString().slice(-6)}-${nanoid(3).toUpperCase()}`;
+      if (!db) {
+        const newMockOrder = {
+          id: mockOrderIdCounter++,
+          orderNumber,
+          userId,
+          status: "pending",
+          subtotal: String(input.subtotal),
+          shippingFee: String(input.shippingFee),
+          discount: String(input.discount),
+          total: String(input.total),
+          totalAmount: String(input.total),
+          currency: "LKR",
+          paymentMethod: input.paymentMethod,
+          paymentStatus: "pending",
+          shippingAddress: input.shippingAddress,
+          billingAddress: input.billingAddress || input.shippingAddress,
+          notes: input.notes || null,
+          createdAt: /* @__PURE__ */ new Date().toISOString(),
+          updatedAt: /* @__PURE__ */ new Date().toISOString(),
+          items: input.items.map((i, idx) => ({
+            id: idx + 1,
+            orderId: mockOrderIdCounter - 1,
+            productId: String(i.productId),
+            variantId: i.variantId ? String(i.variantId) : null,
+            productName: i.productName,
+            quantity: i.quantity,
+            unitPrice: String(i.unitPrice),
+            subtotal: String(i.unitPrice * i.quantity),
+            imageUrl: i.imageUrl || null,
+          })),
+        };
+        MOCK_ORDERS.push(newMockOrder);
+        return { success: true, orderId: newMockOrder.id, orderNumber };
+      }
+      const verifiedItems = await Promise.all(
+        input.items.map(async item => {
+          const numProductId = Number(item.productId);
+          let serverUnitPrice = null;
+          if (!isNaN(numProductId) && numProductId > 0) {
+            if (item.variantId) {
+              const [variant] = await db
+                .select({
+                  price: productVariants.price,
+                  salePrice: productVariants.salePrice,
+                })
+                .from(productVariants)
+                .where(eq6(productVariants.id, Number(item.variantId)))
+                .limit(1);
+              if (variant) {
+                serverUnitPrice =
+                  Number(variant.salePrice) || Number(variant.price);
+              }
+            }
+            if (serverUnitPrice === null) {
+              const [product] = await db
+                .select({
+                  basePrice: products.basePrice,
+                  salePrice: products.salePrice,
+                })
+                .from(products)
+                .where(eq6(products.id, numProductId))
+                .limit(1);
+              if (product) {
+                serverUnitPrice =
+                  Number(product.salePrice) || Number(product.basePrice);
+              }
+            }
+          }
+          const unitPrice = serverUnitPrice ?? Number(item.unitPrice);
+          return { ...item, unitPrice };
         })
-      ).max(100),
-      subtotal: z6.number(),
-      shippingFee: z6.number().default(0),
-      discount: z6.number().default(0),
-      total: z6.number(),
-      paymentMethod: z6.string().max(50),
-      shippingAddress: z6.record(z6.string(), z6.unknown()),
-      billingAddress: z6.record(z6.string(), z6.unknown()).optional(),
-      notes: z6.string().max(1e3).optional()
-    })
-  ).mutation(async ({ ctx, input }) => {
-    const db = await getDb();
-    const userId = ctx.user?.id || null;
-    const orderNumber = `MG-${Date.now().toString().slice(-6)}-${nanoid(3).toUpperCase()}`;
-    if (!db) {
-      const newMockOrder = {
-        id: mockOrderIdCounter++,
+      );
+      const serverSubtotal = verifiedItems.reduce(
+        (sum, item) => sum + item.unitPrice * item.quantity,
+        0
+      );
+      const serverShippingFee = Number(input.shippingFee);
+      const serverDiscount = Number(input.discount);
+      const serverTotal = serverSubtotal + serverShippingFee - serverDiscount;
+      await db.insert(orders).values({
         orderNumber,
         userId,
         status: "pending",
-        subtotal: String(input.subtotal),
-        shippingFee: String(input.shippingFee),
-        discount: String(input.discount),
-        total: String(input.total),
-        totalAmount: String(input.total),
+        subtotal: String(serverSubtotal),
+        shippingFee: String(serverShippingFee),
+        discount: String(serverDiscount),
+        total: String(serverTotal),
         currency: "LKR",
         paymentMethod: input.paymentMethod,
         paymentStatus: "pending",
         shippingAddress: input.shippingAddress,
         billingAddress: input.billingAddress || input.shippingAddress,
         notes: input.notes || null,
-        createdAt: (/* @__PURE__ */ new Date()).toISOString(),
-        updatedAt: (/* @__PURE__ */ new Date()).toISOString(),
-        items: input.items.map((i, idx) => ({
-          id: idx + 1,
-          orderId: mockOrderIdCounter - 1,
-          productId: String(i.productId),
-          variantId: i.variantId ? String(i.variantId) : null,
-          productName: i.productName,
-          quantity: i.quantity,
-          unitPrice: String(i.unitPrice),
-          subtotal: String(i.unitPrice * i.quantity),
-          imageUrl: i.imageUrl || null
-        }))
-      };
-      MOCK_ORDERS.push(newMockOrder);
-      return { success: true, orderId: newMockOrder.id, orderNumber };
-    }
-    const verifiedItems = await Promise.all(
-      input.items.map(async (item) => {
-        const numProductId = Number(item.productId);
-        let serverUnitPrice = null;
-        if (!isNaN(numProductId) && numProductId > 0) {
-          if (item.variantId) {
-            const [variant] = await db.select({ price: productVariants.price, salePrice: productVariants.salePrice }).from(productVariants).where(eq6(productVariants.id, Number(item.variantId))).limit(1);
-            if (variant) {
-              serverUnitPrice = Number(variant.salePrice) || Number(variant.price);
-            }
-          }
-          if (serverUnitPrice === null) {
-            const [product] = await db.select({ basePrice: products.basePrice, salePrice: products.salePrice }).from(products).where(eq6(products.id, numProductId)).limit(1);
-            if (product) {
-              serverUnitPrice = Number(product.salePrice) || Number(product.basePrice);
-            }
-          }
-        }
-        const unitPrice = serverUnitPrice ?? Number(item.unitPrice);
-        return { ...item, unitPrice };
-      })
-    );
-    const serverSubtotal = verifiedItems.reduce(
-      (sum, item) => sum + item.unitPrice * item.quantity,
-      0
-    );
-    const serverShippingFee = Number(input.shippingFee);
-    const serverDiscount = Number(input.discount);
-    const serverTotal = serverSubtotal + serverShippingFee - serverDiscount;
-    await db.insert(orders).values({
-      orderNumber,
-      userId,
-      status: "pending",
-      subtotal: String(serverSubtotal),
-      shippingFee: String(serverShippingFee),
-      discount: String(serverDiscount),
-      total: String(serverTotal),
-      currency: "LKR",
-      paymentMethod: input.paymentMethod,
-      paymentStatus: "pending",
-      shippingAddress: input.shippingAddress,
-      billingAddress: input.billingAddress || input.shippingAddress,
-      notes: input.notes || null
-    });
-    const [newOrder] = await db.select().from(orders).where(eq6(orders.orderNumber, orderNumber)).limit(1);
-    if (!newOrder) {
-      throw new Error("Failed to retrieve created order");
-    }
-    if (verifiedItems.length > 0) {
-      await db.insert(orderItems).values(
-        verifiedItems.map((item) => ({
-          orderId: newOrder.id,
-          productId: String(item.productId),
-          variantId: item.variantId ? String(item.variantId) : null,
-          productName: item.productName,
-          variantName: item.variantName || null,
-          sku: item.sku || null,
-          quantity: item.quantity,
-          unitPrice: String(item.unitPrice),
-          subtotal: String(item.unitPrice * item.quantity)
-        }))
-      );
-    }
-    return { success: true, orderId: newOrder.id, orderNumber };
-  })
+      });
+      const [newOrder] = await db
+        .select()
+        .from(orders)
+        .where(eq6(orders.orderNumber, orderNumber))
+        .limit(1);
+      if (!newOrder) {
+        throw new Error("Failed to retrieve created order");
+      }
+      if (verifiedItems.length > 0) {
+        await db.insert(orderItems).values(
+          verifiedItems.map(item => ({
+            orderId: newOrder.id,
+            productId: String(item.productId),
+            variantId: item.variantId ? String(item.variantId) : null,
+            productName: item.productName,
+            variantName: item.variantName || null,
+            sku: item.sku || null,
+            quantity: item.quantity,
+            unitPrice: String(item.unitPrice),
+            subtotal: String(item.unitPrice * item.quantity),
+          }))
+        );
+      }
+      return { success: true, orderId: newOrder.id, orderNumber };
+    }),
 });
 
 // server/routers/wishlist.ts
@@ -1697,135 +2078,174 @@ import { eq as eq7, and as and5, inArray as inArray2 } from "drizzle-orm";
 var MOCK_WISHLISTS = [];
 var mockWishlistIdCounter = 1;
 var wishlistRouter = router({
-  list: publicProcedure.input(
-    z7.object({
-      sessionId: z7.string().optional()
-    }).optional()
-  ).query(async ({ ctx, input }) => {
-    const db = await getDb();
-    const userId = ctx.user?.id;
-    const sessionId = input?.sessionId;
-    if (!userId && !sessionId) {
-      return [];
-    }
-    let rawItems = [];
-    if (!db || !userId) {
-      rawItems = MOCK_WISHLISTS.filter(
-        (w) => userId ? w.userId === userId : w.sessionId === sessionId
-      );
-    } else {
-      rawItems = await db.select({
-        id: wishlists.id,
-        productId: wishlists.productId
-      }).from(wishlists).where(eq7(wishlists.userId, userId));
-    }
-    if (rawItems.length === 0) return [];
-    const productIds = rawItems.map((i) => Number(i.productId)).filter((id) => !isNaN(id) && id > 0);
-    let productMap = {};
-    let brandMap = {};
-    let imageMap = {};
-    if (db && productIds.length > 0) {
-      const pRows = await db.select({
-        product: products,
-        brand: brands
-      }).from(products).leftJoin(brands, eq7(products.brandId, brands.id)).where(inArray2(products.id, productIds));
-      for (const row of pRows) {
-        productMap[row.product.id] = row.product;
-        if (row.brand) {
-          brandMap[row.product.id] = row.brand;
+  list: publicProcedure
+    .input(
+      z7
+        .object({
+          sessionId: z7.string().optional(),
+        })
+        .optional()
+    )
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      const userId = ctx.user?.id;
+      const sessionId = input?.sessionId;
+      if (!userId && !sessionId) {
+        return [];
+      }
+      let rawItems = [];
+      if (!db || !userId) {
+        rawItems = MOCK_WISHLISTS.filter(w =>
+          userId ? w.userId === userId : w.sessionId === sessionId
+        );
+      } else {
+        rawItems = await db
+          .select({
+            id: wishlists.id,
+            productId: wishlists.productId,
+          })
+          .from(wishlists)
+          .where(eq7(wishlists.userId, userId));
+      }
+      if (rawItems.length === 0) return [];
+      const productIds = rawItems
+        .map(i => Number(i.productId))
+        .filter(id => !isNaN(id) && id > 0);
+      let productMap = {};
+      let brandMap = {};
+      let imageMap = {};
+      if (db && productIds.length > 0) {
+        const pRows = await db
+          .select({
+            product: products,
+            brand: brands,
+          })
+          .from(products)
+          .leftJoin(brands, eq7(products.brandId, brands.id))
+          .where(inArray2(products.id, productIds));
+        for (const row of pRows) {
+          productMap[row.product.id] = row.product;
+          if (row.brand) {
+            brandMap[row.product.id] = row.brand;
+          }
+        }
+        const imgRows = await db
+          .select()
+          .from(productImages)
+          .where(inArray2(productImages.productId, productIds))
+          .orderBy(productImages.sortOrder);
+        for (const img of imgRows) {
+          if (!imageMap[img.productId]) {
+            imageMap[img.productId] = img.url;
+          }
         }
       }
-      const imgRows = await db.select().from(productImages).where(inArray2(productImages.productId, productIds)).orderBy(productImages.sortOrder);
-      for (const img of imgRows) {
-        if (!imageMap[img.productId]) {
-          imageMap[img.productId] = img.url;
+      return rawItems.map(item => {
+        const numId = Number(item.productId);
+        const p = productMap[numId];
+        const b = brandMap[numId];
+        const img = imageMap[numId];
+        return {
+          id: item.id,
+          productId: item.productId,
+          productName: p?.name ?? `Product #${item.productId}`,
+          productSlug: p?.slug ?? "products",
+          basePrice: p?.basePrice ? Number(p.basePrice) : 0,
+          salePrice: p?.salePrice ? Number(p.salePrice) : null,
+          currency: "LKR",
+          isInStock: p ? p.isInStock : true,
+          brandName: b?.name ?? "Manju Group",
+          imageUrl: img || null,
+        };
+      });
+    }),
+  toggle: publicProcedure
+    .input(
+      z7.object({
+        productId: z7.union([z7.string(), z7.number()]),
+        sessionId: z7.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      const userId = ctx.user?.id;
+      const sessionId = input.sessionId;
+      const prodIdStr = String(input.productId);
+      if (!userId && !sessionId) {
+        throw new Error("User session required for wishlist");
+      }
+      if (!db || !userId) {
+        const existingIdx = MOCK_WISHLISTS.findIndex(w =>
+          userId
+            ? w.userId === userId && w.productId === prodIdStr
+            : w.sessionId === sessionId && w.productId === prodIdStr
+        );
+        if (existingIdx >= 0) {
+          MOCK_WISHLISTS.splice(existingIdx, 1);
+          return { added: false };
+        } else {
+          MOCK_WISHLISTS.push({
+            id: mockWishlistIdCounter++,
+            userId,
+            sessionId,
+            productId: prodIdStr,
+          });
+          return { added: true };
         }
       }
-    }
-    return rawItems.map((item) => {
-      const numId = Number(item.productId);
-      const p = productMap[numId];
-      const b = brandMap[numId];
-      const img = imageMap[numId];
-      return {
-        id: item.id,
-        productId: item.productId,
-        productName: p?.name ?? `Product #${item.productId}`,
-        productSlug: p?.slug ?? "products",
-        basePrice: p?.basePrice ? Number(p.basePrice) : 0,
-        salePrice: p?.salePrice ? Number(p.salePrice) : null,
-        currency: "LKR",
-        isInStock: p ? p.isInStock : true,
-        brandName: b?.name ?? "Manju Group",
-        imageUrl: img || null
-      };
-    });
-  }),
-  toggle: publicProcedure.input(
-    z7.object({
-      productId: z7.union([z7.string(), z7.number()]),
-      sessionId: z7.string().optional()
-    })
-  ).mutation(async ({ ctx, input }) => {
-    const db = await getDb();
-    const userId = ctx.user?.id;
-    const sessionId = input.sessionId;
-    const prodIdStr = String(input.productId);
-    if (!userId && !sessionId) {
-      throw new Error("User session required for wishlist");
-    }
-    if (!db || !userId) {
-      const existingIdx = MOCK_WISHLISTS.findIndex(
-        (w) => userId ? w.userId === userId && w.productId === prodIdStr : w.sessionId === sessionId && w.productId === prodIdStr
-      );
-      if (existingIdx >= 0) {
-        MOCK_WISHLISTS.splice(existingIdx, 1);
+      const [existing] = await db
+        .select()
+        .from(wishlists)
+        .where(
+          and5(
+            eq7(wishlists.userId, userId),
+            eq7(wishlists.productId, prodIdStr)
+          )
+        )
+        .limit(1);
+      if (existing) {
+        await db.delete(wishlists).where(eq7(wishlists.id, existing.id));
         return { added: false };
       } else {
-        MOCK_WISHLISTS.push({
-          id: mockWishlistIdCounter++,
+        await db.insert(wishlists).values({
           userId,
-          sessionId,
-          productId: prodIdStr
+          productId: prodIdStr,
         });
         return { added: true };
       }
-    }
-    const [existing] = await db.select().from(wishlists).where(
-      and5(eq7(wishlists.userId, userId), eq7(wishlists.productId, prodIdStr))
-    ).limit(1);
-    if (existing) {
-      await db.delete(wishlists).where(eq7(wishlists.id, existing.id));
-      return { added: false };
-    } else {
-      await db.insert(wishlists).values({
-        userId,
-        productId: prodIdStr
-      });
-      return { added: true };
-    }
-  }),
-  isWishlisted: publicProcedure.input(
-    z7.object({
-      productId: z7.union([z7.string(), z7.number()]),
-      sessionId: z7.string().optional()
-    })
-  ).query(async ({ ctx, input }) => {
-    const db = await getDb();
-    const userId = ctx.user?.id;
-    const sessionId = input.sessionId;
-    const prodIdStr = String(input.productId);
-    if (!userId && !sessionId) return false;
-    if (!db || !userId) {
-      return MOCK_WISHLISTS.some(
-        (w) => userId ? w.userId === userId && w.productId === prodIdStr : w.sessionId === sessionId && w.productId === prodIdStr
-      );
-    }
-    const [item] = await db.select().from(wishlists).where(
-      and5(eq7(wishlists.userId, userId), eq7(wishlists.productId, prodIdStr))
-    ).limit(1);
-    return !!item;
-  })
+    }),
+  isWishlisted: publicProcedure
+    .input(
+      z7.object({
+        productId: z7.union([z7.string(), z7.number()]),
+        sessionId: z7.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      const userId = ctx.user?.id;
+      const sessionId = input.sessionId;
+      const prodIdStr = String(input.productId);
+      if (!userId && !sessionId) return false;
+      if (!db || !userId) {
+        return MOCK_WISHLISTS.some(w =>
+          userId
+            ? w.userId === userId && w.productId === prodIdStr
+            : w.sessionId === sessionId && w.productId === prodIdStr
+        );
+      }
+      const [item] = await db
+        .select()
+        .from(wishlists)
+        .where(
+          and5(
+            eq7(wishlists.userId, userId),
+            eq7(wishlists.productId, prodIdStr)
+          )
+        )
+        .limit(1);
+      return !!item;
+    }),
 });
 
 // server/routers/locations.ts
@@ -1834,29 +2254,50 @@ var locationsRouter = router({
   list: publicProcedure.query(async () => {
     const db = await getDb();
     if (!db) return [];
-    return db.select().from(locations).where(eq8(locations.isActive, true)).orderBy(locations.sortOrder);
-  })
+    return db
+      .select()
+      .from(locations)
+      .where(eq8(locations.isActive, true))
+      .orderBy(locations.sortOrder);
+  }),
 });
 
 // server/routers/blog.ts
 import { z as z8 } from "zod";
 import { eq as eq9, desc as desc3 } from "drizzle-orm";
 var blogRouter = router({
-  list: publicProcedure.input(
-    z8.object({ limit: z8.number().default(10), page: z8.number().default(1) })
-  ).query(async ({ input }) => {
-    const db = await getDb();
-    if (!db) return { items: [], total: 0 };
-    const offset = (input.page - 1) * input.limit;
-    const items = await db.select().from(blogPosts).where(eq9(blogPosts.isPublished, true)).orderBy(desc3(blogPosts.publishedAt)).limit(input.limit).offset(offset);
-    return { items, total: items.length };
-  }),
-  bySlug: publicProcedure.input(z8.object({ slug: z8.string() })).query(async ({ input }) => {
-    const db = await getDb();
-    if (!db) return null;
-    const [post] = await db.select().from(blogPosts).where(eq9(blogPosts.slug, input.slug)).limit(1);
-    return post ?? null;
-  })
+  list: publicProcedure
+    .input(
+      z8.object({
+        limit: z8.number().default(10),
+        page: z8.number().default(1),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { items: [], total: 0 };
+      const offset = (input.page - 1) * input.limit;
+      const items = await db
+        .select()
+        .from(blogPosts)
+        .where(eq9(blogPosts.isPublished, true))
+        .orderBy(desc3(blogPosts.publishedAt))
+        .limit(input.limit)
+        .offset(offset);
+      return { items, total: items.length };
+    }),
+  bySlug: publicProcedure
+    .input(z8.object({ slug: z8.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return null;
+      const [post] = await db
+        .select()
+        .from(blogPosts)
+        .where(eq9(blogPosts.slug, input.slug))
+        .limit(1);
+      return post ?? null;
+    }),
 });
 
 // server/routers/faq.ts
@@ -1865,32 +2306,45 @@ var faqRouter = router({
   list: publicProcedure.query(async () => {
     const db = await getDb();
     if (!db) return [];
-    return db.select().from(faqs).where(eq10(faqs.isActive, true)).orderBy(faqs.sortOrder);
-  })
+    return db
+      .select()
+      .from(faqs)
+      .where(eq10(faqs.isActive, true))
+      .orderBy(faqs.sortOrder);
+  }),
 });
 
 // server/routers/contact.ts
 import { z as z9 } from "zod";
 var contactRouter = router({
-  submit: publicProcedure.input(
-    z9.object({
-      name: z9.string().min(2).max(100),
-      email: z9.string().email().max(254),
-      phone: z9.string().max(30).optional(),
-      subject: z9.string().max(200).optional(),
-      message: z9.string().min(10).max(5e3)
-    })
-  ).mutation(async ({ input }) => {
-    const db = await getDb();
-    if (!db) throw new Error("DB unavailable");
-    await db.insert(contactMessages).values(input);
-    return { success: true };
-  })
+  submit: publicProcedure
+    .input(
+      z9.object({
+        name: z9.string().min(2).max(100),
+        email: z9.string().email().max(254),
+        phone: z9.string().max(30).optional(),
+        subject: z9.string().max(200).optional(),
+        message: z9.string().min(10).max(5e3),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("DB unavailable");
+      await db.insert(contactMessages).values(input);
+      return { success: true };
+    }),
 });
 
 // server/routers/admin.ts
 import { z as z10 } from "zod";
-import { eq as eq11, desc as desc4, sql as sql5, and as and6, like as like2, or as or2 } from "drizzle-orm";
+import {
+  eq as eq11,
+  desc as desc4,
+  sql as sql5,
+  and as and6,
+  like as like2,
+  or as or2,
+} from "drizzle-orm";
 
 // client/src/lib/staticData.ts
 var STATIC_BRANDS = [
@@ -1899,45 +2353,49 @@ var STATIC_BRANDS = [
     slug: "dew-motors",
     name: "Dew Motors",
     tagline: "Power Your Ride, Go Electric",
-    description: "Dew Motors is Sri Lanka's leading electric motorcycle brand, offering eco-friendly, powerful electric bikes designed for daily commuting and adventure. With cutting-edge battery technology and sleek designs, Dew Motors is driving the future of sustainable transportation in Sri Lanka.",
+    description:
+      "Dew Motors is Sri Lanka's leading electric motorcycle brand, offering eco-friendly, powerful electric bikes designed for daily commuting and adventure. With cutting-edge battery technology and sleek designs, Dew Motors is driving the future of sustainable transportation in Sri Lanka.",
     primaryColor: "#0ea5e9",
     accentColor: "#38bdf8",
     sortOrder: 1,
-    isActive: true
+    isActive: true,
   },
   {
     id: 2,
     slug: "dew-plus",
     name: "Dew Plus",
     tagline: "Crystal Clear Entertainment",
-    description: 'Dew Plus brings premium 4K Android Smart TVs with built-in streaming apps, crystal clear displays, and immersive sound systems. Available in 32" to 65" sizes, perfect for every Sri Lankan home.',
+    description:
+      'Dew Plus brings premium 4K Android Smart TVs with built-in streaming apps, crystal clear displays, and immersive sound systems. Available in 32" to 65" sizes, perfect for every Sri Lankan home.',
     primaryColor: "#8b5cf6",
     accentColor: "#a78bfa",
     sortOrder: 2,
-    isActive: true
+    isActive: true,
   },
   {
     id: 3,
     slug: "dew-plus-ac",
     name: "DEW+ AC",
     tagline: "Cool Comfort, Smart Living",
-    description: "DEW+ AC offers energy-efficient inverter split air conditioners with R32 eco-friendly refrigerant. Available in 1 Ton, 1.5 Ton, and 2 Ton capacities with smart WiFi control, turbo cooling, and 5-year compressor warranty.",
+    description:
+      "DEW+ AC offers energy-efficient inverter split air conditioners with R32 eco-friendly refrigerant. Available in 1 Ton, 1.5 Ton, and 2 Ton capacities with smart WiFi control, turbo cooling, and 5-year compressor warranty.",
     primaryColor: "#06b6d4",
     accentColor: "#22d3ee",
     sortOrder: 3,
-    isActive: true
+    isActive: true,
   },
   {
     id: 4,
     slug: "manju-dew-super",
     name: "Manju Dew Super",
     tagline: "Pure Water, Healthy Life",
-    description: "Manju Dew Super water purifiers use advanced RO, UV, and UF filtration technology to deliver clean, safe drinking water. Available in multiple models including hot & cold dispensers, perfect for homes and offices.",
+    description:
+      "Manju Dew Super water purifiers use advanced RO, UV, and UF filtration technology to deliver clean, safe drinking water. Available in multiple models including hot & cold dispensers, perfect for homes and offices.",
     primaryColor: "#3b82f6",
     accentColor: "#60a5fa",
     sortOrder: 4,
-    isActive: true
-  }
+    isActive: true,
+  },
 ];
 var STATIC_PRODUCTS = [
   {
@@ -1957,10 +2415,12 @@ var STATIC_PRODUCTS = [
     isBestSeller: false,
     isNew: false,
     imageUrl: "/ads/ad_dew_super_ro_system_1.webp",
-    specifications: '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 100 liters per day","Sub Category":"RO Water Filter","Installment Plan":"Down Payment - Rs.14900\\nMonthly premium - Rs.6000 X 11 (Months)\\n                                    Rs.4000 X 01 (Month)","Installment Price":"Rs. 84,900"}',
-    description: "One year warranty\nLong term maintenance service after warranty period\nFree shipping and installation\nFree water test\nFree after sale service\nAvailability of all spare parts\n22 years of experienced entrepreneurship\nEasy payment methods in installments\nFree water testing",
+    specifications:
+      '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 100 liters per day","Sub Category":"RO Water Filter","Installment Plan":"Down Payment - Rs.14900\\nMonthly premium - Rs.6000 X 11 (Months)\\n                                    Rs.4000 X 01 (Month)","Installment Price":"Rs. 84,900"}',
+    description:
+      "One year warranty\nLong term maintenance service after warranty period\nFree shipping and installation\nFree water test\nFree after sale service\nAvailability of all spare parts\n22 years of experienced entrepreneurship\nEasy payment methods in installments\nFree water testing",
     shortDescription: "One year warranty",
-    warrantyMonths: 24
+    warrantyMonths: 24,
   },
   {
     id: 39,
@@ -1979,10 +2439,12 @@ var STATIC_PRODUCTS = [
     isBestSeller: false,
     isNew: false,
     imageUrl: "/ads/ad_dew_super_ro_system_2.webp",
-    specifications: '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 100 liters per day","Sub Category":"RO+ Water Filter","Installment Plan":"Down Payment - Rs.14900\\nMonthly premium - Rs.6250 X 12 (Months)","Installment Price":"Rs. 89,900"}',
-    description: "One year warranty\nLong term maintenance service after warranty period\nFree shipping and installation\nFree water test\nFree after sale service\nAvailability of all spare parts\n22 years of experienced entrepreneurship\nEasy payment methods in installments\nFree water testing",
+    specifications:
+      '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 100 liters per day","Sub Category":"RO+ Water Filter","Installment Plan":"Down Payment - Rs.14900\\nMonthly premium - Rs.6250 X 12 (Months)","Installment Price":"Rs. 89,900"}',
+    description:
+      "One year warranty\nLong term maintenance service after warranty period\nFree shipping and installation\nFree water test\nFree after sale service\nAvailability of all spare parts\n22 years of experienced entrepreneurship\nEasy payment methods in installments\nFree water testing",
     shortDescription: "One year warranty",
-    warrantyMonths: 24
+    warrantyMonths: 24,
   },
   {
     id: 40,
@@ -2001,10 +2463,12 @@ var STATIC_PRODUCTS = [
     isBestSeller: false,
     isNew: false,
     imageUrl: "/ads/ad_dew_super_ro_system_1.webp",
-    specifications: '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 75 liters per day","Sub Category":"Hot & Normal Water Filter","Installment Plan":"Down Payment - Rs.19900\\nMonthly premium - Rs.6250 X 12 (Months)","Installment Price":"Rs. 94,900"}',
-    description: "One year warranty\nLong term maintenance service after warranty period\nFree shipping and installation\nFree water test\nFree after sale service\nAvailability of all spare parts\n22 years of experienced entrepreneurship\nEasy payment methods in installments\nFree water testing",
+    specifications:
+      '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 75 liters per day","Sub Category":"Hot & Normal Water Filter","Installment Plan":"Down Payment - Rs.19900\\nMonthly premium - Rs.6250 X 12 (Months)","Installment Price":"Rs. 94,900"}',
+    description:
+      "One year warranty\nLong term maintenance service after warranty period\nFree shipping and installation\nFree water test\nFree after sale service\nAvailability of all spare parts\n22 years of experienced entrepreneurship\nEasy payment methods in installments\nFree water testing",
     shortDescription: "One year warranty",
-    warrantyMonths: 24
+    warrantyMonths: 24,
   },
   {
     id: 41,
@@ -2023,10 +2487,12 @@ var STATIC_PRODUCTS = [
     isBestSeller: true,
     isNew: false,
     imageUrl: "/ads/ad_dew_super_ro_system_2.webp",
-    specifications: '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 75 liters per day","Sub Category":"Hot,Cool & Normal Water Filter","Installment Plan":"Down Payment - Rs.22900\\nMonthly premium - Rs.6250 X 12 (Months)","Installment Price":"Rs. 97,900"}',
-    description: "One year warranty\nLong term maintenance service after warranty period\nFree shipping and installation\nFree water test\nFree after sale service\nAvailability of all spare parts\n22 years of experienced entrepreneurship\nEasy payment methods in installments\nFree water testing",
+    specifications:
+      '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 75 liters per day","Sub Category":"Hot,Cool & Normal Water Filter","Installment Plan":"Down Payment - Rs.22900\\nMonthly premium - Rs.6250 X 12 (Months)","Installment Price":"Rs. 97,900"}',
+    description:
+      "One year warranty\nLong term maintenance service after warranty period\nFree shipping and installation\nFree water test\nFree after sale service\nAvailability of all spare parts\n22 years of experienced entrepreneurship\nEasy payment methods in installments\nFree water testing",
     shortDescription: "One year warranty",
-    warrantyMonths: 24
+    warrantyMonths: 24,
   },
   {
     id: 42,
@@ -2045,10 +2511,12 @@ var STATIC_PRODUCTS = [
     isBestSeller: false,
     isNew: false,
     imageUrl: "/ads/ad_dew_super_ro_system_1.webp",
-    specifications: '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 500 liters per day","Sub Category":"Commercial Water Filter","Installment Plan":"Down Payment - Rs.90000\\nMonthly premium - Rs.17500 X 06 (Months)","Installment Price":"Rs. 195,000"}',
-    description: "One year warranty\nLong term maintenance service after warranty period\nFree shipping and installation\nFree water test\nFree after sale service\nAvailability of all spare parts\n22 years of experienced entrepreneurship\nEasy payment methods in installments\nFree water testing",
+    specifications:
+      '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 500 liters per day","Sub Category":"Commercial Water Filter","Installment Plan":"Down Payment - Rs.90000\\nMonthly premium - Rs.17500 X 06 (Months)","Installment Price":"Rs. 195,000"}',
+    description:
+      "One year warranty\nLong term maintenance service after warranty period\nFree shipping and installation\nFree water test\nFree after sale service\nAvailability of all spare parts\n22 years of experienced entrepreneurship\nEasy payment methods in installments\nFree water testing",
     shortDescription: "One year warranty",
-    warrantyMonths: 24
+    warrantyMonths: 24,
   },
   {
     id: 43,
@@ -2067,10 +2535,12 @@ var STATIC_PRODUCTS = [
     isBestSeller: false,
     isNew: false,
     imageUrl: "/ads/ad_dew_super_ro_system_2.webp",
-    specifications: '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 2500 liters per day","Sub Category":"Commercial Water Filter","Installment Plan":"Down Payment - Rs.170000\\nMonthly premium - Rs.30000 X 06 (Months)","Installment Price":"Rs. 350,000"}',
-    description: "One year warranty\nLong term maintenance service after warranty period\nFree shipping and installation\nFree water test\nFree after sale service\nAvailability of all spare parts\n22 years of experienced entrepreneurship\nEasy payment methods in installments\nFree water testing",
+    specifications:
+      '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 2500 liters per day","Sub Category":"Commercial Water Filter","Installment Plan":"Down Payment - Rs.170000\\nMonthly premium - Rs.30000 X 06 (Months)","Installment Price":"Rs. 350,000"}',
+    description:
+      "One year warranty\nLong term maintenance service after warranty period\nFree shipping and installation\nFree water test\nFree after sale service\nAvailability of all spare parts\n22 years of experienced entrepreneurship\nEasy payment methods in installments\nFree water testing",
     shortDescription: "One year warranty",
-    warrantyMonths: 24
+    warrantyMonths: 24,
   },
   {
     id: 44,
@@ -2089,10 +2559,12 @@ var STATIC_PRODUCTS = [
     isBestSeller: false,
     isNew: false,
     imageUrl: "/ads/ad_dew_super_ro_system_1.webp",
-    specifications: '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 3000 liters per day","Sub Category":"Commercial Water Filter","Installment Plan":"Down Payment - Rs.225000\\nMonthly premium - Rs.37500 X 06 (Months)","Installment Price":"Rs. 450,000"}',
-    description: "One year warranty\nLong term maintenance service after warranty period\nFree shipping and installation\nFree water test\nFree after sale service\nAvailability of all spare parts\n22 years of experienced entrepreneurship\nEasy payment methods in installments\nFree water testing",
+    specifications:
+      '{"01. Stage":"05 Micron Sediment Filter (Above 05 Micron Removes Sediment In Water)","02. Stage":"01 Micron Sediment Filter (Above 01 Micron Removes Sediment In Water)","03. Stage":"Activated Carbon Filter","04. Stage":"Ro Membrane (Only Pure Water Is Filterd)","05. Stage":"Mineral Cartridge","06. Stage":"UV Sterilizer (Destroys Bacteria & Viruses In The Water)","Feature 4":"* High Removal Capacity Of Iron Manganese H2s Aresenic & Heavy Mentals","Feature 5":"* Removes Organizes Bacteria & Color","Feature 6":"* Removes Chlorine","Feature 7":"* Enhances Test Of Water","Feature 10":"* Adds Essential Minerals Like Calcium, Magnesium, Sodium & Potassium.","Feature 11":"* Increase PH & Makes Alkaline Water.","Feature 13":"07. The capacity is 3000 liters per day","Sub Category":"Commercial Water Filter","Installment Plan":"Down Payment - Rs.225000\\nMonthly premium - Rs.37500 X 06 (Months)","Installment Price":"Rs. 450,000"}',
+    description:
+      "One year warranty\nLong term maintenance service after warranty period\nFree shipping and installation\nFree water test\nFree after sale service\nAvailability of all spare parts\n22 years of experienced entrepreneurship\nEasy payment methods in installments\nFree water testing",
     shortDescription: "One year warranty",
-    warrantyMonths: 24
+    warrantyMonths: 24,
   },
   {
     id: 45,
@@ -2111,10 +2583,12 @@ var STATIC_PRODUCTS = [
     isBestSeller: true,
     isNew: false,
     imageUrl: "/dew_plus_32_tv.webp",
-    specifications: '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"Full HD 1080","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.10000\\nMonthly premium - Rs.6200 X 12 (Months)","Installment Price":"Rs. 84,400"}',
-    description: "One year warranty period\nFree after sales service\nOne TV per TV during the warranty period\n22 years of cardamom entrepreneurship\nAvailability of all spare parts\nEasy payment method in installments",
+    specifications:
+      '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"Full HD 1080","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.10000\\nMonthly premium - Rs.6200 X 12 (Months)","Installment Price":"Rs. 84,400"}',
+    description:
+      "One year warranty period\nFree after sales service\nOne TV per TV during the warranty period\n22 years of cardamom entrepreneurship\nAvailability of all spare parts\nEasy payment method in installments",
     shortDescription: "One year warranty period",
-    warrantyMonths: 24
+    warrantyMonths: 24,
   },
   {
     id: 46,
@@ -2133,10 +2607,12 @@ var STATIC_PRODUCTS = [
     isBestSeller: false,
     isNew: false,
     imageUrl: "/dew_plus_43_tv.webp",
-    specifications: '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"Full HD 1080","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.15000\\nMonthly premium - Rs.9150 X 12 (Months)","Installment Price":"Rs. 124,800"}',
-    description: "One year warranty period\nFree after sales service\nOne TV per TV during the warranty period\n22 years of cardamom entrepreneurship\nAvailability of all spare parts\nEasy payment method in installments",
+    specifications:
+      '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"Full HD 1080","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.15000\\nMonthly premium - Rs.9150 X 12 (Months)","Installment Price":"Rs. 124,800"}',
+    description:
+      "One year warranty period\nFree after sales service\nOne TV per TV during the warranty period\n22 years of cardamom entrepreneurship\nAvailability of all spare parts\nEasy payment method in installments",
     shortDescription: "One year warranty period",
-    warrantyMonths: 24
+    warrantyMonths: 24,
   },
   {
     id: 47,
@@ -2155,10 +2631,12 @@ var STATIC_PRODUCTS = [
     isBestSeller: false,
     isNew: false,
     imageUrl: "/dew_plus_55_tv.webp",
-    specifications: '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"4K Ultra HD","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.25000\\nMonthly premium - Rs.10250 X 18 (Months)","Installment Price":"Rs. 209,500"}',
-    description: "One year warranty period\nFree after sales service\nOne TV per TV during the warranty period\n22 years of cardamom entrepreneurship\nAvailability of all spare parts\nEasy payment method in installments",
+    specifications:
+      '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"4K Ultra HD","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.25000\\nMonthly premium - Rs.10250 X 18 (Months)","Installment Price":"Rs. 209,500"}',
+    description:
+      "One year warranty period\nFree after sales service\nOne TV per TV during the warranty period\n22 years of cardamom entrepreneurship\nAvailability of all spare parts\nEasy payment method in installments",
     shortDescription: "One year warranty period",
-    warrantyMonths: 24
+    warrantyMonths: 24,
   },
   {
     id: 48,
@@ -2177,10 +2655,12 @@ var STATIC_PRODUCTS = [
     isBestSeller: false,
     isNew: false,
     imageUrl: "/dew_plus_65_tv.webp",
-    specifications: '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"4K Ultra HD","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.35000\\nMonthly premium - Rs.10950 X 24 (Months)","Installment Price":"Rs. 297,800"}',
-    description: "One year warranty period\nFree after sales service\nOne TV per TV during the warranty period\n22 years of cardamom entrepreneurship\nAvailability of all spare parts\nEasy payment method in installments",
+    specifications:
+      '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"4K Ultra HD","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.35000\\nMonthly premium - Rs.10950 X 24 (Months)","Installment Price":"Rs. 297,800"}',
+    description:
+      "One year warranty period\nFree after sales service\nOne TV per TV during the warranty period\n22 years of cardamom entrepreneurship\nAvailability of all spare parts\nEasy payment method in installments",
     shortDescription: "One year warranty period",
-    warrantyMonths: 24
+    warrantyMonths: 24,
   },
   {
     id: 49,
@@ -2199,10 +2679,12 @@ var STATIC_PRODUCTS = [
     isBestSeller: true,
     isNew: false,
     imageUrl: "/dew_plus_75_tv.webp",
-    specifications: '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"4K Ultra HD","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.50000\\nMonthly premium - Rs.19950 X 24 (Months)","Installment Price":"Rs. 528,800"}',
-    description: "One year warranty period\nFree after sales service\nOne TV per TV during the warranty period\n22 years of cardamom entrepreneurship\nAvailability of all spare parts\nEasy payment method in installments",
+    specifications:
+      '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"4K Ultra HD","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.50000\\nMonthly premium - Rs.19950 X 24 (Months)","Installment Price":"Rs. 528,800"}',
+    description:
+      "One year warranty period\nFree after sales service\nOne TV per TV during the warranty period\n22 years of cardamom entrepreneurship\nAvailability of all spare parts\nEasy payment method in installments",
     shortDescription: "One year warranty period",
-    warrantyMonths: 24
+    warrantyMonths: 24,
   },
   {
     id: 50,
@@ -2221,10 +2703,12 @@ var STATIC_PRODUCTS = [
     isBestSeller: false,
     isNew: false,
     imageUrl: "/dew_plus_98_tv.webp",
-    specifications: '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"4K Ultra HD","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.100000\\nMonthly premium - Rs.37400 X 24 (Months)","Installment Price":"Rs. 997,600"}',
-    description: "One year warranty period\nFree after sales service\nOne TV per TV during the warranty period\n22 years of cardamom entrepreneurship\nAvailability of all spare parts\nEasy payment method in installments",
+    specifications:
+      '{"Feature 1":"LED TV","Feature 2":"Wifi","Feature 3":"4K Ultra HD","Feature 4":"Android 12","Feature 5":"Youtube","Feature 6":"Connect Share Movie","Feature 7":"USB Support","Feature 8":"Energy Saving","Feature 9":"Stereo Clear Voice","Sub Category":"Smart Tv","Installment Plan":"Down Payment - Rs.100000\\nMonthly premium - Rs.37400 X 24 (Months)","Installment Price":"Rs. 997,600"}',
+    description:
+      "One year warranty period\nFree after sales service\nOne TV per TV during the warranty period\n22 years of cardamom entrepreneurship\nAvailability of all spare parts\nEasy payment method in installments",
     shortDescription: "One year warranty period",
-    warrantyMonths: 24
+    warrantyMonths: 24,
   },
   {
     id: 51,
@@ -2243,10 +2727,12 @@ var STATIC_PRODUCTS = [
     isBestSeller: false,
     isNew: false,
     imageUrl: "/scooter_silver.webp",
-    specifications: '{"Feature 1":"Max Speed Is 65KM/H","Feature 2":"Long Life Span","Feature 3":"High/Standard Painting Technology","Feature 4":"Long Distance Range","Feature 5":"Stable & Durable Frame","Feature 6":"Swapped Lithium Battery","Sub Category":"Electric Bike","Installment Plan":"Down Payment - Rs.130000\\nMonthly premium - Rs.20889 X 36 (Months)","Installment Price":"Rs. 882,004"}',
-    description: "Lowest price in the market\nMaximum savings in all respects\n01 year or 1500km warranty\nAfter sales service\nIsland wide service network\nOver 2 decades of customer trust",
+    specifications:
+      '{"Feature 1":"Max Speed Is 65KM/H","Feature 2":"Long Life Span","Feature 3":"High/Standard Painting Technology","Feature 4":"Long Distance Range","Feature 5":"Stable & Durable Frame","Feature 6":"Swapped Lithium Battery","Sub Category":"Electric Bike","Installment Plan":"Down Payment - Rs.130000\\nMonthly premium - Rs.20889 X 36 (Months)","Installment Price":"Rs. 882,004"}',
+    description:
+      "Lowest price in the market\nMaximum savings in all respects\n01 year or 1500km warranty\nAfter sales service\nIsland wide service network\nOver 2 decades of customer trust",
     shortDescription: "Lowest price in the market",
-    warrantyMonths: 12
+    warrantyMonths: 12,
   },
   {
     id: 52,
@@ -2265,10 +2751,12 @@ var STATIC_PRODUCTS = [
     isBestSeller: false,
     isNew: false,
     imageUrl: "/scooter_red.webp",
-    specifications: '{"Feature 1":"Max Speed Is 65KM/H","Feature 2":"Long Life Span","Feature 3":"High/Standard Painting Technology","Feature 4":"Long Distance Range","Feature 5":"Stable & Durable Frame","Feature 6":"Swapped Lithium Battery","Sub Category":"Electric Bike","Installment Plan":"Down Payment - Rs.130000\\nMonthly premium - Rs.26278 X 36 (Months)\\nOr\\nMonthly premium - Rs.33917 X 24 (Months)\\nOr\\nMonthly premium - Rs.56834 X 12 (Months)","Installment Price":"Rs. 957,208"}',
-    description: "Lowest price in the market\nMaximum savings in all respects\n01 year or 1500km warranty\nAfter sales service\nIsland wide service network\nOver 2 decades of customer trust",
+    specifications:
+      '{"Feature 1":"Max Speed Is 65KM/H","Feature 2":"Long Life Span","Feature 3":"High/Standard Painting Technology","Feature 4":"Long Distance Range","Feature 5":"Stable & Durable Frame","Feature 6":"Swapped Lithium Battery","Sub Category":"Electric Bike","Installment Plan":"Down Payment - Rs.130000\\nMonthly premium - Rs.26278 X 36 (Months)\\nOr\\nMonthly premium - Rs.33917 X 24 (Months)\\nOr\\nMonthly premium - Rs.56834 X 12 (Months)","Installment Price":"Rs. 957,208"}',
+    description:
+      "Lowest price in the market\nMaximum savings in all respects\n01 year or 1500km warranty\nAfter sales service\nIsland wide service network\nOver 2 decades of customer trust",
     shortDescription: "Lowest price in the market",
-    warrantyMonths: 12
+    warrantyMonths: 12,
   },
   {
     id: 53,
@@ -2287,10 +2775,13 @@ var STATIC_PRODUCTS = [
     isBestSeller: true,
     isNew: false,
     imageUrl: "/dew_plus_ac_1ton.webp",
-    specifications: '{"Capacity":"12,000 BTU (1.0 Ton)","Features":"WiFi Smart Control, Turbo Cooling, 4-Way Air Swing, Anti-Bacterial Filter","Warranty":"5-Year Compressor Warranty, 1-Year Comprehensive","Technology":"Full DC Inverter","Refrigerant":"Eco-Friendly R32"}',
-    description: "Energy-efficient 1.0 Ton Inverter AC with R32 eco-friendly gas and WiFi smart app control. Free installation and bracket included.",
-    shortDescription: "Energy-efficient 1.0 Ton Inverter AC with R32 eco-friendly gas and WiFi smart app control. Free installation and bracket included.",
-    warrantyMonths: 60
+    specifications:
+      '{"Capacity":"12,000 BTU (1.0 Ton)","Features":"WiFi Smart Control, Turbo Cooling, 4-Way Air Swing, Anti-Bacterial Filter","Warranty":"5-Year Compressor Warranty, 1-Year Comprehensive","Technology":"Full DC Inverter","Refrigerant":"Eco-Friendly R32"}',
+    description:
+      "Energy-efficient 1.0 Ton Inverter AC with R32 eco-friendly gas and WiFi smart app control. Free installation and bracket included.",
+    shortDescription:
+      "Energy-efficient 1.0 Ton Inverter AC with R32 eco-friendly gas and WiFi smart app control. Free installation and bracket included.",
+    warrantyMonths: 60,
   },
   {
     id: 54,
@@ -2309,10 +2800,13 @@ var STATIC_PRODUCTS = [
     isBestSeller: true,
     isNew: false,
     imageUrl: "/dew_plus_ac_1_5ton.webp",
-    specifications: '{"Capacity":"18,000 BTU (1.5 Ton)","Features":"WiFi Smart Control, Turbo Cooling, 4-Way Air Swing, Anti-Bacterial Filter","Warranty":"5-Year Compressor Warranty, 1-Year Comprehensive","Technology":"Full DC Inverter","Refrigerant":"Eco-Friendly R32"}',
-    description: "High-performance 1.5 Ton Inverter AC designed for medium-to-large rooms with high energy efficiency rating.",
-    shortDescription: "High-performance 1.5 Ton Inverter AC designed for medium-to-large rooms with high energy efficiency rating.",
-    warrantyMonths: 60
+    specifications:
+      '{"Capacity":"18,000 BTU (1.5 Ton)","Features":"WiFi Smart Control, Turbo Cooling, 4-Way Air Swing, Anti-Bacterial Filter","Warranty":"5-Year Compressor Warranty, 1-Year Comprehensive","Technology":"Full DC Inverter","Refrigerant":"Eco-Friendly R32"}',
+    description:
+      "High-performance 1.5 Ton Inverter AC designed for medium-to-large rooms with high energy efficiency rating.",
+    shortDescription:
+      "High-performance 1.5 Ton Inverter AC designed for medium-to-large rooms with high energy efficiency rating.",
+    warrantyMonths: 60,
   },
   {
     id: 55,
@@ -2331,11 +2825,14 @@ var STATIC_PRODUCTS = [
     isBestSeller: true,
     isNew: false,
     imageUrl: "/dew_plus_ac_2ton.webp",
-    specifications: '{"Capacity":"24,000 BTU (2.0 Ton)","Features":"WiFi Smart Control, Turbo Cooling, 4-Way Air Swing, Anti-Bacterial Filter","Warranty":"5-Year Compressor Warranty, 1-Year Comprehensive","Technology":"Full DC Inverter","Refrigerant":"Eco-Friendly R32"}',
-    description: "Heavy-duty 2.0 Ton Inverter AC for large living rooms, commercial spaces, and showrooms with rapid turbo cooling.",
-    shortDescription: "Heavy-duty 2.0 Ton Inverter AC for large living rooms, commercial spaces, and showrooms with rapid turbo cooling.",
-    warrantyMonths: 60
-  }
+    specifications:
+      '{"Capacity":"24,000 BTU (2.0 Ton)","Features":"WiFi Smart Control, Turbo Cooling, 4-Way Air Swing, Anti-Bacterial Filter","Warranty":"5-Year Compressor Warranty, 1-Year Comprehensive","Technology":"Full DC Inverter","Refrigerant":"Eco-Friendly R32"}',
+    description:
+      "Heavy-duty 2.0 Ton Inverter AC for large living rooms, commercial spaces, and showrooms with rapid turbo cooling.",
+    shortDescription:
+      "Heavy-duty 2.0 Ton Inverter AC for large living rooms, commercial spaces, and showrooms with rapid turbo cooling.",
+    warrantyMonths: 60,
+  },
 ];
 
 // server/routers/admin.ts
@@ -2355,7 +2852,7 @@ var adminRouter = router({
             { brand: "Dew Motors", revenue: 84e5, orders: 12 },
             { brand: "Dew Plus", revenue: 52e5, orders: 18 },
             { brand: "DEW+ AC", revenue: 31e5, orders: 10 },
-            { brand: "Manju Dew Super", revenue: 175e4, orders: 8 }
+            { brand: "Manju Dew Super", revenue: 175e4, orders: 8 },
           ],
           weeklyTrend: [
             { day: "Mon", revenue: 21e5, orders: 5 },
@@ -2364,17 +2861,22 @@ var adminRouter = router({
             { day: "Thu", revenue: 34e5, orders: 9 },
             { day: "Fri", revenue: 41e5, orders: 11 },
             { day: "Sat", revenue: 29e5, orders: 8 },
-            { day: "Sun", revenue: 12e5, orders: 4 }
-          ]
+            { day: "Sun", revenue: 12e5, orders: 4 },
+          ],
         };
       }
       const [orderStats, productCount, customerCount] = await Promise.all([
-        db.select({
-          count: sql5`count(*)`,
-          revenue: sql5`sum(total)`
-        }).from(orders),
-        db.select({ count: sql5`count(*)` }).from(products).where(eq11(products.isActive, true)),
-        db.select({ count: sql5`count(*)` }).from(users)
+        db
+          .select({
+            count: sql5`count(*)`,
+            revenue: sql5`sum(total)`,
+          })
+          .from(orders),
+        db
+          .select({ count: sql5`count(*)` })
+          .from(products)
+          .where(eq11(products.isActive, true)),
+        db.select({ count: sql5`count(*)` }).from(users),
       ]);
       return {
         totalOrders: Number(orderStats[0]?.count ?? 48),
@@ -2386,7 +2888,7 @@ var adminRouter = router({
           { brand: "Dew Motors", revenue: 84e5, orders: 12 },
           { brand: "Dew Plus", revenue: 52e5, orders: 18 },
           { brand: "DEW+ AC", revenue: 31e5, orders: 10 },
-          { brand: "Manju Dew Super", revenue: 175e4, orders: 8 }
+          { brand: "Manju Dew Super", revenue: 175e4, orders: 8 },
         ],
         weeklyTrend: [
           { day: "Mon", revenue: 21e5, orders: 5 },
@@ -2395,8 +2897,8 @@ var adminRouter = router({
           { day: "Thu", revenue: 34e5, orders: 9 },
           { day: "Fri", revenue: 41e5, orders: 11 },
           { day: "Sat", revenue: 29e5, orders: 8 },
-          { day: "Sun", revenue: 12e5, orders: 4 }
-        ]
+          { day: "Sun", revenue: 12e5, orders: 4 },
+        ],
       };
     } catch (err) {
       return {
@@ -2409,7 +2911,7 @@ var adminRouter = router({
           { brand: "Dew Motors", revenue: 84e5, orders: 12 },
           { brand: "Dew Plus", revenue: 52e5, orders: 18 },
           { brand: "DEW+ AC", revenue: 31e5, orders: 10 },
-          { brand: "Manju Dew Super", revenue: 175e4, orders: 8 }
+          { brand: "Manju Dew Super", revenue: 175e4, orders: 8 },
         ],
         weeklyTrend: [
           { day: "Mon", revenue: 21e5, orders: 5 },
@@ -2418,8 +2920,8 @@ var adminRouter = router({
           { day: "Thu", revenue: 34e5, orders: 9 },
           { day: "Fri", revenue: 41e5, orders: 11 },
           { day: "Sat", revenue: 29e5, orders: 8 },
-          { day: "Sun", revenue: 12e5, orders: 4 }
-        ]
+          { day: "Sun", revenue: 12e5, orders: 4 },
+        ],
       };
     }
   }),
@@ -2427,77 +2929,161 @@ var adminRouter = router({
   erpSync: publicProcedure.mutation(async () => {
     return {
       success: true,
-      syncedAt: (/* @__PURE__ */ new Date()).toISOString(),
+      syncedAt: /* @__PURE__ */ new Date().toISOString(),
       productsSynced: STATIC_PRODUCTS.length,
       ordersExported: 48,
       status: "CONNECTED",
-      ledgerHash: `ERP_SYNC_${Date.now()}`
+      ledgerHash: `ERP_SYNC_${Date.now()}`,
     };
   }),
   // Recent orders
-  recentOrders: publicProcedure.input(z10.object({ limit: z10.number().int().min(1).max(100).default(10) })).query(async ({ input }) => {
-    try {
-      const db = await getDb();
-      if (!db) return [];
-      return db.select().from(orders).orderBy(desc4(orders.createdAt)).limit(input.limit);
-    } catch (e) {
-      return [];
-    }
-  }),
+  recentOrders: publicProcedure
+    .input(
+      z10.object({ limit: z10.number().int().min(1).max(100).default(10) })
+    )
+    .query(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) return [];
+        return db
+          .select()
+          .from(orders)
+          .orderBy(desc4(orders.createdAt))
+          .limit(input.limit);
+      } catch (e) {
+        return [];
+      }
+    }),
   // All orders
-  orders: publicProcedure.input(
-    z10.object({ page: z10.number().int().min(1).default(1), limit: z10.number().int().min(1).max(100).default(20) })
-  ).query(async ({ input }) => {
-    try {
-      const db = await getDb();
-      if (!db) return { items: [], total: 0 };
-      const offset = (input.page - 1) * input.limit;
-      const [items, countResult] = await Promise.all([
-        db.select().from(orders).orderBy(desc4(orders.createdAt)).limit(input.limit).offset(offset),
-        db.select({ count: sql5`count(*)` }).from(orders)
-      ]);
-      return { items, total: Number(countResult[0]?.count ?? 0) };
-    } catch (e) {
-      return { items: [], total: 0 };
-    }
-  }),
+  orders: publicProcedure
+    .input(
+      z10.object({
+        page: z10.number().int().min(1).default(1),
+        limit: z10.number().int().min(1).max(100).default(20),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) return { items: [], total: 0 };
+        const offset = (input.page - 1) * input.limit;
+        const [items, countResult] = await Promise.all([
+          db
+            .select()
+            .from(orders)
+            .orderBy(desc4(orders.createdAt))
+            .limit(input.limit)
+            .offset(offset),
+          db.select({ count: sql5`count(*)` }).from(orders),
+        ]);
+        return { items, total: Number(countResult[0]?.count ?? 0) };
+      } catch (e) {
+        return { items: [], total: 0 };
+      }
+    }),
   // Update order status
-  updateOrderStatus: publicProcedure.input(
-    z10.object({
-      orderId: z10.number(),
-      status: z10.enum([
-        "pending",
-        "confirmed",
-        "processing",
-        "shipped",
-        "delivered",
-        "cancelled",
-        "refunded"
-      ])
-    })
-  ).mutation(async ({ input }) => {
-    try {
-      const db = await getDb();
-      if (!db) return { success: true };
-      await db.update(orders).set({ status: input.status }).where(eq11(orders.id, input.orderId));
-      return { success: true };
-    } catch (e) {
-      return { success: true };
-    }
-  }),
+  updateOrderStatus: publicProcedure
+    .input(
+      z10.object({
+        orderId: z10.number(),
+        status: z10.enum([
+          "pending",
+          "confirmed",
+          "processing",
+          "shipped",
+          "delivered",
+          "cancelled",
+          "refunded",
+        ]),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) return { success: true };
+        await db
+          .update(orders)
+          .set({ status: input.status })
+          .where(eq11(orders.id, input.orderId));
+        return { success: true };
+      } catch (e) {
+        return { success: true };
+      }
+    }),
   // Products management
-  products: publicProcedure.input(
-    z10.object({
-      page: z10.number().int().min(1).default(1),
-      limit: z10.number().int().min(1).max(100).default(20),
-      search: z10.string().optional()
-    })
-  ).query(async ({ input }) => {
-    try {
-      const db = await getDb();
-      if (!db) {
+  products: publicProcedure
+    .input(
+      z10.object({
+        page: z10.number().int().min(1).default(1),
+        limit: z10.number().int().min(1).max(100).default(20),
+        search: z10.string().optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) {
+          return {
+            items: STATIC_PRODUCTS.map(p => ({
+              id: p.id,
+              slug: p.slug,
+              sku: p.sku,
+              name: p.name,
+              basePrice: p.basePrice,
+              salePrice: p.salePrice,
+              stockQuantity: 15,
+              isInStock: p.isInStock,
+              isFeatured: p.isFeatured,
+              isBestSeller: p.isBestSeller,
+              isActive: true,
+              brandName: p.brandName,
+              categoryName: p.category,
+              imageUrl: p.imageUrl,
+              createdAt: /* @__PURE__ */ new Date().toISOString(),
+            })),
+            total: STATIC_PRODUCTS.length,
+          };
+        }
+        const offset = (input.page - 1) * input.limit;
+        const conditions = input.search
+          ? [
+              or2(
+                like2(products.name, `%${input.search}%`),
+                like2(products.sku, `%${input.search}%`)
+              ),
+            ]
+          : [];
+        const [items, countResult] = await Promise.all([
+          db
+            .select({
+              id: products.id,
+              slug: products.slug,
+              sku: products.sku,
+              name: products.name,
+              basePrice: products.basePrice,
+              salePrice: products.salePrice,
+              stockQuantity: products.stockQuantity,
+              isInStock: products.isInStock,
+              isFeatured: products.isFeatured,
+              isBestSeller: products.isBestSeller,
+              isActive: products.isActive,
+              brandName: brands.name,
+              categoryName: categories.name,
+              createdAt: products.createdAt,
+            })
+            .from(products)
+            .leftJoin(brands, eq11(products.brandId, brands.id))
+            .leftJoin(categories, eq11(products.categoryId, categories.id))
+            .where(conditions.length > 0 ? and6(...conditions) : void 0)
+            .orderBy(desc4(products.createdAt))
+            .limit(input.limit)
+            .offset(offset),
+          db.select({ count: sql5`count(*)` }).from(products),
+        ]);
+        return { items, total: Number(countResult[0]?.count ?? 0) };
+      } catch (e) {
         return {
-          items: STATIC_PRODUCTS.map((p) => ({
+          items: STATIC_PRODUCTS.map(p => ({
             id: p.id,
             slug: p.slug,
             sku: p.sku,
@@ -2512,147 +3098,123 @@ var adminRouter = router({
             brandName: p.brandName,
             categoryName: p.category,
             imageUrl: p.imageUrl,
-            createdAt: (/* @__PURE__ */ new Date()).toISOString()
+            createdAt: /* @__PURE__ */ new Date().toISOString(),
           })),
-          total: STATIC_PRODUCTS.length
+          total: STATIC_PRODUCTS.length,
         };
       }
-      const offset = (input.page - 1) * input.limit;
-      const conditions = input.search ? [
-        or2(
-          like2(products.name, `%${input.search}%`),
-          like2(products.sku, `%${input.search}%`)
-        )
-      ] : [];
-      const [items, countResult] = await Promise.all([
-        db.select({
-          id: products.id,
-          slug: products.slug,
-          sku: products.sku,
-          name: products.name,
-          basePrice: products.basePrice,
-          salePrice: products.salePrice,
-          stockQuantity: products.stockQuantity,
-          isInStock: products.isInStock,
-          isFeatured: products.isFeatured,
-          isBestSeller: products.isBestSeller,
-          isActive: products.isActive,
-          brandName: brands.name,
-          categoryName: categories.name,
-          createdAt: products.createdAt
-        }).from(products).leftJoin(brands, eq11(products.brandId, brands.id)).leftJoin(categories, eq11(products.categoryId, categories.id)).where(conditions.length > 0 ? and6(...conditions) : void 0).orderBy(desc4(products.createdAt)).limit(input.limit).offset(offset),
-        db.select({ count: sql5`count(*)` }).from(products)
-      ]);
-      return { items, total: Number(countResult[0]?.count ?? 0) };
-    } catch (e) {
-      return {
-        items: STATIC_PRODUCTS.map((p) => ({
-          id: p.id,
-          slug: p.slug,
-          sku: p.sku,
-          name: p.name,
-          basePrice: p.basePrice,
-          salePrice: p.salePrice,
-          stockQuantity: 15,
-          isInStock: p.isInStock,
-          isFeatured: p.isFeatured,
-          isBestSeller: p.isBestSeller,
-          isActive: true,
-          brandName: p.brandName,
-          categoryName: p.category,
-          imageUrl: p.imageUrl,
-          createdAt: (/* @__PURE__ */ new Date()).toISOString()
-        })),
-        total: STATIC_PRODUCTS.length
-      };
-    }
-  }),
+    }),
   // Toggle product active
-  toggleProductActive: publicProcedure.input(z10.object({ productId: z10.number(), isActive: z10.boolean() })).mutation(async ({ input }) => {
-    try {
-      const db = await getDb();
-      if (!db) return { success: true };
-      await db.update(products).set({ isActive: input.isActive }).where(eq11(products.id, input.productId));
-      return { success: true };
-    } catch (e) {
-      return { success: true };
-    }
-  }),
+  toggleProductActive: publicProcedure
+    .input(z10.object({ productId: z10.number(), isActive: z10.boolean() }))
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) return { success: true };
+        await db
+          .update(products)
+          .set({ isActive: input.isActive })
+          .where(eq11(products.id, input.productId));
+        return { success: true };
+      } catch (e) {
+        return { success: true };
+      }
+    }),
   // Brand/category lookups for product form dropdowns
   brandOptions: publicProcedure.query(async () => {
-    return STATIC_BRANDS.map((b) => ({ id: b.id, name: b.name }));
+    return STATIC_BRANDS.map(b => ({ id: b.id, name: b.name }));
   }),
   categoryOptions: publicProcedure.query(async () => {
     return [
       { id: 1, name: "Electric Bikes" },
       { id: 2, name: "Smart TVs" },
       { id: 3, name: "Air Conditioners" },
-      { id: 4, name: "Water Filters" }
+      { id: 4, name: "Water Filters" },
     ];
   }),
-  productById: publicProcedure.input(z10.object({ productId: z10.number() })).query(async ({ input }) => {
-    const p = STATIC_PRODUCTS.find((p2) => p2.id === input.productId);
-    return p ?? null;
-  }),
-  createProduct: publicProcedure.input(
-    z10.object({
-      name: z10.string().min(1),
-      sku: z10.string().min(1),
-      brandId: z10.number(),
-      categoryId: z10.number(),
-      shortDescription: z10.string().optional(),
-      description: z10.string().optional(),
-      basePrice: z10.number().positive(),
-      salePrice: z10.number().positive().optional(),
-      stockQuantity: z10.number().int().min(0).default(0),
-      isFeatured: z10.boolean().default(false),
-      isBestSeller: z10.boolean().default(false),
-      isNew: z10.boolean().default(false),
-      isActive: z10.boolean().default(true)
-    })
-  ).mutation(async ({ input }) => {
-    return { success: true, slug: `${input.sku.toLowerCase()}-${Date.now()}` };
-  }),
-  updateProduct: publicProcedure.input(
-    z10.object({
-      productId: z10.number(),
-      name: z10.string().min(1),
-      sku: z10.string().min(1),
-      brandId: z10.number(),
-      categoryId: z10.number(),
-      shortDescription: z10.string().optional(),
-      description: z10.string().optional(),
-      basePrice: z10.number().positive(),
-      salePrice: z10.number().positive().optional(),
-      stockQuantity: z10.number().int().min(0),
-      isFeatured: z10.boolean(),
-      isBestSeller: z10.boolean(),
-      isNew: z10.boolean(),
-      isActive: z10.boolean()
-    })
-  ).mutation(async ({ input }) => {
-    return { success: true };
-  }),
-  deleteProduct: publicProcedure.input(z10.object({ productId: z10.number() })).mutation(async ({ input }) => {
-    return { success: true };
-  }),
+  productById: publicProcedure
+    .input(z10.object({ productId: z10.number() }))
+    .query(async ({ input }) => {
+      const p = STATIC_PRODUCTS.find(p2 => p2.id === input.productId);
+      return p ?? null;
+    }),
+  createProduct: publicProcedure
+    .input(
+      z10.object({
+        name: z10.string().min(1),
+        sku: z10.string().min(1),
+        brandId: z10.number(),
+        categoryId: z10.number(),
+        shortDescription: z10.string().optional(),
+        description: z10.string().optional(),
+        basePrice: z10.number().positive(),
+        salePrice: z10.number().positive().optional(),
+        stockQuantity: z10.number().int().min(0).default(0),
+        isFeatured: z10.boolean().default(false),
+        isBestSeller: z10.boolean().default(false),
+        isNew: z10.boolean().default(false),
+        isActive: z10.boolean().default(true),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return {
+        success: true,
+        slug: `${input.sku.toLowerCase()}-${Date.now()}`,
+      };
+    }),
+  updateProduct: publicProcedure
+    .input(
+      z10.object({
+        productId: z10.number(),
+        name: z10.string().min(1),
+        sku: z10.string().min(1),
+        brandId: z10.number(),
+        categoryId: z10.number(),
+        shortDescription: z10.string().optional(),
+        description: z10.string().optional(),
+        basePrice: z10.number().positive(),
+        salePrice: z10.number().positive().optional(),
+        stockQuantity: z10.number().int().min(0),
+        isFeatured: z10.boolean(),
+        isBestSeller: z10.boolean(),
+        isNew: z10.boolean(),
+        isActive: z10.boolean(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return { success: true };
+    }),
+  deleteProduct: publicProcedure
+    .input(z10.object({ productId: z10.number() }))
+    .mutation(async ({ input }) => {
+      return { success: true };
+    }),
   // Order detail
-  orderById: publicProcedure.input(z10.object({ orderId: z10.number() })).query(async ({ input }) => {
-    return null;
-  }),
+  orderById: publicProcedure
+    .input(z10.object({ orderId: z10.number() }))
+    .query(async ({ input }) => {
+      return null;
+    }),
   // Customers
-  customers: publicProcedure.input(
-    z10.object({ page: z10.number().int().min(1).default(1), limit: z10.number().int().min(1).max(100).default(20) })
-  ).query(async ({ input }) => {
-    return { items: [], total: 0 };
-  }),
+  customers: publicProcedure
+    .input(
+      z10.object({
+        page: z10.number().int().min(1).default(1),
+        limit: z10.number().int().min(1).max(100).default(20),
+      })
+    )
+    .query(async ({ input }) => {
+      return { items: [], total: 0 };
+    }),
   // Contact messages
   contactMessages: publicProcedure.query(async () => {
     return [];
   }),
-  markMessageRead: publicProcedure.input(z10.object({ id: z10.number() })).mutation(async ({ input }) => {
-    return { success: true };
-  }),
+  markMessageRead: publicProcedure
+    .input(z10.object({ id: z10.number() }))
+    .mutation(async ({ input }) => {
+      return { success: true };
+    }),
   // Revenue chart data (last 7 days)
   revenueChart: publicProcedure.query(async () => {
     return [
@@ -2662,17 +3224,17 @@ var adminRouter = router({
       { date: "2026-08-20", revenue: 34e5, count: 9 },
       { date: "2026-08-21", revenue: 41e5, count: 11 },
       { date: "2026-08-22", revenue: 29e5, count: 8 },
-      { date: "2026-08-23", revenue: 12e5, count: 4 }
+      { date: "2026-08-23", revenue: 12e5, count: 4 },
     ];
-  })
+  }),
 });
 
 // server/routers/ai.ts
 import { z as z11 } from "zod";
 
 // server/_core/llm.ts
-var ensureArray = (value) => Array.isArray(value) ? value : [value];
-var normalizeContentPart = (part) => {
+var ensureArray = value => (Array.isArray(value) ? value : [value]);
+var normalizeContentPart = part => {
   if (typeof part === "string") {
     return { type: "text", text: part };
   }
@@ -2687,15 +3249,17 @@ var normalizeContentPart = (part) => {
   }
   throw new Error("Unsupported message content part");
 };
-var normalizeMessage = (message) => {
+var normalizeMessage = message => {
   const { role, name, tool_call_id } = message;
   if (role === "tool" || role === "function") {
-    const content = ensureArray(message.content).map((part) => typeof part === "string" ? part : JSON.stringify(part)).join("\n");
+    const content = ensureArray(message.content)
+      .map(part => (typeof part === "string" ? part : JSON.stringify(part)))
+      .join("\n");
     return {
       role,
       name,
       tool_call_id,
-      content
+      content,
     };
   }
   const contentParts = ensureArray(message.content).map(normalizeContentPart);
@@ -2703,13 +3267,13 @@ var normalizeMessage = (message) => {
     return {
       role,
       name,
-      content: contentParts[0].text
+      content: contentParts[0].text,
     };
   }
   return {
     role,
     name,
-    content: contentParts
+    content: contentParts,
   };
 };
 var normalizeToolChoice = (toolChoice, tools) => {
@@ -2730,18 +3294,21 @@ var normalizeToolChoice = (toolChoice, tools) => {
     }
     return {
       type: "function",
-      function: { name: tools[0].function.name }
+      function: { name: tools[0].function.name },
     };
   }
   if ("name" in toolChoice) {
     return {
       type: "function",
-      function: { name: toolChoice.name }
+      function: { name: toolChoice.name },
     };
   }
   return toolChoice;
 };
-var resolveApiUrl = () => ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0 ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions` : "https://forge.manus.im/v1/chat/completions";
+var resolveApiUrl = () =>
+  ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
+    ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`
+    : "https://forge.manus.im/v1/chat/completions";
 var assertApiKey = () => {
   if (!ENV.forgeApiKey) {
     throw new Error("OPENAI_API_KEY is not configured");
@@ -2751,11 +3318,14 @@ var normalizeResponseFormat = ({
   responseFormat,
   response_format,
   outputSchema,
-  output_schema
+  output_schema,
 }) => {
   const explicitFormat = responseFormat || response_format;
   if (explicitFormat) {
-    if (explicitFormat.type === "json_schema" && !explicitFormat.json_schema?.schema) {
+    if (
+      explicitFormat.type === "json_schema" &&
+      !explicitFormat.json_schema?.schema
+    ) {
       throw new Error(
         "responseFormat json_schema requires a defined schema object"
       );
@@ -2772,15 +3342,15 @@ var normalizeResponseFormat = ({
     json_schema: {
       name: schema.name,
       schema: schema.schema,
-      ...typeof schema.strict === "boolean" ? { strict: schema.strict } : {}
-    }
+      ...(typeof schema.strict === "boolean" ? { strict: schema.strict } : {}),
+    },
   };
 };
 var RETRY_MAX_RETRIES = 4;
 var RETRY_BASE_DELAY_MS = 500;
 var RETRY_MAX_DELAY_MS = 3e4;
-var sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-var parseRetryAfter = (value) => {
+var sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+var parseRetryAfter = value => {
   if (!value) return void 0;
   const seconds = Number(value);
   if (Number.isFinite(seconds)) return Math.max(0, seconds * 1e3);
@@ -2803,8 +3373,7 @@ var fetchWithBackoff = async (url, init) => {
       const retryAfterMs = parseRetryAfter(response.headers.get("retry-after"));
       try {
         await response.body?.cancel();
-      } catch {
-      }
+      } catch {}
       console.warn(
         `LLM request retry ${attempt + 1}/${RETRY_MAX_RETRIES} after status ${response.status}`
       );
@@ -2818,7 +3387,9 @@ var fetchWithBackoff = async (url, init) => {
       await sleep(computeBackoffDelay(attempt));
     }
   }
-  throw lastError instanceof Error ? lastError : new Error("LLM request failed after exhausting retries");
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("LLM request failed after exhausting retries");
 };
 async function invokeLLM(params) {
   assertApiKey();
@@ -2835,10 +3406,10 @@ async function invokeLLM(params) {
     thinking,
     reasoning,
     maxTokens,
-    max_tokens
+    max_tokens,
   } = params;
   const payload = {
-    messages: messages.map(normalizeMessage)
+    messages: messages.map(normalizeMessage),
   };
   if (model) {
     payload.model = model;
@@ -2867,7 +3438,7 @@ async function invokeLLM(params) {
     responseFormat,
     response_format,
     outputSchema,
-    output_schema
+    output_schema,
   });
   if (normalizedResponseFormat) {
     payload.response_format = normalizedResponseFormat;
@@ -2876,9 +3447,9 @@ async function invokeLLM(params) {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      authorization: `Bearer ${ENV.forgeApiKey}`
+      authorization: `Bearer ${ENV.forgeApiKey}`,
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
   if (!response.ok) {
     const errorText = await response.text();
@@ -2972,14 +3543,29 @@ function isSinhalaOrSinglish(text2) {
     "machan",
     "sahodaraya",
     "sir",
-    "madam"
+    "madam",
   ];
-  return singlishTokens.some((token) => t2.includes(token));
+  return singlishTokens.some(token => t2.includes(token));
 }
 function generateExpertResponse(userQuery) {
   const query = userQuery.toLowerCase().trim();
   const isLocalLang = isSinhalaOrSinglish(userQuery);
-  if (query.includes("reccomend") || query.includes("recommend") || query.includes("buy karanna") || query.includes("ganna puluwan") || query.includes("monada thiyenne") || query.includes("what can i buy") || query.includes("what products") || query.includes("overview") || query.includes("catalog") || query.includes("introduce") || query.includes("mokada thiyenne") || query.includes("hondama product") || query.includes("mata") && query.includes("buy") || query.includes("mata") && query.includes("ganna")) {
+  if (
+    query.includes("reccomend") ||
+    query.includes("recommend") ||
+    query.includes("buy karanna") ||
+    query.includes("ganna puluwan") ||
+    query.includes("monada thiyenne") ||
+    query.includes("what can i buy") ||
+    query.includes("what products") ||
+    query.includes("overview") ||
+    query.includes("catalog") ||
+    query.includes("introduce") ||
+    query.includes("mokada thiyenne") ||
+    query.includes("hondama product") ||
+    (query.includes("mata") && query.includes("buy")) ||
+    (query.includes("mata") && query.includes("ganna"))
+  ) {
     if (isLocalLang) {
       return `\u0D86\u0DBA\u0DD4\u0DB6\u0DDD\u0DC0\u0DB1\u0DCA! \u{1F64F} **Manju Group** \u0DC0\u0DD9\u0DAD \u0D94\u0DB6\u0DC0 \u0D89\u0DAD\u0DCF\u0DB8 \u0DC3\u0DCF\u0DAF\u0DBB\u0DBA\u0DD9\u0DB1\u0DCA \u0DB4\u0DD2\u0DC5\u0DD2\u0D9C\u0DB1\u0DD2\u0DB8\u0DD4.
 
@@ -3023,7 +3609,21 @@ With over 22 years of trusted manufacturing excellence in Sri Lanka, we proudly 
 
 Which product category would you like to explore in detail? \u{1F4DE} Hotline: **+94 11 234 5678**`;
   }
-  if (query.includes("bike") || query.includes("scooter") || query.includes("motor") || query.includes("electric") || query.includes("em005") || query.includes("yw06") || query.includes("battery") || query.includes("range") || query.includes("speed") || query.includes("charge") || query.includes("\u0DB6\u0DBA\u0DD2\u0D9A\u0DCA") || query.includes("\u0DC3\u0DCA\u0D9A\u0DD6\u0DA7\u0DBB\u0DCA") || query.includes("\u0DB4\u0DD0\u0DA7\u0DCA\u200D\u0DBB\u0DBD\u0DCA")) {
+  if (
+    query.includes("bike") ||
+    query.includes("scooter") ||
+    query.includes("motor") ||
+    query.includes("electric") ||
+    query.includes("em005") ||
+    query.includes("yw06") ||
+    query.includes("battery") ||
+    query.includes("range") ||
+    query.includes("speed") ||
+    query.includes("charge") ||
+    query.includes("\u0DB6\u0DBA\u0DD2\u0D9A\u0DCA") ||
+    query.includes("\u0DC3\u0DCA\u0D9A\u0DD6\u0DA7\u0DBB\u0DCA") ||
+    query.includes("\u0DB4\u0DD0\u0DA7\u0DCA\u200D\u0DBB\u0DBD\u0DCA")
+  ) {
     if (isLocalLang) {
       return `\u26A1 **Dew Motors Electric Bikes & Scooters (\u0DC0\u0DD2\u0DAF\u0DD4\u0DBD\u0DD2 \u0DBA\u0DAD\u0DD4\u0DBB\u0DD4\u0DB4\u0DD0\u0DAF\u0DD2)**:
 
@@ -3054,7 +3654,18 @@ Which product category would you like to explore in detail? \u{1F4DE} Hotline: *
 
 \u{1F4DE} Call **+94 11 234 5678** to book a showroom test ride.`;
   }
-  if (query.includes("tv") || query.includes("television") || query.includes("screen") || query.includes("\u0DA7\u0DD3\u0DC0\u0DD3") || query.includes("32") || query.includes("43") || query.includes("55") || query.includes("65") || query.includes("75") || query.includes("98")) {
+  if (
+    query.includes("tv") ||
+    query.includes("television") ||
+    query.includes("screen") ||
+    query.includes("\u0DA7\u0DD3\u0DC0\u0DD3") ||
+    query.includes("32") ||
+    query.includes("43") ||
+    query.includes("55") ||
+    query.includes("65") ||
+    query.includes("75") ||
+    query.includes("98")
+  ) {
     if (isLocalLang) {
       return `\u{1F4FA} **Dew Plus 4K Android Smart TV \u0DB4\u0DD9\u0DC5\u0D9C\u0DD0\u0DC3\u0DCA\u0DB8 \u0DC3\u0DC4 \u0DB8\u0DD2\u0DBD \u0D9C\u0DAB\u0DB1\u0DCA**:
 
@@ -3078,7 +3689,15 @@ Which product category would you like to explore in detail? \u{1F4DE} Hotline: *
 
 \u2728 Includes: 2-Year Warranty with 1-to-1 replacement in the 1st year, Android 12, Netflix, YouTube & Island-wide Delivery!`;
   }
-  if (query.includes("ac") || query.includes("air condition") || query.includes("inverter") || query.includes("cool") || query.includes("ton") || query.includes("btu") || query.includes("\u0D92\u0DC3\u0DD3")) {
+  if (
+    query.includes("ac") ||
+    query.includes("air condition") ||
+    query.includes("inverter") ||
+    query.includes("cool") ||
+    query.includes("ton") ||
+    query.includes("btu") ||
+    query.includes("\u0D92\u0DC3\u0DD3")
+  ) {
     if (isLocalLang) {
       return `\u2744\uFE0F **DEW+ Inverter Split Air Conditioners (R32 Eco Gas)**:
 
@@ -3103,7 +3722,18 @@ Which product category would you like to explore in detail? \u{1F4DE} Hotline: *
 
 \u{1F381} 10-Year Compressor Warranty + **FREE Installation** (up to 3m copper tubing) + Island-wide delivery!`;
   }
-  if (query.includes("water") || query.includes("filter") || query.includes("purifier") || query.includes("ro") || query.includes("dispenser") || query.includes("hot") || query.includes("cold") || query.includes("alkaline") || query.includes("\u0DC0\u0DAD\u0DD4\u0DBB") || query.includes("\u0DC6\u0DD2\u0DBD\u0DCA\u0DA7\u0DBB\u0DCA")) {
+  if (
+    query.includes("water") ||
+    query.includes("filter") ||
+    query.includes("purifier") ||
+    query.includes("ro") ||
+    query.includes("dispenser") ||
+    query.includes("hot") ||
+    query.includes("cold") ||
+    query.includes("alkaline") ||
+    query.includes("\u0DC0\u0DAD\u0DD4\u0DBB") ||
+    query.includes("\u0DC6\u0DD2\u0DBD\u0DCA\u0DA7\u0DBB\u0DCA")
+  ) {
     if (isLocalLang) {
       return `\u{1F4A7} **Manju Dew Super \u0DA2\u0DBD \u0DB4\u0DD9\u0DBB\u0DAB \u0DB4\u0DAF\u0DCA\u0DB0\u0DAD\u0DD2 \u0DC3\u0DC4 Dispensers**:
 
@@ -3130,7 +3760,18 @@ Which product category would you like to explore in detail? \u{1F4DE} Hotline: *
 
 \u2728 Free Water Testing, Free Installation, 2-Year Warranty & Island-wide Delivery!`;
   }
-  if (query.includes("installment") || query.includes("down payment") || query.includes("monthly") || query.includes("\u0D9C\u0DD9\u0DC0\u0DB1\u0DCA\u0DB1") || query.includes("\u0DC0\u0DCF\u0DBB\u0DD2\u0D9A") || query.includes("\u0DB1\u0DBA\u0DA7") || query.includes("\u0DB8\u0DD2\u0DBD") || query.includes("\u0D9C\u0DAB\u0DB1\u0DCA") || query.includes("kiyada") || query.includes("ganan")) {
+  if (
+    query.includes("installment") ||
+    query.includes("down payment") ||
+    query.includes("monthly") ||
+    query.includes("\u0D9C\u0DD9\u0DC0\u0DB1\u0DCA\u0DB1") ||
+    query.includes("\u0DC0\u0DCF\u0DBB\u0DD2\u0D9A") ||
+    query.includes("\u0DB1\u0DBA\u0DA7") ||
+    query.includes("\u0DB8\u0DD2\u0DBD") ||
+    query.includes("\u0D9C\u0DAB\u0DB1\u0DCA") ||
+    query.includes("kiyada") ||
+    query.includes("ganan")
+  ) {
     if (isLocalLang) {
       return `\u{1F4B3} **Manju Group \u0DB4\u0DC4\u0DC3\u0DD4 \u0DB8\u0DCF\u0DC3\u0DD2\u0D9A \u0DC0\u0DCF\u0DBB\u0DD2\u0D9A \u0D9A\u0DCA\u200D\u0DBB\u0DB8 (Easy Installments)**:
 
@@ -3154,7 +3795,22 @@ Which product category would you like to explore in detail? \u{1F4DE} Hotline: *
 
 \u{1F4DE} Call **+94 11 234 5678** for fast installment approval!`;
   }
-  if (query.includes("company") || query.includes("manju") || query.includes("contact") || query.includes("hotline") || query.includes("phone") || query.includes("number") || query.includes("location") || query.includes("branch") || query.includes("showroom") || query.includes("address") || query.includes("delivery") || query.includes("warranty") || query.includes("\u0DC0\u0DDC\u0DBB\u0DB1\u0DCA\u0DA7\u0DD2") || query.includes("\u0D9A\u0DDC\u0DC4\u0DD9\u0DAF")) {
+  if (
+    query.includes("company") ||
+    query.includes("manju") ||
+    query.includes("contact") ||
+    query.includes("hotline") ||
+    query.includes("phone") ||
+    query.includes("number") ||
+    query.includes("location") ||
+    query.includes("branch") ||
+    query.includes("showroom") ||
+    query.includes("address") ||
+    query.includes("delivery") ||
+    query.includes("warranty") ||
+    query.includes("\u0DC0\u0DDC\u0DBB\u0DB1\u0DCA\u0DA7\u0DD2") ||
+    query.includes("\u0D9A\u0DDC\u0DC4\u0DD9\u0DAF")
+  ) {
     if (isLocalLang) {
       return `\u{1F3E2} **Manju Group of Companies (Manju Enterprises)**
 
@@ -3206,47 +3862,56 @@ I can help you with exact prices, technical specifications, installment plans, a
 What product or information would you like to know more about? You can ask me in **English, \u0DC3\u0DD2\u0D82\u0DC4\u0DBD, or Singlish**! \u{1F4DE} Hotline: **+94 11 234 5678**`;
 }
 var aiRouter = router({
-  chat: publicProcedure.input(
-    z11.object({
-      message: z11.string().min(1).max(1e3),
-      history: z11.array(
-        z11.object({
-          role: z11.enum(["user", "assistant"]),
-          content: z11.string()
-        })
-      ).default([])
-    })
-  ).mutation(async ({ input }) => {
-    try {
-      const messages = [
-        ...input.history.slice(-6).map((m) => ({
-          role: m.role,
-          content: m.content
-        })),
-        { role: "user", content: input.message }
-      ];
-      const allMessages = [
-        { role: "system", content: SYSTEM_PROMPT },
-        ...messages
-      ];
-      const response = await invokeLLM({
-        model: "gpt-4o-mini",
-        messages: allMessages,
-        maxTokens: 600
-      });
-      const reply = response.choices?.[0]?.message?.content;
-      const replyText = typeof reply === "string" ? reply : Array.isArray(reply) ? reply.map(
-        (p) => typeof p === "string" ? p : p.text || ""
-      ).join("") : "";
-      if (replyText && replyText.trim()) {
-        return { reply: replyText };
+  chat: publicProcedure
+    .input(
+      z11.object({
+        message: z11.string().min(1).max(1e3),
+        history: z11
+          .array(
+            z11.object({
+              role: z11.enum(["user", "assistant"]),
+              content: z11.string(),
+            })
+          )
+          .default([]),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const messages = [
+          ...input.history.slice(-6).map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
+          { role: "user", content: input.message },
+        ];
+        const allMessages = [
+          { role: "system", content: SYSTEM_PROMPT },
+          ...messages,
+        ];
+        const response = await invokeLLM({
+          model: "gpt-4o-mini",
+          messages: allMessages,
+          maxTokens: 600,
+        });
+        const reply = response.choices?.[0]?.message?.content;
+        const replyText =
+          typeof reply === "string"
+            ? reply
+            : Array.isArray(reply)
+              ? reply
+                  .map(p => (typeof p === "string" ? p : p.text || ""))
+                  .join("")
+              : "";
+        if (replyText && replyText.trim()) {
+          return { reply: replyText };
+        }
+        return { reply: generateExpertResponse(input.message) };
+      } catch (error) {
+        const expertReply = generateExpertResponse(input.message);
+        return { reply: expertReply };
       }
-      return { reply: generateExpertResponse(input.message) };
-    } catch (error) {
-      const expertReply = generateExpertResponse(input.message);
-      return { reply: expertReply };
-    }
-  })
+    }),
 });
 
 // server/routers/index.ts
@@ -3255,18 +3920,18 @@ var INVALID_CREDENTIALS_MSG = "Invalid email or password";
 async function createSessionAndSetCookie(ctx, openId, name) {
   const sessionToken = await sdk.createSessionToken(openId, {
     name,
-    expiresInMs: ONE_YEAR_MS
+    expiresInMs: ONE_YEAR_MS,
   });
   const cookieOptions = getSessionCookieOptions(ctx.req);
   ctx.res.cookie(COOKIE_NAME, sessionToken, {
     ...cookieOptions,
-    maxAge: ONE_YEAR_MS
+    maxAge: ONE_YEAR_MS,
   });
 }
 var appRouter = router({
   system: systemRouter,
   auth: router({
-    me: publicProcedure.query((opts) => {
+    me: publicProcedure.query(opts => {
       if (!opts.ctx.user) return null;
       const { passwordHash, ...safeUser } = opts.ctx.user;
       return safeUser;
@@ -3276,112 +3941,130 @@ var appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true };
     }),
-    register: publicProcedure.input(
-      z12.object({
-        name: z12.string().min(1),
-        email: z12.string().email(),
-        password: z12.string().min(8)
-      })
-    ).mutation(async ({ ctx, input }) => {
-      const existing = await getUserByEmail(input.email);
-      if (existing) {
-        throw new TRPCError5({
-          code: "CONFLICT",
-          message: "An account with this email already exists"
-        });
-      }
-      const passwordHash = await bcrypt.hash(input.password, 10);
-      const openId = `local_${nanoid2()}`;
-      await upsertUser({
-        openId,
-        name: input.name,
-        email: input.email,
-        loginMethod: "email",
-        passwordHash,
-        lastSignedIn: /* @__PURE__ */ new Date()
-      });
-      await createSessionAndSetCookie(ctx, openId, input.name);
-      return { success: true };
-    }),
-    login: publicProcedure.input(
-      z12.object({
-        email: z12.string().email(),
-        password: z12.string().min(1)
-      })
-    ).mutation(async ({ ctx, input }) => {
-      const user = await getUserByEmail(input.email);
-      if (!user || !user.passwordHash) {
-        throw new TRPCError5({
-          code: "UNAUTHORIZED",
-          message: INVALID_CREDENTIALS_MSG
-        });
-      }
-      const passwordMatches = await bcrypt.compare(
-        input.password,
-        user.passwordHash
-      );
-      if (!passwordMatches) {
-        throw new TRPCError5({
-          code: "UNAUTHORIZED",
-          message: INVALID_CREDENTIALS_MSG
-        });
-      }
-      await createSessionAndSetCookie(ctx, user.openId, user.name || "");
-      return { success: true };
-    }),
-    googleLogin: publicProcedure.input(
-      z12.object({
-        credential: z12.string().min(1)
-      })
-    ).mutation(async ({ ctx, input }) => {
-      if (!ENV.googleClientId) {
-        throw new TRPCError5({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Google Client ID is not configured"
-        });
-      }
-      const client = new OAuth2Client(ENV.googleClientId);
-      let payload;
-      try {
-        const ticket = await client.verifyIdToken({
-          idToken: input.credential,
-          audience: ENV.googleClientId
-        });
-        payload = ticket.getPayload();
-      } catch (err) {
-        console.error("[GoogleLogin] Token verification failed:", err);
-        throw new TRPCError5({
-          code: "UNAUTHORIZED",
-          message: "Failed to verify Google token"
-        });
-      }
-      if (!payload || !payload.sub) {
-        throw new TRPCError5({
-          code: "UNAUTHORIZED",
-          message: "Invalid Google token payload"
-        });
-      }
-      let openId = `google_${payload.sub}`;
-      const existingUserByOpenId = await getUserByOpenId(openId);
-      if (existingUserByOpenId) {
+    register: publicProcedure
+      .input(
+        z12.object({
+          name: z12.string().min(1),
+          email: z12.string().email(),
+          password: z12.string().min(8),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const existing = await getUserByEmail(input.email);
+        if (existing) {
+          throw new TRPCError5({
+            code: "CONFLICT",
+            message: "An account with this email already exists",
+          });
+        }
+        const passwordHash = await bcrypt.hash(input.password, 10);
+        const openId = `local_${nanoid2()}`;
         await upsertUser({
           openId,
-          name: payload.name || existingUserByOpenId.name || null,
-          email: payload.email ?? existingUserByOpenId.email ?? null,
-          avatarUrl: payload.picture || existingUserByOpenId.avatarUrl || null,
-          loginMethod: "google",
-          lastSignedIn: /* @__PURE__ */ new Date()
+          name: input.name,
+          email: input.email,
+          loginMethod: "email",
+          passwordHash,
+          lastSignedIn: /* @__PURE__ */ new Date(),
         });
-      } else if (payload.email) {
-        const existingUserByEmail = await getUserByEmail(payload.email);
-        if (existingUserByEmail) {
-          openId = existingUserByEmail.openId;
+        await createSessionAndSetCookie(ctx, openId, input.name);
+        return { success: true };
+      }),
+    login: publicProcedure
+      .input(
+        z12.object({
+          email: z12.string().email(),
+          password: z12.string().min(1),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const user = await getUserByEmail(input.email);
+        if (!user || !user.passwordHash) {
+          throw new TRPCError5({
+            code: "UNAUTHORIZED",
+            message: INVALID_CREDENTIALS_MSG,
+          });
+        }
+        const passwordMatches = await bcrypt.compare(
+          input.password,
+          user.passwordHash
+        );
+        if (!passwordMatches) {
+          throw new TRPCError5({
+            code: "UNAUTHORIZED",
+            message: INVALID_CREDENTIALS_MSG,
+          });
+        }
+        await createSessionAndSetCookie(ctx, user.openId, user.name || "");
+        return { success: true };
+      }),
+    googleLogin: publicProcedure
+      .input(
+        z12.object({
+          credential: z12.string().min(1),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (!ENV.googleClientId) {
+          throw new TRPCError5({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Google Client ID is not configured",
+          });
+        }
+        const client = new OAuth2Client(ENV.googleClientId);
+        let payload;
+        try {
+          const ticket = await client.verifyIdToken({
+            idToken: input.credential,
+            audience: ENV.googleClientId,
+          });
+          payload = ticket.getPayload();
+        } catch (err) {
+          console.error("[GoogleLogin] Token verification failed:", err);
+          throw new TRPCError5({
+            code: "UNAUTHORIZED",
+            message: "Failed to verify Google token",
+          });
+        }
+        if (!payload || !payload.sub) {
+          throw new TRPCError5({
+            code: "UNAUTHORIZED",
+            message: "Invalid Google token payload",
+          });
+        }
+        let openId = `google_${payload.sub}`;
+        const existingUserByOpenId = await getUserByOpenId(openId);
+        if (existingUserByOpenId) {
           await upsertUser({
             openId,
-            name: payload.name || existingUserByEmail.name || null,
-            avatarUrl: payload.picture || existingUserByEmail.avatarUrl || null,
-            lastSignedIn: /* @__PURE__ */ new Date()
+            name: payload.name || existingUserByOpenId.name || null,
+            email: payload.email ?? existingUserByOpenId.email ?? null,
+            avatarUrl:
+              payload.picture || existingUserByOpenId.avatarUrl || null,
+            loginMethod: "google",
+            lastSignedIn: /* @__PURE__ */ new Date(),
           });
+        } else if (payload.email) {
+          const existingUserByEmail = await getUserByEmail(payload.email);
+          if (existingUserByEmail) {
+            openId = existingUserByEmail.openId;
+            await upsertUser({
+              openId,
+              name: payload.name || existingUserByEmail.name || null,
+              avatarUrl:
+                payload.picture || existingUserByEmail.avatarUrl || null,
+              lastSignedIn: /* @__PURE__ */ new Date(),
+            });
+          } else {
+            await upsertUser({
+              openId,
+              name: payload.name || null,
+              email: payload.email ?? null,
+              avatarUrl: payload.picture || null,
+              loginMethod: "google",
+              lastSignedIn: /* @__PURE__ */ new Date(),
+            });
+          }
         } else {
           await upsertUser({
             openId,
@@ -3389,22 +4072,12 @@ var appRouter = router({
             email: payload.email ?? null,
             avatarUrl: payload.picture || null,
             loginMethod: "google",
-            lastSignedIn: /* @__PURE__ */ new Date()
+            lastSignedIn: /* @__PURE__ */ new Date(),
           });
         }
-      } else {
-        await upsertUser({
-          openId,
-          name: payload.name || null,
-          email: payload.email ?? null,
-          avatarUrl: payload.picture || null,
-          loginMethod: "google",
-          lastSignedIn: /* @__PURE__ */ new Date()
-        });
-      }
-      await createSessionAndSetCookie(ctx, openId, payload.name || "");
-      return { success: true };
-    })
+        await createSessionAndSetCookie(ctx, openId, payload.name || "");
+        return { success: true };
+      }),
   }),
   products: productsRouter,
   brands: brandsRouter,
@@ -3417,7 +4090,7 @@ var appRouter = router({
   faq: faqRouter,
   contact: contactRouter,
   admin: adminRouter,
-  ai: aiRouter
+  ai: aiRouter,
 });
 
 // server/_core/context.ts
@@ -3431,7 +4104,7 @@ async function createContext(opts) {
   return {
     req: opts.req,
     res: opts.res,
-    user
+    user,
   };
 }
 
@@ -3460,16 +4133,16 @@ function registerOAuthRoutes(app2) {
         name: userInfo.name || null,
         email: userInfo.email ?? null,
         loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
-        lastSignedIn: /* @__PURE__ */ new Date()
+        lastSignedIn: /* @__PURE__ */ new Date(),
       });
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {
         name: userInfo.name || "",
-        expiresInMs: ONE_YEAR_MS
+        expiresInMs: ONE_YEAR_MS,
       });
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, {
         ...cookieOptions,
-        maxAge: ONE_YEAR_MS
+        maxAge: ONE_YEAR_MS,
       });
       res.redirect(302, "/");
     } catch (error) {
@@ -3487,7 +4160,8 @@ function getCallbackUrl(req) {
     return process.env.GOOGLE_CALLBACK_URL;
   }
   const protocol = req.headers["x-forwarded-proto"] || req.protocol || "http";
-  const host = req.headers["x-forwarded-host"] || req.get("host") || "localhost:3000";
+  const host =
+    req.headers["x-forwarded-host"] || req.get("host") || "localhost:3000";
   return `${protocol}://${host}/api/oauth/google/callback`;
 }
 function encodeState(redirect) {
@@ -3496,10 +4170,11 @@ function encodeState(redirect) {
 function decodeState(state) {
   if (!state) return DEFAULT_REDIRECT;
   try {
-    const parsed = JSON.parse(
-      Buffer.from(state, "base64").toString("utf-8")
-    );
-    if (typeof parsed.redirect === "string" && parsed.redirect.startsWith("/")) {
+    const parsed = JSON.parse(Buffer.from(state, "base64").toString("utf-8"));
+    if (
+      typeof parsed.redirect === "string" &&
+      parsed.redirect.startsWith("/")
+    ) {
       return parsed.redirect;
     }
     return DEFAULT_REDIRECT;
@@ -3525,13 +4200,13 @@ function registerGoogleOAuthRoutes(app2) {
     const client = new OAuth2Client2({
       clientId: ENV.googleClientId,
       clientSecret: ENV.googleClientSecret,
-      redirectUri
+      redirectUri,
     });
     const authUrl = client.generateAuthUrl({
       access_type: "online",
       scope: ["openid", "email", "profile"],
       state: encodeState(redirectParam),
-      prompt: "select_account"
+      prompt: "select_account",
     });
     res.redirect(302, authUrl);
   });
@@ -3567,7 +4242,7 @@ function registerGoogleOAuthRoutes(app2) {
       const client = new OAuth2Client2({
         clientId: ENV.googleClientId,
         clientSecret: ENV.googleClientSecret,
-        redirectUri
+        redirectUri,
       });
       const { tokens } = await client.getToken(code);
       if (!tokens.id_token) {
@@ -3575,7 +4250,7 @@ function registerGoogleOAuthRoutes(app2) {
       }
       const ticket = await client.verifyIdToken({
         idToken: tokens.id_token,
-        audience: ENV.googleClientId
+        audience: ENV.googleClientId,
       });
       const payload = ticket.getPayload();
       if (!payload || !payload.sub) {
@@ -3590,7 +4265,7 @@ function registerGoogleOAuthRoutes(app2) {
           email: payload.email ?? existingUserByOpenId.email ?? null,
           avatarUrl: payload.picture || existingUserByOpenId.avatarUrl || null,
           loginMethod: "google",
-          lastSignedIn: /* @__PURE__ */ new Date()
+          lastSignedIn: /* @__PURE__ */ new Date(),
         });
       } else if (payload.email) {
         const existingUserByEmail = await getUserByEmail(payload.email);
@@ -3600,7 +4275,7 @@ function registerGoogleOAuthRoutes(app2) {
             openId,
             name: payload.name || existingUserByEmail.name || null,
             avatarUrl: payload.picture || existingUserByEmail.avatarUrl || null,
-            lastSignedIn: /* @__PURE__ */ new Date()
+            lastSignedIn: /* @__PURE__ */ new Date(),
           });
         } else {
           await upsertUser({
@@ -3609,7 +4284,7 @@ function registerGoogleOAuthRoutes(app2) {
             email: payload.email ?? null,
             avatarUrl: payload.picture || null,
             loginMethod: "google",
-            lastSignedIn: /* @__PURE__ */ new Date()
+            lastSignedIn: /* @__PURE__ */ new Date(),
           });
         }
       } else {
@@ -3619,21 +4294,25 @@ function registerGoogleOAuthRoutes(app2) {
           email: payload.email ?? null,
           avatarUrl: payload.picture || null,
           loginMethod: "google",
-          lastSignedIn: /* @__PURE__ */ new Date()
+          lastSignedIn: /* @__PURE__ */ new Date(),
         });
       }
       const sessionToken = await sdk.createSessionToken(openId, {
         name: payload.name || "",
-        expiresInMs: ONE_YEAR_MS
+        expiresInMs: ONE_YEAR_MS,
       });
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, {
         ...cookieOptions,
-        maxAge: ONE_YEAR_MS
+        maxAge: ONE_YEAR_MS,
       });
       res.redirect(302, redirectPath);
     } catch (error) {
-      const details = error?.response?.data?.error_description || error?.response?.data?.error || error?.message || String(error);
+      const details =
+        error?.response?.data?.error_description ||
+        error?.response?.data?.error ||
+        error?.message ||
+        String(error);
       console.error("[GoogleOAuth] Callback failed:", details, error);
       res.redirect(
         302,
@@ -3662,7 +4341,7 @@ function registerStorageProxy(app2) {
       );
       forgeUrl.searchParams.set("path", key);
       const forgeResp = await fetch(forgeUrl, {
-        headers: { Authorization: `Bearer ${ENV.forgeApiKey}` }
+        headers: { Authorization: `Bearer ${ENV.forgeApiKey}` },
       });
       if (!forgeResp.ok) {
         const body = await forgeResp.text().catch(() => "");
@@ -3696,13 +4375,16 @@ var app = express();
 app.use(
   cors({
     origin: true,
-    credentials: true
+    credentials: true,
   })
 );
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.get(["/", "/api", "/api/health"], (req, res) => {
-  res.json({ status: "ok", timestamp: (/* @__PURE__ */ new Date()).toISOString() });
+  res.json({
+    status: "ok",
+    timestamp: /* @__PURE__ */ new Date().toISOString(),
+  });
 });
 registerStorageProxy(app);
 registerOAuthRoutes(app);
@@ -3720,7 +4402,7 @@ app.use(
     createContext,
     onError({ error, path }) {
       console.error(`[tRPC Error on ${path}]:`, error);
-    }
+    },
   })
 );
 app.use((err, req, res, next) => {
@@ -3729,8 +4411,8 @@ app.use((err, req, res, next) => {
   res.status(err?.status || 500).json({
     error: {
       message: err?.message || "Internal Server Error",
-      code: "INTERNAL_SERVER_ERROR"
-    }
+      code: "INTERNAL_SERVER_ERROR",
+    },
   });
 });
 var index_default = app;
@@ -3750,5 +4432,5 @@ export {
   _nanoid,
   _trpc,
   _zod,
-  index_default as default
+  index_default as default,
 };

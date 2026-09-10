@@ -2,7 +2,13 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { orders, orderItems, productImages, products, productVariants } from "../../drizzle/schema";
+import {
+  orders,
+  orderItems,
+  productImages,
+  products,
+  productVariants,
+} from "../../drizzle/schema";
 import { eq, desc, inArray, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
@@ -10,7 +16,10 @@ import { nanoid } from "nanoid";
 const MOCK_ORDERS: any[] = [];
 let mockOrderIdCounter = 1;
 
-async function attachItemImages(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, items: (typeof orderItems.$inferSelect)[]) {
+async function attachItemImages(
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
+  items: (typeof orderItems.$inferSelect)[]
+) {
   const productIds = Array.from(
     new Set(
       items.map(i => Number(i.productId)).filter(id => !isNaN(id) && id > 0)
@@ -117,7 +126,9 @@ export const ordersRouter = router({
       const userId = ctx.user.id;
 
       if (!db) {
-        const mock = MOCK_ORDERS.find(o => o.id === input.id && o.userId === userId);
+        const mock = MOCK_ORDERS.find(
+          o => o.id === input.id && o.userId === userId
+        );
         return mock || null;
       }
 
@@ -163,7 +174,8 @@ export const ordersRouter = router({
           const addr = o.shippingAddress || {};
           return (
             String(addr.email || "").toLowerCase() === credential ||
-            String(addr.phone || "").replace(/\D/g, "") === credential.replace(/\D/g, "")
+            String(addr.phone || "").replace(/\D/g, "") ===
+              credential.replace(/\D/g, "")
           );
         });
         return found || null;
@@ -180,7 +192,8 @@ export const ordersRouter = router({
       const addr = (order.shippingAddress || {}) as Record<string, unknown>;
       const emailMatch = String(addr.email || "").toLowerCase() === credential;
       const phoneMatch =
-        String(addr.phone || "").replace(/\D/g, "") === credential.replace(/\D/g, "");
+        String(addr.phone || "").replace(/\D/g, "") ===
+        credential.replace(/\D/g, "");
 
       if (!emailMatch && !phoneMatch) return null;
 
@@ -199,18 +212,23 @@ export const ordersRouter = router({
   create: publicProcedure
     .input(
       z.object({
-        items: z.array(
-          z.object({
-            productId: z.union([z.string(), z.number()]),
-            variantId: z.union([z.string(), z.number()]).optional().nullable(),
-            productName: z.string().max(300),
-            variantName: z.string().max(200).optional(),
-            sku: z.string().max(100).optional(),
-            quantity: z.number().int().min(1).max(1000),
-            unitPrice: z.number(),
-            imageUrl: z.string().max(500).optional().nullable(),
-          })
-        ).max(100),
+        items: z
+          .array(
+            z.object({
+              productId: z.union([z.string(), z.number()]),
+              variantId: z
+                .union([z.string(), z.number()])
+                .optional()
+                .nullable(),
+              productName: z.string().max(300),
+              variantName: z.string().max(200).optional(),
+              sku: z.string().max(100).optional(),
+              quantity: z.number().int().min(1).max(1000),
+              unitPrice: z.number(),
+              imageUrl: z.string().max(500).optional().nullable(),
+            })
+          )
+          .max(100),
         subtotal: z.number(),
         shippingFee: z.number().default(0),
         discount: z.number().default(0),
@@ -271,22 +289,30 @@ export const ordersRouter = router({
             if (!isNaN(numProductId) && numProductId > 0) {
               if (item.variantId) {
                 const [variant] = await db
-                  .select({ price: productVariants.price, salePrice: productVariants.salePrice })
+                  .select({
+                    price: productVariants.price,
+                    salePrice: productVariants.salePrice,
+                  })
                   .from(productVariants)
                   .where(eq(productVariants.id, Number(item.variantId)))
                   .limit(1);
                 if (variant) {
-                  serverUnitPrice = Number(variant.salePrice) || Number(variant.price);
+                  serverUnitPrice =
+                    Number(variant.salePrice) || Number(variant.price);
                 }
               }
               if (serverUnitPrice === null) {
                 const [product] = await db
-                  .select({ basePrice: products.basePrice, salePrice: products.salePrice })
+                  .select({
+                    basePrice: products.basePrice,
+                    salePrice: products.salePrice,
+                  })
                   .from(products)
                   .where(eq(products.id, numProductId))
                   .limit(1);
                 if (product) {
-                  serverUnitPrice = Number(product.salePrice) || Number(product.basePrice);
+                  serverUnitPrice =
+                    Number(product.salePrice) || Number(product.basePrice);
                 }
               }
             }

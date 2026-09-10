@@ -48,7 +48,7 @@ const aiRateLimit = rateLimit({
 // must be rate-limited hard against brute force: 5 attempts per 15 min per IP.
 const adminAuthRateLimit = rateLimit({
   windowMs: 15 * 60_000,
-  max: 5,
+  max: process.env.NODE_ENV === "development" ? 100 : 5,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many admin login attempts, please try again later." },
@@ -74,7 +74,12 @@ async function startServer() {
   app.use(
     cors({
       origin: (origin, cb) => {
-        if (!origin || allowedOrigins.includes(origin) || origin.endsWith("manjugroup.lk") || origin.endsWith("vercel.app")) {
+        if (
+          !origin ||
+          allowedOrigins.includes(origin) ||
+          origin.endsWith("manjugroup.lk") ||
+          origin.endsWith("vercel.app")
+        ) {
           return cb(null, true);
         }
         cb(new Error("CORS: origin not allowed"));
@@ -91,7 +96,10 @@ async function startServer() {
   registerUploadRoute(app);
 
   // Serve static assets from client/public directly (including /uploads)
-  const clientPublicPath = path.resolve(import.meta.dirname, "../../client/public");
+  const clientPublicPath = path.resolve(
+    import.meta.dirname,
+    "../../client/public"
+  );
   app.use(express.static(clientPublicPath));
   app.use("/uploads", express.static(path.join(clientPublicPath, "uploads")));
 

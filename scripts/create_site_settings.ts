@@ -1,11 +1,11 @@
-import postgres from 'postgres';
-import * as dotenv from 'dotenv';
+import postgres from "postgres";
+import * as dotenv from "dotenv";
 dotenv.config();
 
-const sql = postgres(process.env.DATABASE_URL!, { ssl: 'require' });
+const sql = postgres(process.env.DATABASE_URL!, { ssl: "require" });
 
 async function run() {
-  console.log('Creating site_settings table if not exists...');
+  console.log("Creating site_settings table if not exists...");
   await sql`
     CREATE TABLE IF NOT EXISTS public.site_settings (
       id SERIAL PRIMARY KEY,
@@ -30,8 +30,9 @@ async function run() {
       END IF;
     END $$;
   `;
-  const tables = await sql`SELECT table_name FROM information_schema.tables WHERE table_name = 'site_settings';`;
-  console.log('site_settings table status:', tables);
+  const tables =
+    await sql`SELECT table_name FROM information_schema.tables WHERE table_name = 'site_settings';`;
+  console.log("site_settings table status:", tables);
   await sql.end();
 }
 

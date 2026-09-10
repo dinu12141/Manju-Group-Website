@@ -382,9 +382,7 @@ export const productsRouter = router({
       const bId = input.brandId ? Number(input.brandId) : undefined;
       const targetLimit = input.limit ?? 8;
 
-      const conditions: SQL[] = [
-        eq(products.isActive, true),
-      ];
+      const conditions: SQL[] = [eq(products.isActive, true)];
       if (currentId > 0) {
         conditions.push(ne(products.id, currentId));
       }
@@ -401,12 +399,19 @@ export const productsRouter = router({
         .leftJoin(brands, eq(products.brandId, brands.id))
         .leftJoin(categories, eq(products.categoryId, categories.id))
         .where(and(...conditions))
-        .orderBy(desc(products.isFeatured), desc(products.isBestSeller), desc(products.createdAt))
+        .orderBy(
+          desc(products.isFeatured),
+          desc(products.isBestSeller),
+          desc(products.createdAt)
+        )
         .limit(targetLimit);
 
       // If category/brand matching returned fewer than desired items, supplement with other top products!
       if (rows.length < targetLimit) {
-        const pickedIds = new Set<number>([currentId, ...rows.map(r => r.product.id)]);
+        const pickedIds = new Set<number>([
+          currentId,
+          ...rows.map(r => r.product.id),
+        ]);
         const remainingLimit = targetLimit - rows.length;
 
         const fallbackRows = await db
@@ -414,13 +419,12 @@ export const productsRouter = router({
           .from(products)
           .leftJoin(brands, eq(products.brandId, brands.id))
           .leftJoin(categories, eq(products.categoryId, categories.id))
-          .where(
-            and(
-              eq(products.isActive, true),
-              ne(products.id, currentId)
-            )
+          .where(and(eq(products.isActive, true), ne(products.id, currentId)))
+          .orderBy(
+            desc(products.isFeatured),
+            desc(products.isBestSeller),
+            desc(products.createdAt)
           )
-          .orderBy(desc(products.isFeatured), desc(products.isBestSeller), desc(products.createdAt))
           .limit(remainingLimit * 2);
 
         for (const fRow of fallbackRows) {
@@ -436,7 +440,11 @@ export const productsRouter = router({
     }),
 
   getFeatured: publicProcedure
-    .input(z.object({ limit: z.number().int().min(1).max(100).default(8) }).optional())
+    .input(
+      z
+        .object({ limit: z.number().int().min(1).max(100).default(8) })
+        .optional()
+    )
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) return [];
@@ -454,7 +462,12 @@ export const productsRouter = router({
     }),
 
   search: publicProcedure
-    .input(z.object({ query: z.string(), limit: z.number().int().min(1).max(100).default(8) }))
+    .input(
+      z.object({
+        query: z.string(),
+        limit: z.number().int().min(1).max(100).default(8),
+      })
+    )
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) return [];
@@ -494,7 +507,9 @@ export const productsRouter = router({
       const rows = await db
         .select()
         .from(reviews)
-        .where(and(eq(reviews.productId, prodIdStr), eq(reviews.isApproved, true)))
+        .where(
+          and(eq(reviews.productId, prodIdStr), eq(reviews.isApproved, true))
+        )
         .orderBy(desc(reviews.createdAt));
       return rows;
     }),
@@ -506,7 +521,10 @@ export const productsRouter = router({
         authorName: z.string().min(1, "Name is required").max(100),
         rating: z.number().int().min(1).max(5),
         title: z.string().max(256).optional(),
-        body: z.string().min(2, "Review comment must be at least 2 characters").max(2000),
+        body: z
+          .string()
+          .min(2, "Review comment must be at least 2 characters")
+          .max(2000),
         userEmail: z.string().email().optional().or(z.literal("")),
       })
     )
@@ -521,7 +539,8 @@ export const productsRouter = router({
 
       const prodIdStr = String(input.productId);
       const userId = ctx.user?.id ? Number(ctx.user.id) : null;
-      const authorName = input.authorName.trim() || ctx.user?.name || "Verified Customer";
+      const authorName =
+        input.authorName.trim() || ctx.user?.name || "Verified Customer";
 
       const [created] = await db
         .insert(reviews)
@@ -529,7 +548,10 @@ export const productsRouter = router({
           productId: prodIdStr,
           userId,
           authorName,
-          userEmail: (input.userEmail && input.userEmail.trim()) || ctx.user?.email || null,
+          userEmail:
+            (input.userEmail && input.userEmail.trim()) ||
+            ctx.user?.email ||
+            null,
           rating: input.rating,
           title: input.title?.trim() || null,
           body: input.body.trim(),

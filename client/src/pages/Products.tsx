@@ -89,7 +89,8 @@ export default function Products() {
   const { data: categoriesData } = trpc.categories.list.useQuery();
 
   const brands = useMemo(() => {
-    const raw = brandsData && brandsData.length > 0 ? brandsData : STATIC_BRANDS;
+    const raw =
+      brandsData && brandsData.length > 0 ? brandsData : STATIC_BRANDS;
     return raw.filter(
       b =>
         !b.slug.toLowerCase().includes("exercise") &&
@@ -187,11 +188,11 @@ export default function Products() {
 
   const hasActiveFilters = Boolean(
     filters.brandId ||
-      filters.categoryId ||
-      filters.priceRange ||
-      filters.inStockOnly ||
-      filters.bestSellersOnly ||
-      filters.newArrivalsOnly
+    filters.categoryId ||
+    filters.priceRange ||
+    filters.inStockOnly ||
+    filters.bestSellersOnly ||
+    filters.newArrivalsOnly
   );
 
   useEffect(() => {
@@ -269,9 +270,10 @@ export default function Products() {
         structuredData={{
           "@context": "https://schema.org",
           "@type": "CollectionPage",
-          "name": "Manju Group Products & Appliances Catalog",
-          "url": "https://manjugroup.lk/products",
-          "description": "Browse genuine multi-brand electronics, vehicles, and water purifiers in Sri Lanka with official warranty."
+          name: "Manju Group Products & Appliances Catalog",
+          url: "https://manjugroup.lk/products",
+          description:
+            "Browse genuine multi-brand electronics, vehicles, and water purifiers in Sri Lanka with official warranty.",
         }}
       />
       {/* ── Page Header Banner ─────────────────────────────────────────── */}
@@ -339,7 +341,9 @@ export default function Products() {
           <div className="w-full mt-6 sm:mt-8 overflow-x-auto no-scrollbar scroll-smooth">
             <div className="flex items-center gap-2 sm:gap-2.5 pb-2 min-w-max">
               <button
-                onClick={() => setFilters(f => ({ ...f, categoryId: undefined }))}
+                onClick={() =>
+                  setFilters(f => ({ ...f, categoryId: undefined }))
+                }
                 className={`shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
                   filters.categoryId === undefined
                     ? "bg-[#F85606] text-white shadow-md shadow-orange-500/25 ring-2 ring-orange-400/40 scale-102"

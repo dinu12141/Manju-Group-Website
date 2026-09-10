@@ -126,7 +126,6 @@ export default function Cart() {
                               (e.target as HTMLImageElement).src =
                                 "/manju-logo-circle.webp";
                             }}
-
                           />
                         </div>
                       </Link>

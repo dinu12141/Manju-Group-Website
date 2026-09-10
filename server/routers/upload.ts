@@ -106,10 +106,7 @@ function isValidFileSignature(buffer: Buffer, mimetype: string): boolean {
 import { supabase } from "../supabase";
 
 // Ensure uploads directory exists (guarded for read-only serverless filesystems)
-const UPLOADS_DIR = path.resolve(
-  process.cwd(),
-  "client/public/uploads"
-);
+const UPLOADS_DIR = path.resolve(process.cwd(), "client/public/uploads");
 
 try {
   if (!fs.existsSync(UPLOADS_DIR)) {
@@ -178,7 +175,8 @@ export function registerUploadRoute(app: Express) {
         // 2. Magic bytes validation
         if (!isValidFileSignature(buffer, mimetype.toLowerCase())) {
           res.status(400).json({
-            error: "File validation failed: Content does not match file type signature.",
+            error:
+              "File validation failed: Content does not match file type signature.",
           });
           return;
         }
@@ -193,9 +191,8 @@ export function registerUploadRoute(app: Express) {
 
         // Attempt 1: Upload directly to Supabase Cloud Storage (Global CDN, serverless-safe)
         try {
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from("uploads")
-            .upload(filename, buffer, {
+          const { data: uploadData, error: uploadError } =
+            await supabase.storage.from("uploads").upload(filename, buffer, {
               contentType: mimetype,
               upsert: true,
             });
@@ -219,7 +216,10 @@ export function registerUploadRoute(app: Express) {
             await fs.promises.writeFile(targetPath, buffer);
             publicUrl = `/uploads/${filename}`;
           } catch (diskErr) {
-            console.warn("[Upload] Local disk write skipped (read-only filesystem):", diskErr);
+            console.warn(
+              "[Upload] Local disk write skipped (read-only filesystem):",
+              diskErr
+            );
             // Attempt 3: High-efficiency data URL fallback so upload never fails
             publicUrl = `data:${mimetype};base64,${buffer.toString("base64")}`;
           }

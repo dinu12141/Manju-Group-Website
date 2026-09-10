@@ -24,7 +24,7 @@ export function validateEnv(): void {
     const names = missing.map(([, envVar]) => envVar).join(", ");
     throw new Error(
       `[startup] Missing required environment variable(s): ${names}. ` +
-        `Copy .env.example to .env and fill in all required values.`,
+        `Copy .env.example to .env and fill in all required values.`
     );
   }
 }

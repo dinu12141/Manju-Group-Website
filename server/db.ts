@@ -25,6 +25,7 @@ export async function getDb() {
       max: 10,
       idle_timeout: 30,
       connect_timeout: 15,
+      max_lifetime: 60 * 30,
     });
     _db = drizzle(_client);
     console.log("[Database] Connected successfully");
@@ -150,7 +151,11 @@ export async function getUserByResetToken(token: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function updateUserResetToken(userId: number, token: string | null, expiry: Date | null) {
+export async function updateUserResetToken(
+  userId: number,
+  token: string | null,
+  expiry: Date | null
+) {
   const db = await getDb();
   if (!db) return;
 

@@ -148,16 +148,10 @@ function OrderSummaryBox({ compact = false }: { compact?: boolean }) {
 
       <div className="space-y-3 mb-4 max-h-72 overflow-y-auto pr-1 divide-y divide-slate-100">
         {items.map(item => (
-          <div
-            key={item.id}
-            className="flex items-center gap-3.5 py-2.5"
-          >
+          <div key={item.id} className="flex items-center gap-3.5 py-2.5">
             <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-xl overflow-hidden border border-slate-200 flex-shrink-0 bg-white p-1 shadow-xs">
               <img
-                src={
-                  item.imageUrl ||
-                  "/manju-logo.webp"
-                }
+                src={item.imageUrl || "/manju-logo.webp"}
                 alt={item.productName || ""}
                 className="w-full h-full object-contain"
                 onError={e => {
@@ -870,7 +864,10 @@ export default function Checkout() {
                           <div className="bg-blue-50/90 border border-blue-200 rounded-2xl p-4 text-xs text-blue-900 space-y-2">
                             <div className="flex items-center justify-between border-b border-blue-200/60 pb-1.5">
                               <p className="font-extrabold text-blue-950 flex items-center gap-1.5">
-                                <Building2 size={15} className="text-[#0F2D5E]" />
+                                <Building2
+                                  size={15}
+                                  className="text-[#0F2D5E]"
+                                />
                                 Direct Bank Transfer Details
                               </p>
                               <span className="bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
@@ -882,13 +879,17 @@ export default function Checkout() {
                                 <span className="text-slate-500 font-semibold block text-[10px]">
                                   Bank:
                                 </span>
-                                <strong className="font-bold">{bankDetails.bankName}</strong>
+                                <strong className="font-bold">
+                                  {bankDetails.bankName}
+                                </strong>
                               </div>
                               <div>
                                 <span className="text-slate-500 font-semibold block text-[10px]">
                                   Account Name:
                                 </span>
-                                <strong className="font-bold">{bankDetails.accountName}</strong>
+                                <strong className="font-bold">
+                                  {bankDetails.accountName}
+                                </strong>
                               </div>
                               <div>
                                 <span className="text-slate-500 font-semibold block text-[10px]">
@@ -902,7 +903,9 @@ export default function Checkout() {
                                 <span className="text-slate-500 font-semibold block text-[10px]">
                                   Branch:
                                 </span>
-                                <strong className="font-bold">{bankDetails.branch}</strong>
+                                <strong className="font-bold">
+                                  {bankDetails.branch}
+                                </strong>
                               </div>
                             </div>
                             <p className="text-[11px] text-blue-900/90 pt-2 border-t border-blue-200/60 leading-relaxed font-medium">
@@ -955,9 +958,13 @@ export default function Checkout() {
                         <p className="font-black text-base text-slate-900">
                           {getValues("firstName")} {getValues("lastName")}
                         </p>
-                        <p className="font-medium text-slate-700">{getValues("addressLine1")}</p>
+                        <p className="font-medium text-slate-700">
+                          {getValues("addressLine1")}
+                        </p>
                         {getValues("addressLine2") && (
-                          <p className="font-medium text-slate-700">{getValues("addressLine2")}</p>
+                          <p className="font-medium text-slate-700">
+                            {getValues("addressLine2")}
+                          </p>
                         )}
                         <p className="font-bold text-slate-900">
                           {getValues("city")}, {getValues("district")}{" "}
@@ -966,7 +973,9 @@ export default function Checkout() {
                         <div className="pt-2 border-t border-slate-200/70 text-xs sm:text-sm text-slate-700 space-y-1">
                           <p className="font-bold flex items-center gap-2 text-slate-900">
                             <span>📞 Mobile:</span>
-                            <span className="font-extrabold text-slate-950">{getValues("phone")}</span>
+                            <span className="font-extrabold text-slate-950">
+                              {getValues("phone")}
+                            </span>
                           </p>
                           <p className="font-semibold text-slate-600 flex items-center gap-2">
                             <span>✉️ Email:</span>
