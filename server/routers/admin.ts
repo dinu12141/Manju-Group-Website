@@ -1537,4 +1537,56 @@ export const adminRouter = router({
       await db.delete(reviews).where(eq(reviews.id, input.reviewId));
       return { success: true };
     }),
+
+  inquiriesList: adminProcedure
+    .input(
+      z.object({
+        page: z.number().int().min(1).default(1),
+        limit: z.number().int().min(1).max(100).default(20),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { items: [], total: 0 };
+      const offset = (input.page - 1) * input.limit;
+      const data = await db
+        .select()
+        .from(contactMessages)
+        .orderBy(desc(contactMessages.createdAt))
+        .limit(input.limit)
+        .offset(offset);
+      const [{ count }] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(contactMessages);
+      return { items: data, total: Number(count) };
+    }),
+
+  markInquiryRead: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+      await db
+        .update(contactMessages)
+        .set({ isRead: true })
+        .where(eq(contactMessages.id, input.id));
+      return { success: true };
+    }),
+
+  deleteInquiry: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+      await db.delete(contactMessages).where(eq(contactMessages.id, input.id));
+      return { success: true };
+    }),
 });
