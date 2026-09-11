@@ -584,8 +584,7 @@ export default function Admin() {
   const invalidateProductQueries = () => {
     utils.admin.products.invalidate();
     utils.admin.stats.invalidate();
-    utils.products.list.invalidate();
-    utils.products.getFeatured.invalidate();
+    utils.products.invalidate();
     refetchProducts();
   };
 
@@ -611,13 +610,39 @@ export default function Admin() {
     },
   });
 
+  const [deletingProductId, setDeletingProductId] = useState<number | null>(null);
+
   const deleteProductMutation = trpc.admin.deleteProduct.useMutation({
+    onMutate: async ({ productId }) => {
+      setDeletingProductId(productId);
+      await utils.admin.products.cancel({ page: 1, limit: 100 });
+      const prevProducts = utils.admin.products.getData({ page: 1, limit: 100 });
+      utils.admin.products.setData(
+        { page: 1, limit: 100 },
+        (old: any) => {
+          if (!old?.items) return old;
+          return {
+            ...old,
+            items: old.items.filter((p: any) => p.id !== productId),
+            total: Math.max(0, (old.total ?? old.items.length) - 1),
+          };
+        }
+      );
+      return { prevProducts };
+    },
     onSuccess: () => {
       invalidateProductQueries();
-      toast.success("Product removed from catalog");
+      toast.success("Product permanently deleted from catalog");
     },
-    onError: err => {
+    onError: (err, _variables, context) => {
+      if (context?.prevProducts) {
+        utils.admin.products.setData({ page: 1, limit: 100 }, context.prevProducts);
+      }
       toast.error(err.message || "Failed to delete product");
+    },
+    onSettled: () => {
+      setDeletingProductId(null);
+      refetchProducts();
     },
   });
 
@@ -1036,10 +1061,10 @@ export default function Admin() {
     }
   };
 
-  const handleDeleteProduct = (id: number) => {
+  const handleDeleteProduct = (id: number, name?: string) => {
     if (
       confirm(
-        "Are you sure you want to remove this product from the live catalog?"
+        `Are you sure you want to permanently delete "${name || "this product"}" from the live catalog? This action cannot be undone.`
       )
     ) {
       deleteProductMutation.mutate({ productId: id });
@@ -1866,11 +1891,16 @@ export default function Admin() {
                                   <Edit2 size={14} />
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteProduct(p.id)}
-                                  className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 cursor-pointer"
+                                  onClick={() => handleDeleteProduct(p.id, p.name)}
+                                  disabled={deletingProductId === p.id}
+                                  className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                                   title="Delete Product"
                                 >
-                                  <Trash2 size={14} />
+                                  {deletingProductId === p.id ? (
+                                    <Loader2 size={14} className="animate-spin" />
+                                  ) : (
+                                    <Trash2 size={14} />
+                                  )}
                                 </button>
                               </div>
                             </td>

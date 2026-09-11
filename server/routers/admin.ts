@@ -1027,20 +1027,39 @@ export const adminRouter = router({
       }
 
       try {
-        await db.transaction(async tx => {
-          await tx
-            .delete(productImages)
-            .where(eq(productImages.productId, input.productId));
-          await tx
-            .delete(productVariants)
-            .where(eq(productVariants.productId, input.productId));
-          await tx.delete(products).where(eq(products.id, input.productId));
+        await withDbTimeout(async () => {
+          await db.transaction(async tx => {
+            const strProductId = String(input.productId);
+
+            // Clean up child product images and variants
+            await tx
+              .delete(productImages)
+              .where(eq(productImages.productId, input.productId));
+            await tx
+              .delete(productVariants)
+              .where(eq(productVariants.productId, input.productId));
+
+            // Clean up related reviews, wishlists, and cart items
+            await tx
+              .delete(reviews)
+              .where(eq(reviews.productId, strProductId));
+            await tx
+              .delete(wishlists)
+              .where(eq(wishlists.productId, strProductId));
+            await tx
+              .delete(cartItems)
+              .where(eq(cartItems.productId, strProductId));
+
+            // Permanently delete product row
+            await tx.delete(products).where(eq(products.id, input.productId));
+          });
         });
 
-        return { success: true };
+        return { success: true, productId: input.productId };
       } catch (e: any) {
         console.error("Failed to delete product:", e);
-        throw new TRPCError({ cause: e,
+        throw new TRPCError({
+          cause: e,
           code: "INTERNAL_SERVER_ERROR",
           message: e.message || "Failed to delete product",
         });
