@@ -2476,6 +2476,196 @@ export default function Admin() {
                 </div>
               </div>
 
+              {/* SECTION 2.5: HERO SLIDER ADS */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="text-[#0052B4]" size={18} />
+                    <h4 className="font-extrabold text-sm text-slate-900">
+                      2.5 Hero Slider Ads (Bottom Right Carousel)
+                    </h4>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold text-[10px]">
+                      {localAdConfig.heroSlides?.length || 0} Slides
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLocalAdConfig({
+                          ...localAdConfig,
+                          heroSlides: [
+                            ...(localAdConfig.heroSlides || []),
+                            {
+                              id: `slide-${Date.now()}`,
+                              badge: "NEW",
+                              title: "New Product",
+                              category: "Category",
+                              price: "Rs. 0",
+                              imageUrl: "",
+                              linkUrl: "/products",
+                            },
+                          ],
+                        });
+                      }}
+                      className="text-xs font-bold bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700"
+                    >
+                      + Add Slide
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  {localAdConfig.heroSlides?.map((slide, sIdx) => (
+                    <div
+                      key={slide.id || sIdx}
+                      className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 relative"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newSlides = [...localAdConfig.heroSlides];
+                          newSlides.splice(sIdx, 1);
+                          setLocalAdConfig({
+                            ...localAdConfig,
+                            heroSlides: newSlides,
+                          });
+                        }}
+                        className="absolute top-4 right-4 text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded-md"
+                        title="Remove Slide"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+
+                      <span className="font-black text-xs text-slate-800 uppercase block">
+                        Slide #{sIdx + 1}
+                      </span>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs font-bold text-slate-700 block mb-1">
+                                Badge
+                              </label>
+                              <input
+                                type="text"
+                                value={slide.badge}
+                                onChange={e => {
+                                  const newSlides = [...localAdConfig.heroSlides];
+                                  newSlides[sIdx] = { ...slide, badge: e.target.value };
+                                  setLocalAdConfig({ ...localAdConfig, heroSlides: newSlides });
+                                }}
+                                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl font-bold"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-bold text-slate-700 block mb-1">
+                                Category Text
+                              </label>
+                              <input
+                                type="text"
+                                value={slide.category}
+                                onChange={e => {
+                                  const newSlides = [...localAdConfig.heroSlides];
+                                  newSlides[sIdx] = { ...slide, category: e.target.value };
+                                  setLocalAdConfig({ ...localAdConfig, heroSlides: newSlides });
+                                }}
+                                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl font-bold text-blue-600"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="text-xs font-bold text-slate-700 block mb-1">
+                              Product Title
+                            </label>
+                            <input
+                              type="text"
+                              value={slide.title}
+                              onChange={e => {
+                                const newSlides = [...localAdConfig.heroSlides];
+                                newSlides[sIdx] = { ...slide, title: e.target.value };
+                                setLocalAdConfig({ ...localAdConfig, heroSlides: newSlides });
+                              }}
+                              className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl font-bold"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs font-bold text-slate-700 block mb-1">
+                                Price Text
+                              </label>
+                              <input
+                                type="text"
+                                value={slide.price}
+                                onChange={e => {
+                                  const newSlides = [...localAdConfig.heroSlides];
+                                  newSlides[sIdx] = { ...slide, price: e.target.value };
+                                  setLocalAdConfig({ ...localAdConfig, heroSlides: newSlides });
+                                }}
+                                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl font-black text-amber-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-bold text-slate-700 block mb-1">
+                                Target Link URL
+                              </label>
+                              <input
+                                type="text"
+                                value={slide.linkUrl}
+                                onChange={e => {
+                                  const newSlides = [...localAdConfig.heroSlides];
+                                  newSlides[sIdx] = { ...slide, linkUrl: e.target.value };
+                                  setLocalAdConfig({ ...localAdConfig, heroSlides: newSlides });
+                                }}
+                                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          <MediaUploader
+                            label="Upload Slide Image (Auto-WebP)"
+                            currentUrl={slide.imageUrl}
+                            accept="image"
+                            recommendedDimensions="800x450"
+                            onUploaded={url => {
+                              const newSlides = [...localAdConfig.heroSlides];
+                              newSlides[sIdx] = { ...slide, imageUrl: url };
+                              setLocalAdConfig({ ...localAdConfig, heroSlides: newSlides });
+                            }}
+                          />
+                        </div>
+
+                        {/* Preview */}
+                        <div className="rounded-2xl bg-slate-900 border border-slate-700 p-4 flex flex-col justify-end relative overflow-hidden min-h-[190px] shadow-sm">
+                          {slide.imageUrl && (
+                            <img
+                              src={slide.imageUrl}
+                              alt="Preview"
+                              className="absolute inset-0 w-full h-full object-cover opacity-60"
+                            />
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                          <div className="relative z-10 flex flex-col gap-1">
+                            <span className="text-blue-400 font-bold text-[10px] uppercase tracking-wider">
+                              {slide.category}
+                            </span>
+                            <h5 className="font-extrabold text-white text-lg leading-tight line-clamp-2">
+                              {slide.title}
+                            </h5>
+                            <span className="text-amber-400 font-black text-sm mt-1">
+                              {slide.price}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* SECTION 3: HOME PAGE DUAL PROMO BANNERS */}
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
