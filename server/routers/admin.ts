@@ -1743,20 +1743,20 @@ export const adminRouter = router({
     .input(
       z.object({
         name: z.string().min(2, "Name must be at least 2 characters"),
-        badge: z.string().optional(),
+        badge: z.string().optional().nullable(),
         type: z.string().default("showroom"),
         address: z.string().min(3, "Address is required"),
         city: z.string().min(2, "City is required"),
-        province: z.string().optional(),
-        phone: z.string().optional(),
-        directCall: z.string().optional(),
-        email: z.string().optional(),
-        manager: z.string().optional(),
+        province: z.string().optional().nullable(),
+        phone: z.string().optional().nullable(),
+        directCall: z.string().optional().nullable(),
+        email: z.string().optional().nullable(),
+        manager: z.string().optional().nullable(),
         latitude: z.union([z.number(), z.string()]).default("6.9034"),
         longitude: z.union([z.number(), z.string()]).default("79.8524"),
         openingHours: z.any().optional(),
         services: z.array(z.string()).optional(),
-        imageUrl: z.string().optional(),
+        imageUrl: z.string().optional().nullable(),
         featured: z.boolean().default(false),
         isActive: z.boolean().default(true),
         sortOrder: z.number().default(0),
@@ -1780,20 +1780,20 @@ export const adminRouter = router({
           .insert(locations)
           .values({
             name: input.name,
-            badge: input.badge || null,
+            badge: input.badge?.trim() || null,
             type: input.type,
             address: input.address,
             city: input.city,
-            province: input.province || "Western Province",
-            phone: input.phone || null,
-            directCall: input.directCall || (input.phone ? input.phone.replace(/[^0-9+]/g, "") : null),
-            email: input.email || null,
-            manager: input.manager || null,
+            province: input.province?.trim() || "Western Province",
+            phone: input.phone?.trim() || null,
+            directCall: input.directCall?.trim() || (input.phone ? input.phone.replace(/[^0-9+]/g, "") : null),
+            email: input.email?.trim() || null,
+            manager: input.manager?.trim() || null,
             latitude: String(input.latitude),
             longitude: String(input.longitude),
             openingHours: openingHoursPayload || { summary: "Mon–Sat: 8:30 AM – 6:30 PM" },
             services: input.services || [],
-            imageUrl: input.imageUrl || null,
+            imageUrl: input.imageUrl?.trim() ? input.imageUrl.trim() : null,
             featured: input.featured,
             isActive: input.isActive,
             sortOrder: input.sortOrder,
@@ -1845,15 +1845,15 @@ export const adminRouter = router({
 
         const updateData: Record<string, any> = {};
         if (input.name !== undefined) updateData.name = input.name;
-        if (input.badge !== undefined) updateData.badge = input.badge;
+        if (input.badge !== undefined) updateData.badge = input.badge?.trim() || null;
         if (input.type !== undefined) updateData.type = input.type;
         if (input.address !== undefined) updateData.address = input.address;
         if (input.city !== undefined) updateData.city = input.city;
-        if (input.province !== undefined) updateData.province = input.province;
-        if (input.phone !== undefined) updateData.phone = input.phone;
-        if (input.directCall !== undefined) updateData.directCall = input.directCall;
-        if (input.email !== undefined) updateData.email = input.email;
-        if (input.manager !== undefined) updateData.manager = input.manager;
+        if (input.province !== undefined) updateData.province = input.province?.trim() || null;
+        if (input.phone !== undefined) updateData.phone = input.phone?.trim() || null;
+        if (input.directCall !== undefined) updateData.directCall = input.directCall?.trim() || null;
+        if (input.email !== undefined) updateData.email = input.email?.trim() || null;
+        if (input.manager !== undefined) updateData.manager = input.manager?.trim() || null;
         if (input.latitude !== undefined) updateData.latitude = String(input.latitude);
         if (input.longitude !== undefined) updateData.longitude = String(input.longitude);
         if (input.openingHours !== undefined) {
@@ -1863,7 +1863,9 @@ export const adminRouter = router({
               : input.openingHours;
         }
         if (input.services !== undefined) updateData.services = input.services;
-        if (input.imageUrl !== undefined) updateData.imageUrl = input.imageUrl;
+        if (input.imageUrl !== undefined) {
+          updateData.imageUrl = input.imageUrl && input.imageUrl.trim() !== "" ? input.imageUrl.trim() : null;
+        }
         if (input.featured !== undefined) updateData.featured = input.featured;
         if (input.isActive !== undefined) updateData.isActive = input.isActive;
         if (input.sortOrder !== undefined) updateData.sortOrder = input.sortOrder;
