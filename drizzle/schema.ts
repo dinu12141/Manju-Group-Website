@@ -271,21 +271,28 @@ export type BlogPost = typeof blogPosts.$inferSelect;
 export const locations = pgTable("locations", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 128 }).notNull(),
+  badge: varchar("badge", { length: 128 }),
   type: varchar("type", { length: 64 }).default("showroom").notNull(),
   address: text("address").notNull(),
   city: varchar("city", { length: 64 }).notNull(),
   province: varchar("province", { length: 64 }),
   phone: varchar("phone", { length: 32 }),
+  directCall: varchar("directCall", { length: 32 }),
   email: varchar("email", { length: 320 }),
+  manager: varchar("manager", { length: 128 }),
   latitude: numeric("latitude", { precision: 10, scale: 7 }),
   longitude: numeric("longitude", { precision: 10, scale: 7 }),
   openingHours: json("openingHours"),
+  services: json("services"),
+  imageUrl: text("imageUrl"),
+  featured: boolean("featured").default(false),
   isActive: boolean("isActive").default(true).notNull(),
   sortOrder: integer("sortOrder").default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
 export type Location = typeof locations.$inferSelect;
+export type InsertLocation = typeof locations.$inferInsert;
 
 // ─── Banners ──────────────────────────────────────────────────────────────────
 export const banners = pgTable("banners", {

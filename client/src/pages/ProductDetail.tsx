@@ -93,12 +93,20 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
           />
         ))}
       </div>
-      <span className="text-sm font-bold text-slate-800">
-        {rating.toFixed(1)}
-      </span>
-      <span className="text-sm text-slate-500 font-medium">
-        ({count} customer reviews)
-      </span>
+      {count > 0 ? (
+        <>
+          <span className="text-sm font-bold text-slate-800">
+            {rating.toFixed(1)}
+          </span>
+          <span className="text-sm text-slate-500 font-medium">
+            ({count} customer review{count === 1 ? "" : "s"})
+          </span>
+        </>
+      ) : (
+        <span className="text-sm text-slate-500 font-medium">
+          (No customer reviews yet)
+        </span>
+      )}
     </div>
   );
 }
@@ -110,7 +118,21 @@ export default function ProductDetail({ params }: ProductDetailProps) {
   const { slug } = params;
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (
+      typeof window !== "undefined" &&
+      window.location.hash.includes("review")
+    ) {
+      setActiveTab("reviews");
+      const timer = setTimeout(() => {
+        const el = document.getElementById("reviews-section");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 350);
+      return () => clearTimeout(timer);
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }, [slug]);
 
   const [, setLocation] = useLocation();
@@ -227,13 +249,19 @@ export default function ProductDetail({ params }: ProductDetailProps) {
   );
 
   // Realtime Live Customer Reviews Query
+  // Realtime Live Customer Reviews Query with polling and instant freshness
   const {
     data: reviewsList,
     refetch: refetchReviews,
     isLoading: isLoadingReviews,
   } = trpc.products.reviews.useQuery(
     { productId: item?.id ?? 0 },
-    { enabled: !!item?.id }
+    {
+      enabled: !!item?.id,
+      staleTime: 0,
+      refetchInterval: 3000,
+      refetchOnWindowFocus: true,
+    }
   );
 
   const utils = trpc.useUtils();
@@ -248,7 +276,7 @@ export default function ProductDetail({ params }: ProductDetailProps) {
   const [reviewComment, setReviewComment] = useState("");
 
   const addReviewMutation = trpc.products.addReview.useMutation({
-    onSuccess: () => {
+    onSuccess: createdReview => {
       toast.success("Thank you! Your review has been posted live.");
       setReviewAuthor("");
       setReviewEmail("");
@@ -256,7 +284,24 @@ export default function ProductDetail({ params }: ProductDetailProps) {
       setReviewComment("");
       setReviewRating(5);
       setShowReviewForm(false);
-      utils.products.reviews.invalidate({ productId: item?.id ?? 0 });
+
+      // Instant optimistic/cache update so count & review list increment with 0ms delay!
+      if (createdReview && item?.id) {
+        utils.products.reviews.setData(
+          { productId: item.id },
+          (old: any) => {
+            const currentList = Array.isArray(old) ? old : [];
+            if (currentList.some((r: any) => r.id === createdReview.id)) {
+              return currentList;
+            }
+            return [createdReview, ...currentList];
+          }
+        );
+      }
+
+      // Invalidate both public product reviews and admin review dashboard
+      utils.products.reviews.invalidate();
+      utils.admin.reviewsList.invalidate();
       refetchReviews();
     },
     onError: err => {
@@ -447,18 +492,16 @@ export default function ProductDetail({ params }: ProductDetailProps) {
 
   const dbReviews = reviewsList || [];
   const realReviewsCount = dbReviews.length;
-  const baseReviewCount = 85 + ((item.id * 37) % 420);
-  const reviewCount = baseReviewCount + realReviewsCount;
+  const reviewCount = realReviewsCount;
   const rating =
     realReviewsCount > 0
       ? Number(
           (
-            (4.8 * baseReviewCount +
-              dbReviews.reduce((sum, r) => sum + r.rating, 0)) /
-            reviewCount
+            dbReviews.reduce((sum, r) => sum + r.rating, 0) /
+            realReviewsCount
           ).toFixed(1)
         )
-      : 4.8;
+      : 5.0;
   const soldCount = 140 + ((item.id * 53) % 850);
 
   const fallbackImage = getProductImage(
@@ -947,7 +990,7 @@ export default function ProductDetail({ params }: ProductDetailProps) {
           </div>
 
           {/* Tab Navigation Section (Description / Specifications / Reviews) */}
-          <div className="mb-16">
+          <div id="reviews-section" className="mb-16 scroll-mt-24">
             <div className="flex gap-2 mb-6 border-b border-slate-200 pb-2 overflow-x-auto scrollbar-none">
               {tabs.map(tab => (
                 <button
@@ -1058,8 +1101,9 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                           Customer Ratings &amp; Reviews
                         </h4>
                         <p className="text-sm text-slate-600 mt-1">
-                          {reviewCount} verified customers &amp; visitors have
-                          reviewed this product.
+                          {reviewCount > 0
+                            ? `${reviewCount} verified customer${reviewCount === 1 ? "" : "s"} rated and reviewed this product.`
+                            : "No customer reviews yet. Be the first to review this product!"}
                         </p>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                           <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
@@ -1243,11 +1287,7 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                       <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider">
-                        Customer Feedback &amp; Discussion (
-                        {dbReviews.length > 0
-                          ? dbReviews.length
-                          : "Verified Community"}
-                        )
+                        Customer Feedback &amp; Discussion ({dbReviews.length})
                       </h4>
                       <span className="text-xs text-slate-500 font-medium">
                         Showing newest reviews first
@@ -1328,89 +1368,23 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                         ))}
                       </div>
                     ) : (
-                      <div className="space-y-4">
-                        {/* Sample verified seed reviews when no user has posted yet */}
-                        {[
-                          {
-                            name: "Kasun Jayasundara",
-                            city: "Colombo",
-                            rating: 5,
-                            days: "2 days ago",
-                            title:
-                              "Exceptional build quality & islandwide service",
-                            comment:
-                              "Received directly from the Colombo flagship showroom. Tested extensively on hill climbs and city traffic. Superb torque and seamless warranty support from Manju Group!",
-                          },
-                          {
-                            name: "Niluka Perera",
-                            city: "Kandy",
-                            rating: 5,
-                            days: "5 days ago",
-                            title:
-                              "Genuine warranty and very helpful customer team",
-                            comment:
-                              "Delivered to Kandy within 48 hours in secure wooden crating. Battery performance easily matches the listed specifications. Highly recommended!",
-                          },
-                          {
-                            name: "Dinesh Weerasinghe",
-                            city: "Galle",
-                            rating: 4,
-                            days: "1 week ago",
-                            title: "Very satisfied with this purchase",
-                            comment:
-                              "Great product for daily commute. The installment plan was easy to setup with the showroom team. Very happy with the purchase!",
-                          },
-                        ].map((seed, idx) => (
-                          <div
-                            key={idx}
-                            className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-2 hover:border-slate-300 transition-colors"
-                          >
-                            <div className="flex items-center justify-between flex-wrap gap-2">
-                              <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 text-white font-black text-xs flex items-center justify-center shadow-sm">
-                                  {seed.name.charAt(0)}
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-bold text-xs text-slate-900">
-                                      {seed.name}
-                                    </span>
-                                    <span className="text-[10px] text-slate-400">
-                                      • {seed.city}
-                                    </span>
-                                    <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-black flex items-center gap-1">
-                                      <CheckCircle2 size={10} /> Verified
-                                      Customer
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-1 mt-0.5">
-                                    {[1, 2, 3, 4, 5].map(star => (
-                                      <Star
-                                        key={star}
-                                        size={12}
-                                        className={
-                                          star <= seed.rating
-                                            ? "text-amber-400 fill-amber-400"
-                                            : "text-slate-200"
-                                        }
-                                      />
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                              <span className="text-[11px] text-slate-400 font-medium">
-                                {seed.days}
-                              </span>
-                            </div>
-
-                            <h5 className="text-xs font-bold text-slate-900 pt-1">
-                              {seed.title}
-                            </h5>
-                            <p className="text-xs text-slate-700 leading-relaxed font-medium">
-                              {seed.comment}
-                            </p>
-                          </div>
-                        ))}
+                      <div className="py-12 px-6 rounded-3xl bg-slate-50 border border-slate-200/80 text-center">
+                        <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-[#0F2D5E] flex items-center justify-center mb-4 shadow-sm">
+                          <MessageSquare size={28} />
+                        </div>
+                        <h4 className="text-base font-bold text-slate-900 mb-1">
+                          No reviews yet for this product
+                        </h4>
+                        <p className="text-xs text-slate-500 max-w-md mx-auto mb-5">
+                          Be the first customer to share your feedback and experience with this item.
+                        </p>
+                        <button
+                          onClick={() => setShowReviewForm(true)}
+                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F2D5E] hover:bg-[#1a4a8a] text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+                        >
+                          <Edit3 size={14} />
+                          <span>Write the First Review</span>
+                        </button>
                       </div>
                     )}
                   </div>

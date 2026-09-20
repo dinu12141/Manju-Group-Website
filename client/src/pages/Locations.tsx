@@ -15,8 +15,10 @@ import {
   Sparkles,
   ArrowRight,
   ChevronDown,
+  User,
 } from "lucide-react";
 import MainLayout from "@/components/MainLayout";
+import { trpc } from "@/lib/trpc";
 
 interface Showroom {
   id: number;
@@ -32,6 +34,9 @@ interface Showroom {
   longitude: number;
   featured?: boolean;
   services: string[];
+  manager?: string;
+  imageUrl?: string | null;
+  distanceKm?: number | null;
 }
 
 const ALL_SHOWROOMS: Showroom[] = [
@@ -235,9 +240,45 @@ export default function Locations() {
   const [isLocating, setIsLocating] = useState(false);
   const [locationStatus, setLocationStatus] = useState<string>("");
 
+  // Live database showrooms query with automatic fallback and instant freshness
+  const { data: dbLocations, isLoading } = trpc.locations.list.useQuery(undefined, {
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+  });
+
+  const allShowrooms: Showroom[] = useMemo(() => {
+    if (dbLocations && dbLocations.length > 0) {
+      return dbLocations as Showroom[];
+    }
+    return ALL_SHOWROOMS;
+  }, [dbLocations]);
+
+  // Keep selectedStoreId valid when list updates
+  useEffect(() => {
+    if (allShowrooms.length > 0) {
+      if (!allShowrooms.some(s => s.id === selectedStoreId)) {
+        setSelectedStoreId(allShowrooms[0].id);
+      }
+    }
+  }, [allShowrooms, selectedStoreId]);
+
+  // Dynamically extract all available provinces from active showrooms
+  const availableProvinces = useMemo(() => {
+    const provs = new Set<string>();
+    provs.add("All");
+    allShowrooms.forEach(s => {
+      if (s.district) {
+        const clean = s.district.replace(/ Province$/i, "").trim();
+        if (clean) provs.add(clean);
+      }
+    });
+    return Array.from(provs);
+  }, [allShowrooms]);
+
   // Calculate distances if user location is available
   const showroomsWithDistance = useMemo(() => {
-    return ALL_SHOWROOMS.map(store => {
+    return allShowrooms.map(store => {
       let distanceKm: number | null = null;
       if (userLocation) {
         distanceKm = calculateDistanceKm(
@@ -249,7 +290,7 @@ export default function Locations() {
       }
       return { ...store, distanceKm };
     });
-  }, [userLocation]);
+  }, [allShowrooms, userLocation]);
 
   // Filter showrooms by search query and province
   const filteredShowrooms = useMemo(() => {
@@ -260,11 +301,12 @@ export default function Locations() {
           store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           store.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
           store.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          store.district.toLowerCase().includes(searchQuery.toLowerCase());
+          store.district.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (store.manager && store.manager.toLowerCase().includes(searchQuery.toLowerCase()));
 
         const matchesProvince =
           selectedProvince === "All" ||
-          store.district.includes(selectedProvince);
+          store.district.toLowerCase().includes(selectedProvince.toLowerCase());
 
         return matchesQuery && matchesProvince;
       })
@@ -278,9 +320,9 @@ export default function Locations() {
 
   const selectedStore = useMemo(() => {
     return (
-      ALL_SHOWROOMS.find(s => s.id === selectedStoreId) || ALL_SHOWROOMS[0]
+      allShowrooms.find(s => s.id === selectedStoreId) || allShowrooms[0]
     );
-  }, [selectedStoreId]);
+  }, [allShowrooms, selectedStoreId]);
 
   // GPS Live Location Detection
   const handleUseLiveLocation = () => {
@@ -300,10 +342,10 @@ export default function Locations() {
         setIsLocating(false);
 
         // Find closest showroom
-        let closestStore = ALL_SHOWROOMS[0];
+        let closestStore = allShowrooms[0];
         let minDistance = Infinity;
 
-        ALL_SHOWROOMS.forEach(store => {
+        allShowrooms.forEach(store => {
           const dist = calculateDistanceKm(
             userLat,
             userLng,
@@ -441,7 +483,7 @@ export default function Locations() {
                 onChange={e => setSelectedStoreId(Number(e.target.value))}
                 className="w-full bg-slate-50 hover:bg-slate-100/80 border border-slate-300 text-slate-900 font-bold text-sm rounded-xl py-2.5 pl-4 pr-10 outline-none focus:ring-2 focus:ring-[#0052B4] cursor-pointer transition-colors appearance-none shadow-xs"
               >
-                {ALL_SHOWROOMS.map(store => (
+                {allShowrooms.map(store => (
                   <option
                     key={store.id}
                     value={store.id}
@@ -500,6 +542,12 @@ export default function Locations() {
                         {selectedStore.phone}
                       </a>
                     </div>
+                    {selectedStore.manager && (
+                      <div className="flex items-center gap-2.5 text-slate-600 pt-1 border-t border-slate-200/60">
+                        <User size={15} className="text-blue-600 shrink-0" />
+                        <span>Branch Manager: <strong className="text-slate-900">{selectedStore.manager}</strong></span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-4">
@@ -580,14 +628,7 @@ export default function Locations() {
 
             {/* Province Badges */}
             <div className="flex flex-wrap gap-1.5">
-              {[
-                "All",
-                "Western",
-                "Central",
-                "Southern",
-                "North Western",
-                "Northern",
-              ].map(prov => (
+              {availableProvinces.map(prov => (
                 <button
                   key={prov}
                   onClick={() => setSelectedProvince(prov)}
@@ -616,7 +657,7 @@ export default function Locations() {
                 }}
                 className="mt-2 text-xs font-extrabold text-[#0052B4] hover:underline cursor-pointer"
               >
-                Clear Search & View All 9 Locations
+                Clear Search & View All {allShowrooms.length} Locations
               </button>
             </div>
           ) : (
@@ -633,6 +674,20 @@ export default function Locations() {
                     }`}
                   >
                     <div>
+                      {store.imageUrl && (
+                        <div className="w-full h-36 rounded-xl overflow-hidden mb-3.5 bg-slate-100 border border-slate-200 relative">
+                          <img
+                            src={store.imageUrl}
+                            alt={store.name}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                          />
+                          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold">
+                            {store.city}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Card Header */}
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <span className="text-[11px] font-extrabold uppercase text-[#0052B4] tracking-wider block">
@@ -683,6 +738,12 @@ export default function Locations() {
                             {store.phone}
                           </a>
                         </div>
+                        {store.manager && (
+                          <div className="flex items-center gap-2 text-slate-500 pt-0.5">
+                            <User size={13} className="text-blue-500 shrink-0" />
+                            <span>Mgr: <strong className="text-slate-700">{store.manager}</strong></span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Services */}

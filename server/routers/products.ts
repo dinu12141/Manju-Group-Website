@@ -22,6 +22,7 @@ import {
   notLike,
   or,
   sql,
+  inArray,
   type SQL,
 } from "drizzle-orm";
 
@@ -504,11 +505,38 @@ export const productsRouter = router({
       const db = await getDb();
       if (!db) return [];
       const prodIdStr = String(input.productId);
+      const isNumeric = /^\d+$/.test(prodIdStr);
+      const matchedIds: string[] = [prodIdStr];
+
+      try {
+        if (isNumeric) {
+          const prod = await db
+            .select({ slug: products.slug })
+            .from(products)
+            .where(eq(products.id, Number(prodIdStr)))
+            .limit(1);
+          if (prod[0]?.slug) {
+            matchedIds.push(prod[0].slug);
+          }
+        } else {
+          const prod = await db
+            .select({ id: products.id })
+            .from(products)
+            .where(eq(products.slug, prodIdStr))
+            .limit(1);
+          if (prod[0]?.id) {
+            matchedIds.push(String(prod[0].id));
+          }
+        }
+      } catch (e) {
+        // Fallback to prodIdStr if lookup fails
+      }
+
       const rows = await db
         .select()
         .from(reviews)
         .where(
-          and(eq(reviews.productId, prodIdStr), eq(reviews.isApproved, true))
+          and(inArray(reviews.productId, matchedIds), eq(reviews.isApproved, true))
         )
         .orderBy(desc(reviews.createdAt));
       return rows;

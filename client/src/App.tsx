@@ -46,6 +46,9 @@ function Router() {
           <Route path="/products/:slug">
             {params => <ProductDetail params={params as { slug: string }} />}
           </Route>
+          <Route path="/product/:slug">
+            {params => <ProductDetail params={params as { slug: string }} />}
+          </Route>
           <Route path="/brands" component={Brands} />
           <Route path="/brands/:slug">
             {params => <BrandPage params={params as { slug: string }} />}

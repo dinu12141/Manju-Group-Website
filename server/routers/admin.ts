@@ -60,6 +60,7 @@ import {
   cartItems,
   reviews,
   siteSettings,
+  locations,
 } from "../../drizzle/schema";
 import { nanoid } from "nanoid";
 import { eq, desc, asc, sql, and, like, or, inArray } from "drizzle-orm";
@@ -1447,34 +1448,97 @@ export const adminRouter = router({
             ]
           : [];
 
-        const [items, countResult] = await Promise.all([
-            db
-              .select({
-                id: reviews.id,
-                productId: reviews.productId,
-                userId: reviews.userId,
-                authorName: reviews.authorName,
-                userEmail: reviews.userEmail,
-                rating: reviews.rating,
-                title: reviews.title,
-                body: reviews.body,
-                isVerified: reviews.isVerified,
-                isApproved: reviews.isApproved,
-                createdAt: reviews.createdAt,
-                productName: products.name,
-              })
-              .from(reviews)
-              // reviews.productId is text; cast it to int to join properly
-              .leftJoin(
-                products,
-                eq(products.id, sql<number>`CAST(${reviews.productId} AS integer)`)
+        const [rawItems, countResult] = await Promise.all([
+          db
+            .select({
+              id: reviews.id,
+              productId: reviews.productId,
+              userId: reviews.userId,
+              authorName: reviews.authorName,
+              userEmail: reviews.userEmail,
+              rating: reviews.rating,
+              title: reviews.title,
+              body: reviews.body,
+              isVerified: reviews.isVerified,
+              isApproved: reviews.isApproved,
+              createdAt: reviews.createdAt,
+              productDbId: products.id,
+              productName: products.name,
+              productSlug: products.slug,
+              productSku: products.sku,
+              brandName: brands.name,
+              categoryName: categories.name,
+            })
+            .from(reviews)
+            .leftJoin(
+              products,
+              or(
+                eq(
+                  products.id,
+                  sql<number>`CASE WHEN ${reviews.productId} ~ '^[0-9]+$' THEN CAST(${reviews.productId} AS integer) ELSE NULL END`
+                ),
+                eq(products.slug, reviews.productId)
               )
-              .where(conditions.length > 0 ? and(...conditions) : undefined)
-              .orderBy(desc(reviews.createdAt))
-              .limit(limit)
-              .offset(offset),
-            db.select({ count: sql<number>`count(*)` }).from(reviews),
-          ]);
+            )
+            .leftJoin(brands, eq(brands.id, products.brandId))
+            .leftJoin(categories, eq(categories.id, products.categoryId))
+            .where(conditions.length > 0 ? and(...conditions) : undefined)
+            .orderBy(desc(reviews.createdAt))
+            .limit(limit)
+            .offset(offset),
+          db.select({ count: sql<number>`count(*)` }).from(reviews),
+        ]);
+
+        const resolvedProductIds = Array.from(
+          new Set(
+            rawItems
+              .map(i => i.productDbId || (Number.isInteger(Number(i.productId)) ? Number(i.productId) : null))
+              .filter((id): id is number => typeof id === "number" && id > 0)
+          )
+        );
+
+        const imageMap = new Map<number, string>();
+        if (resolvedProductIds.length > 0) {
+          try {
+            const imgs = await db
+              .select({
+                productId: productImages.productId,
+                url: productImages.url,
+                isPrimary: productImages.isPrimary,
+              })
+              .from(productImages)
+              .where(inArray(productImages.productId, resolvedProductIds));
+
+            for (const img of imgs) {
+              if (!imageMap.has(img.productId) || img.isPrimary) {
+                imageMap.set(img.productId, img.url);
+              }
+            }
+          } catch (imgErr) {
+            console.warn("Failed to load review product images:", imgErr);
+          }
+        }
+
+        const items = rawItems.map(item => {
+          const pId = item.productDbId || (Number.isInteger(Number(item.productId)) ? Number(item.productId) : null);
+          const staticMatch = !item.productSlug
+            ? STATIC_PRODUCTS.find(
+                p =>
+                  String(p.id) === String(item.productId) ||
+                  p.slug === String(item.productId)
+              )
+            : null;
+
+          return {
+            ...item,
+            productName: item.productName || staticMatch?.name || `Product #${item.productId}`,
+            productSlug: item.productSlug || staticMatch?.slug || item.productId,
+            productSku: item.productSku || staticMatch?.sku || null,
+            brandName: item.brandName || staticMatch?.brandName || null,
+            categoryName: item.categoryName || (staticMatch as any)?.category || null,
+            productImageUrl: (pId && imageMap.get(pId)) || staticMatch?.imageUrl || null,
+          };
+        });
 
         return {
           items,
@@ -1589,4 +1653,526 @@ export const adminRouter = router({
       await db.delete(contactMessages).where(eq(contactMessages.id, input.id));
       return { success: true };
     }),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SHOWROOMS / LOCATIONS cPanel Endpoints
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  locationsList: adminProcedure
+    .input(
+      z
+        .object({
+          search: z.string().optional(),
+          province: z.string().optional(),
+          isActive: z.boolean().optional(),
+        })
+        .optional()
+    )
+    .query(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) return [];
+
+        const rows = await db
+          .select()
+          .from(locations)
+          .orderBy(asc(locations.sortOrder), asc(locations.id));
+
+        return rows.map(loc => {
+          let formattedHours = "Mon–Sat: 8:30 AM – 6:30 PM";
+          if (typeof loc.openingHours === "string") {
+            formattedHours = loc.openingHours;
+          } else if (loc.openingHours && typeof loc.openingHours === "object") {
+            const oh = loc.openingHours as Record<string, string>;
+            if (oh.Monday && oh.Sunday) {
+              formattedHours = `Mon–Sat: ${oh.Monday} | Sun: ${oh.Sunday}`;
+            } else if (oh.summary) {
+              formattedHours = String(oh.summary);
+            } else {
+              formattedHours = Object.entries(oh)
+                .map(([k, v]) => `${k}: ${v}`)
+                .slice(0, 2)
+                .join(" | ");
+            }
+          }
+
+          const servicesList = Array.isArray(loc.services)
+            ? (loc.services as string[])
+            : [];
+
+          return {
+            ...loc,
+            badge: loc.badge || (loc.type === "service_center" ? "Official Service Center" : "Authorized Experience Center"),
+            directCall: loc.directCall || (loc.phone ? loc.phone.replace(/[^0-9+]/g, "") : "+94112345678"),
+            hours: formattedHours,
+            latitude: Number(loc.latitude) || 6.9034,
+            longitude: Number(loc.longitude) || 79.8524,
+            services: servicesList,
+            manager: loc.manager || "Branch Manager",
+            imageUrl: loc.imageUrl || "",
+          };
+        }).filter(loc => {
+          if (input?.isActive !== undefined && loc.isActive !== input.isActive) {
+            return false;
+          }
+          if (input?.province && input.province !== "All" && loc.province !== input.province) {
+            return false;
+          }
+          if (input?.search && input.search.trim()) {
+            const q = input.search.toLowerCase().trim();
+            const matches =
+              loc.name.toLowerCase().includes(q) ||
+              loc.city.toLowerCase().includes(q) ||
+              loc.address.toLowerCase().includes(q) ||
+              (loc.province && loc.province.toLowerCase().includes(q)) ||
+              (loc.manager && loc.manager.toLowerCase().includes(q));
+            if (!matches) return false;
+          }
+          return true;
+        });
+      } catch (e: any) {
+        console.error("Failed to fetch admin locations list:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to fetch locations list",
+        });
+      }
+    }),
+
+  createLocation: adminProcedure
+    .input(
+      z.object({
+        name: z.string().min(2, "Name must be at least 2 characters"),
+        badge: z.string().optional(),
+        type: z.string().default("showroom"),
+        address: z.string().min(3, "Address is required"),
+        city: z.string().min(2, "City is required"),
+        province: z.string().optional(),
+        phone: z.string().optional(),
+        directCall: z.string().optional(),
+        email: z.string().optional(),
+        manager: z.string().optional(),
+        latitude: z.union([z.number(), z.string()]).default("6.9034"),
+        longitude: z.union([z.number(), z.string()]).default("79.8524"),
+        openingHours: z.any().optional(),
+        services: z.array(z.string()).optional(),
+        imageUrl: z.string().optional(),
+        featured: z.boolean().default(false),
+        isActive: z.boolean().default(true),
+        sortOrder: z.number().default(0),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db)
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Database not available",
+          });
+
+        let openingHoursPayload = input.openingHours;
+        if (typeof input.openingHours === "string") {
+          openingHoursPayload = { summary: input.openingHours };
+        }
+
+        const [created] = await db
+          .insert(locations)
+          .values({
+            name: input.name,
+            badge: input.badge || null,
+            type: input.type,
+            address: input.address,
+            city: input.city,
+            province: input.province || "Western Province",
+            phone: input.phone || null,
+            directCall: input.directCall || (input.phone ? input.phone.replace(/[^0-9+]/g, "") : null),
+            email: input.email || null,
+            manager: input.manager || null,
+            latitude: String(input.latitude),
+            longitude: String(input.longitude),
+            openingHours: openingHoursPayload || { summary: "Mon–Sat: 8:30 AM – 6:30 PM" },
+            services: input.services || [],
+            imageUrl: input.imageUrl || null,
+            featured: input.featured,
+            isActive: input.isActive,
+            sortOrder: input.sortOrder,
+          })
+          .returning();
+
+        return { success: true, location: created };
+      } catch (e: any) {
+        console.error("Failed to create location:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to create showroom",
+        });
+      }
+    }),
+
+  updateLocation: adminProcedure
+    .input(
+      z.object({
+        id: z.number().int(),
+        name: z.string().min(2).optional(),
+        badge: z.string().optional().nullable(),
+        type: z.string().optional(),
+        address: z.string().min(3).optional(),
+        city: z.string().min(2).optional(),
+        province: z.string().optional().nullable(),
+        phone: z.string().optional().nullable(),
+        directCall: z.string().optional().nullable(),
+        email: z.string().optional().nullable(),
+        manager: z.string().optional().nullable(),
+        latitude: z.union([z.number(), z.string()]).optional(),
+        longitude: z.union([z.number(), z.string()]).optional(),
+        openingHours: z.any().optional(),
+        services: z.array(z.string()).optional(),
+        imageUrl: z.string().optional().nullable(),
+        featured: z.boolean().optional(),
+        isActive: z.boolean().optional(),
+        sortOrder: z.number().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db)
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Database not available",
+          });
+
+        const updateData: Record<string, any> = {};
+        if (input.name !== undefined) updateData.name = input.name;
+        if (input.badge !== undefined) updateData.badge = input.badge;
+        if (input.type !== undefined) updateData.type = input.type;
+        if (input.address !== undefined) updateData.address = input.address;
+        if (input.city !== undefined) updateData.city = input.city;
+        if (input.province !== undefined) updateData.province = input.province;
+        if (input.phone !== undefined) updateData.phone = input.phone;
+        if (input.directCall !== undefined) updateData.directCall = input.directCall;
+        if (input.email !== undefined) updateData.email = input.email;
+        if (input.manager !== undefined) updateData.manager = input.manager;
+        if (input.latitude !== undefined) updateData.latitude = String(input.latitude);
+        if (input.longitude !== undefined) updateData.longitude = String(input.longitude);
+        if (input.openingHours !== undefined) {
+          updateData.openingHours =
+            typeof input.openingHours === "string"
+              ? { summary: input.openingHours }
+              : input.openingHours;
+        }
+        if (input.services !== undefined) updateData.services = input.services;
+        if (input.imageUrl !== undefined) updateData.imageUrl = input.imageUrl;
+        if (input.featured !== undefined) updateData.featured = input.featured;
+        if (input.isActive !== undefined) updateData.isActive = input.isActive;
+        if (input.sortOrder !== undefined) updateData.sortOrder = input.sortOrder;
+
+        const [updated] = await db
+          .update(locations)
+          .set(updateData)
+          .where(eq(locations.id, input.id))
+          .returning();
+
+        return { success: true, location: updated };
+      } catch (e: any) {
+        console.error("Failed to update location:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to update showroom",
+        });
+      }
+    }),
+
+  toggleLocationActive: adminProcedure
+    .input(z.object({ id: z.number().int(), isActive: z.boolean() }))
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db)
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Database not available",
+          });
+
+        await db
+          .update(locations)
+          .set({ isActive: input.isActive })
+          .where(eq(locations.id, input.id));
+
+        return { success: true, isActive: input.isActive };
+      } catch (e: any) {
+        console.error("Failed to toggle showroom status:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to toggle status",
+        });
+      }
+    }),
+
+  deleteLocation: adminProcedure
+    .input(z.object({ id: z.number().int() }))
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db)
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Database not available",
+          });
+
+        await db.delete(locations).where(eq(locations.id, input.id));
+        return { success: true };
+      } catch (e: any) {
+        console.error("Failed to delete showroom:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: e.message || "Failed to delete showroom",
+        });
+      }
+    }),
+
+  seedDefaultLocations: adminProcedure.mutation(async () => {
+    try {
+      const db = await getDb();
+      if (!db)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+
+      const OFFICIAL_SHOWROOMS = [
+        {
+          name: "Manju Group — Colombo Flagship Store",
+          badge: "Headquarters & Experience Center",
+          type: "showroom",
+          address: "No. 234, Galle Road, Kollupitiya, Colombo 03",
+          city: "Colombo",
+          province: "Western Province",
+          phone: "+94 11 234 5678",
+          directCall: "+94112345678",
+          email: "colombo@manjugroup.lk",
+          manager: "Saman Jayawardena",
+          latitude: "6.9034",
+          longitude: "79.8524",
+          openingHours: { summary: "Mon–Sat: 8:30 AM – 7:00 PM | Sun: 9:00 AM – 4:00 PM" },
+          services: [
+            "All 4 Core Brands Showcase",
+            "Electric Bike Test Rides",
+            "Same-Day Pickup",
+            "Instant Installment Approval",
+          ],
+          imageUrl: "https://images.unsplash.com/photo-1541888946425-d0fbb1861593?q=80&w=1200&auto=format&fit=crop",
+          featured: true,
+          isActive: true,
+          sortOrder: 1,
+        },
+        {
+          name: "Manju Group — Kandy City Showroom",
+          badge: "Central Province Hub",
+          type: "showroom",
+          address: "No. 45, Peradeniya Road, Kandy",
+          city: "Kandy",
+          province: "Central Province",
+          phone: "+94 81 234 5678",
+          directCall: "+94812345678",
+          email: "kandy@manjugroup.lk",
+          manager: "Roshan Weerasinghe",
+          latitude: "7.2906",
+          longitude: "80.6337",
+          openingHours: { summary: "Mon–Sat: 8:30 AM – 6:30 PM | Sun: 9:00 AM – 3:00 PM" },
+          services: [
+            "Dew Plus 4K TVs",
+            "Dew Motors E-Bikes",
+            "DEW+ AC Demo Units",
+            "Water Test Lab",
+          ],
+          imageUrl: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1200&auto=format&fit=crop",
+          featured: true,
+          isActive: true,
+          sortOrder: 2,
+        },
+        {
+          name: "Manju Group — Galle Coastal Showroom",
+          badge: "Southern Province Hub",
+          type: "showroom",
+          address: "No. 12, Wakwella Road, Galle",
+          city: "Galle",
+          province: "Southern Province",
+          phone: "+94 91 234 5678",
+          directCall: "+94912345678",
+          email: "galle@manjugroup.lk",
+          manager: "Priyantha Silva",
+          latitude: "6.0535",
+          longitude: "80.2210",
+          openingHours: { summary: "Mon–Sat: 8:30 AM – 6:00 PM | Sun: Closed" },
+          services: [
+            "Solar & AC Inverter Solutions",
+            "RO Water Purification",
+            "E-Bike Service Center",
+          ],
+          imageUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1200&auto=format&fit=crop",
+          featured: true,
+          isActive: true,
+          sortOrder: 3,
+        },
+        {
+          name: "Manju Group — Kurunegala Showroom",
+          badge: "North Western Hub",
+          type: "showroom",
+          address: "No. 88, Colombo Road, Kurunegala",
+          city: "Kurunegala",
+          province: "North Western Province",
+          phone: "+94 37 222 4567",
+          directCall: "+94372224567",
+          email: "kurunegala@manjugroup.lk",
+          manager: "Nuwan Pradeep",
+          latitude: "7.4863",
+          longitude: "80.3623",
+          openingHours: { summary: "Mon–Sat: 8:30 AM – 6:30 PM" },
+          services: [
+            "Complete Home Appliances",
+            "Water Filter Installations",
+            "E-Bike Showroom",
+          ],
+          imageUrl: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1200&auto=format&fit=crop",
+          featured: false,
+          isActive: true,
+          sortOrder: 4,
+        },
+        {
+          name: "Manju Group — Negombo Showroom",
+          badge: "Airport Corridor Hub",
+          type: "showroom",
+          address: "No. 142, Main Street, Negombo",
+          city: "Negombo",
+          province: "Western Province",
+          phone: "+94 31 223 8900",
+          directCall: "+94312238900",
+          email: "negombo@manjugroup.lk",
+          manager: "Janaka Perera",
+          latitude: "7.2088",
+          longitude: "79.8358",
+          openingHours: { summary: "Mon–Sat: 8:30 AM – 7:00 PM" },
+          services: [
+            "Dew Plus 4K Smart TVs",
+            "Fast Delivery Hub",
+            "After-Sales Service",
+          ],
+          imageUrl: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1200&auto=format&fit=crop",
+          featured: false,
+          isActive: true,
+          sortOrder: 5,
+        },
+        {
+          name: "Manju Group — Matara Showroom",
+          badge: "Deep South Hub",
+          type: "showroom",
+          address: "No. 56, Anagarika Dharmapala Mawatha, Matara",
+          city: "Matara",
+          province: "Southern Province",
+          phone: "+94 41 222 6789",
+          directCall: "+94412226789",
+          email: "matara@manjugroup.lk",
+          manager: "Sunil Kumara",
+          latitude: "5.9496",
+          longitude: "80.5469",
+          openingHours: { summary: "Mon–Sat: 8:30 AM – 6:00 PM" },
+          services: [
+            "Commercial & Domestic RO Filters",
+            "Inverter AC Units",
+            "Warranty Support",
+          ],
+          imageUrl: "https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?q=80&w=1200&auto=format&fit=crop",
+          featured: false,
+          isActive: true,
+          sortOrder: 6,
+        },
+        {
+          name: "Manju Group — Gampaha Showroom",
+          badge: "Industrial & Domestic Center",
+          type: "showroom",
+          address: "No. 19, Yakkala Road, Gampaha",
+          city: "Gampaha",
+          province: "Western Province",
+          phone: "+94 33 222 1144",
+          directCall: "+94332221144",
+          email: "gampaha@manjugroup.lk",
+          manager: "Kasun Bandara",
+          latitude: "7.0917",
+          longitude: "79.9999",
+          openingHours: { summary: "Mon–Sat: 8:30 AM – 6:30 PM" },
+          services: [
+            "Dew Motors E-Bikes",
+            "Smart TV Experience Zone",
+            "Spare Parts Depot",
+          ],
+          imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?q=80&w=1200&auto=format&fit=crop",
+          featured: false,
+          isActive: true,
+          sortOrder: 7,
+        },
+        {
+          name: "Manju Group — Anuradhapura Showroom",
+          badge: "North Central Hub",
+          type: "showroom",
+          address: "No. 104, Main Street, Anuradhapura",
+          city: "Anuradhapura",
+          province: "North Central Province",
+          phone: "+94 25 222 3456",
+          directCall: "+94252223456",
+          email: "anuradhapura@manjugroup.lk",
+          manager: "Anura Wickramasinghe",
+          latitude: "8.3114",
+          longitude: "80.4037",
+          openingHours: { summary: "Mon–Sat: 8:30 AM – 6:00 PM" },
+          services: [
+            "High-Capacity Water Filters",
+            "Air Conditioners",
+            "Agricultural & Commercial RO",
+          ],
+          imageUrl: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=1200&auto=format&fit=crop",
+          featured: false,
+          isActive: true,
+          sortOrder: 8,
+        },
+        {
+          name: "Manju Group — Jaffna Showroom",
+          badge: "Northern Province Hub",
+          type: "showroom",
+          address: "No. 78, Hospital Road, Jaffna",
+          city: "Jaffna",
+          province: "Northern Province",
+          phone: "+94 21 222 7890",
+          directCall: "+94212227890",
+          email: "jaffna@manjugroup.lk",
+          manager: "S. Thivagar",
+          latitude: "9.6615",
+          longitude: "80.0255",
+          openingHours: { summary: "Mon–Sat: 8:30 AM – 6:00 PM" },
+          services: [
+            "Full Product Range",
+            "Commercial RO Water Plants",
+            "Technical Assistance",
+          ],
+          imageUrl: "https://images.unsplash.com/photo-1578575437130-527eed3abbec?q=80&w=1200&auto=format&fit=crop",
+          featured: false,
+          isActive: true,
+          sortOrder: 9,
+        },
+      ];
+
+      // Delete old existing locations and insert fresh 9 official branches
+      await db.delete(locations);
+      await db.insert(locations).values(OFFICIAL_SHOWROOMS);
+
+      return { success: true, count: OFFICIAL_SHOWROOMS.length };
+    } catch (e: any) {
+      console.error("Failed to seed official showrooms:", e);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: e.message || "Failed to seed showrooms",
+      });
+    }
+  }),
 });

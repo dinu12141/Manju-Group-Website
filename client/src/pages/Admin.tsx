@@ -49,6 +49,20 @@ import {
   EyeOff,
   Check,
   Navigation,
+  Server,
+  Database,
+  HardDrive,
+  Terminal,
+  Globe,
+  Activity,
+  ChevronDown,
+  ChevronUp,
+  Lock,
+  KeyRound,
+  Wrench,
+  Grid,
+  CheckCircle,
+  ChevronLeft,
 } from "lucide-react";
 import {
   AreaChart,
@@ -62,7 +76,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { STATIC_PRODUCTS, STATIC_BRANDS } from "@/lib/staticData";
-import { formatPrice } from "@/lib/data";
+import { formatPrice, getProductImage } from "@/lib/data";
 import {
   useAdSettings,
   PRESET_AD_MEDIA,
@@ -90,6 +104,7 @@ import { trpc } from "@/lib/trpc";
 import SEO from "@/components/SEO";
 
 type AdminTab =
+  | "tools"
   | "dashboard"
   | "products"
   | "orders"
@@ -390,7 +405,13 @@ export default function Admin() {
     toast.info("Logged out from Admin Command Center");
   };
 
-  const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
+  const [activeTab, setActiveTab] = useState<AdminTab>("tools");
+  const [cpanelSearch, setCpanelSearch] = useState("");
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+
+  const toggleCategory = (catId: string) => {
+    setCollapsedCategories(prev => ({ ...prev, [catId]: !prev[catId] }));
+  };
   const [orderFilter, setOrderFilter] = useState<string>("all");
   const [orderPage, setOrderPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -894,7 +915,12 @@ export default function Admin() {
     refetch: refetchAdminReviews,
   } = trpc.admin.reviewsList.useQuery(
     { page: reviewPage, limit: 20, search: reviewSearch || undefined },
-    { enabled: isAdmin }
+    {
+      enabled: isAdmin,
+      staleTime: 0,
+      refetchInterval: 3000,
+      refetchOnWindowFocus: true,
+    }
   );
 
   // Inquiries Hooks
@@ -923,6 +949,231 @@ export default function Admin() {
       toast.error(err.message || "Failed to delete inquiry");
     }
   });
+
+  // Showrooms / Locations cPanel Hooks
+  const [showroomSearch, setShowroomSearch] = useState("");
+  const [showroomProvinceFilter, setShowroomProvinceFilter] = useState("All");
+  const [showroomStatusFilter, setShowroomStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [showroomsViewMode, setShowroomsViewMode] = useState<"table" | "grid">("table");
+
+  // Showroom modal / editing state
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [editingLocation, setEditingLocation] = useState<any | null>(null);
+  const [locationServicesChips, setLocationServicesChips] = useState<string[]>([]);
+  const [newServiceChipInput, setNewServiceChipInput] = useState("");
+  const [quickCoordInput, setQuickCoordInput] = useState("");
+
+  // Map preview modal state
+  const [previewMapLocation, setPreviewMapLocation] = useState<any | null>(null);
+
+  // Showroom delete confirmation modal
+  const [deletingLocation, setDeletingLocation] = useState<any | null>(null);
+
+  const {
+    data: adminShowrooms = [],
+    isLoading: isAdminShowroomsLoading,
+    refetch: refetchAdminShowrooms,
+  } = trpc.admin.locationsList.useQuery(
+    {
+      search: showroomSearch || undefined,
+      province: showroomProvinceFilter !== "All" ? showroomProvinceFilter : undefined,
+      isActive: showroomStatusFilter === "all" ? undefined : showroomStatusFilter === "active",
+    },
+    { enabled: isAdmin, staleTime: 0, refetchOnMount: "always" }
+  );
+
+  const createLocationMutation = trpc.admin.createLocation.useMutation({
+    onSuccess: () => {
+      utils.admin.locationsList.invalidate();
+      utils.locations.list.invalidate();
+      setIsLocationModalOpen(false);
+      setEditingLocation(null);
+      toast.success("Showroom branch added successfully!");
+    },
+    onError: err => {
+      toast.error(err.message || "Failed to add showroom");
+    },
+  });
+
+  const updateLocationMutation = trpc.admin.updateLocation.useMutation({
+    onSuccess: () => {
+      utils.admin.locationsList.invalidate();
+      utils.locations.list.invalidate();
+      setIsLocationModalOpen(false);
+      setEditingLocation(null);
+      toast.success("Showroom details updated successfully!");
+    },
+    onError: err => {
+      toast.error(err.message || "Failed to update showroom");
+    },
+  });
+
+  const toggleLocationActiveMutation = trpc.admin.toggleLocationActive.useMutation({
+    onSuccess: (_, vars) => {
+      utils.admin.locationsList.invalidate();
+      utils.locations.list.invalidate();
+      toast.success(vars.isActive ? "Showroom activated and visible online" : "Showroom hidden from website");
+    },
+    onError: err => {
+      toast.error(err.message || "Failed to update showroom status");
+    },
+  });
+
+  const deleteLocationMutation = trpc.admin.deleteLocation.useMutation({
+    onSuccess: () => {
+      utils.admin.locationsList.invalidate();
+      utils.locations.list.invalidate();
+      setDeletingLocation(null);
+      toast.success("Showroom deleted successfully");
+    },
+    onError: err => {
+      toast.error(err.message || "Failed to delete showroom");
+    },
+  });
+
+  const seedLocationsMutation = trpc.admin.seedDefaultLocations.useMutation({
+    onSuccess: data => {
+      utils.admin.locationsList.invalidate();
+      utils.locations.list.invalidate();
+      toast.success(`Successfully restored all ${data.count} official Manju Group branches!`);
+    },
+    onError: err => {
+      toast.error(err.message || "Failed to seed showrooms");
+    },
+  });
+
+  const handleOpenCreateLocation = () => {
+    setEditingLocation({
+      name: "",
+      badge: "Authorized Experience Center",
+      type: "showroom",
+      address: "",
+      city: "",
+      province: "Western Province",
+      phone: "+94 11 ",
+      directCall: "+9411",
+      email: "",
+      manager: "",
+      latitude: "6.9034",
+      longitude: "79.8524",
+      hours: "Mon–Sat: 8:30 AM – 6:30 PM",
+      imageUrl: "",
+      featured: false,
+      isActive: true,
+      sortOrder: (adminShowrooms?.length || 0) + 1,
+    });
+    setLocationServicesChips([
+      "All 4 Core Brands Showcase",
+      "Water Test Lab & Installations",
+      "After-Sales & Warranty Support",
+    ]);
+    setQuickCoordInput("");
+    setIsLocationModalOpen(true);
+  };
+
+  const handleOpenEditLocation = (loc: any) => {
+    setEditingLocation({
+      id: loc.id,
+      name: loc.name,
+      badge: loc.badge || "",
+      type: loc.type || "showroom",
+      address: loc.address,
+      city: loc.city,
+      province: loc.province || "Western Province",
+      phone: loc.phone || "",
+      directCall: loc.directCall || "",
+      email: loc.email || "",
+      manager: loc.manager || "",
+      latitude: String(loc.latitude || "6.9034"),
+      longitude: String(loc.longitude || "79.8524"),
+      hours: loc.hours || "Mon–Sat: 8:30 AM – 6:30 PM",
+      imageUrl: loc.imageUrl || "",
+      featured: !!loc.featured,
+      isActive: loc.isActive !== false,
+      sortOrder: loc.sortOrder ?? 0,
+    });
+    setLocationServicesChips(Array.isArray(loc.services) ? [...loc.services] : []);
+    setQuickCoordInput("");
+    setIsLocationModalOpen(true);
+  };
+
+  const handleSaveLocation = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingLocation) return;
+    if (!editingLocation.name.trim()) {
+      toast.error("Showroom name is required");
+      return;
+    }
+    if (!editingLocation.city.trim()) {
+      toast.error("City is required");
+      return;
+    }
+    if (!editingLocation.address.trim()) {
+      toast.error("Physical address is required");
+      return;
+    }
+
+    const payload = {
+      name: editingLocation.name.trim(),
+      badge: editingLocation.badge?.trim() || undefined,
+      type: editingLocation.type || "showroom",
+      address: editingLocation.address.trim(),
+      city: editingLocation.city.trim(),
+      province: editingLocation.province || "Western Province",
+      phone: editingLocation.phone?.trim() || undefined,
+      directCall: editingLocation.directCall?.trim() || (editingLocation.phone ? editingLocation.phone.replace(/[^0-9+]/g, "") : undefined),
+      email: editingLocation.email?.trim() || undefined,
+      manager: editingLocation.manager?.trim() || undefined,
+      latitude: editingLocation.latitude || "6.9034",
+      longitude: editingLocation.longitude || "79.8524",
+      openingHours: editingLocation.hours || "Mon–Sat: 8:30 AM – 6:30 PM",
+      services: locationServicesChips,
+      imageUrl: editingLocation.imageUrl?.trim() || undefined,
+      featured: !!editingLocation.featured,
+      isActive: editingLocation.isActive,
+      sortOrder: Number(editingLocation.sortOrder) || 0,
+    };
+
+    if (editingLocation.id) {
+      updateLocationMutation.mutate({
+        id: editingLocation.id,
+        ...payload,
+      });
+    } else {
+      createLocationMutation.mutate(payload);
+    }
+  };
+
+  const handleAutoParseCoordinates = () => {
+    if (!quickCoordInput.trim()) return;
+    const parsed = parseCoordinatesInput(quickCoordInput);
+    if (parsed) {
+      setEditingLocation((prev: any) => ({
+        ...prev,
+        latitude: parsed.latitude,
+        longitude: parsed.longitude,
+      }));
+      toast.success(`Coordinates extracted: ${parsed.latitude}, ${parsed.longitude}`);
+      setQuickCoordInput("");
+      return;
+    }
+    toast.error("Could not parse coordinates. Please enter latitude & longitude directly or paste a Google Maps link");
+  };
+
+  const handleAddServiceChip = () => {
+    const trimmed = newServiceChipInput.trim();
+    if (!trimmed) return;
+    if (locationServicesChips.includes(trimmed)) {
+      toast.info("Service tag already added");
+      return;
+    }
+    setLocationServicesChips(prev => [...prev, trimmed]);
+    setNewServiceChipInput("");
+  };
+
+  const handleRemoveServiceChip = (chipToRemove: string) => {
+    setLocationServicesChips(prev => prev.filter(c => c !== chipToRemove));
+  };
 
   // Reviews query can also surface an expired/invalid admin session.
   useEffect(() => {
@@ -1109,141 +1360,477 @@ export default function Admin() {
   // Server already applies status filtering for ordersList
   const filteredOrders = ordersList;
 
-  // ── AUTH GATE: PASSCODE LOGIN ────────────────────────────────────────────
+  // ── AUTH GATE: CPANEL PASSCODE LOGIN ─────────────────────────────────────
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#001433] via-[#00224D] to-[#0A2E5C] flex items-center justify-center p-4">
-        <SEO title="Admin Login | Command Center" noindex />
+      <div className="min-h-screen bg-[#0A101D] text-slate-200 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <SEO title="cPanel Login | Manju Group Enterprise" noindex />
+
+        {/* Ambient Server Rack Glow */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#FF6C2C]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 left-10 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          initial={{ opacity: 0, scale: 0.96, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl relative overflow-hidden"
+          className="w-full max-w-md bg-[#131E31] border border-slate-700/80 rounded-2xl shadow-2xl relative overflow-hidden z-10"
         >
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-[#0052B4] border-2 border-white/80 flex items-center justify-center mx-auto mb-4 shadow-[0_0_25px_rgba(0,82,180,0.4)]">
-              <img
-                src="/manju-logo.webp"
-                alt="Logo"
-                className="w-12 h-12 object-contain"
-              />
-            </div>
-            <h1 className="text-2xl font-black font-display tracking-tight text-[#001A3D]">
-              MANJU GROUP
-            </h1>
-            <p className="text-xs uppercase tracking-widest text-[#C9A84C] font-bold mt-1">
-              Enterprise Command Center
-            </p>
-            <p className="text-xs text-slate-500 mt-3">
-              Enter the admin passcode to access the dashboard.
-            </p>
-          </div>
+          {/* Top cPanel Brand Strip */}
+          <div className="h-1.5 bg-gradient-to-r from-[#FF6C2C] via-[#FF854D] to-[#0052B4]" />
 
-          <form onSubmit={handleLogin} className="space-y-3">
-            <input
-              type="password"
-              value={passcode}
-              onChange={e => {
-                setPasscode(e.target.value);
-                setAuthError(false);
-              }}
-              placeholder="Admin passcode"
-              autoFocus
-              className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 ${
-                authError
-                  ? "border-red-300 focus:ring-red-200"
-                  : "border-slate-200 focus:ring-[#0052B4]/30"
-              }`}
-            />
-            {authError && (
-              <p className="text-xs text-red-600 font-semibold">
-                Invalid passcode. Please try again.
+          <div className="p-8">
+            <div className="text-center mb-6">
+              {/* cPanel Iconic Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-[#FF6C2C]/15 border border-[#FF6C2C]/40 text-[#FF6C2C] text-xs font-black tracking-wider uppercase mb-3">
+                <span className="w-5 h-5 rounded bg-[#FF6C2C] text-white flex items-center justify-center text-[11px] font-black">
+                  cP
+                </span>
+                <span>cPanel® Suite v118.0</span>
+              </div>
+
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <img
+                  src="/manju-logo.webp"
+                  alt="Manju Group"
+                  className="w-8 h-8 object-contain"
+                />
+                <h1 className="text-2xl font-black font-display tracking-tight text-white">
+                  MANJU GROUP
+                </h1>
+              </div>
+              <p className="text-xs text-slate-400 font-medium">
+                Enterprise Web & Branch Control Panel
               </p>
-            )}
-            <button
-              type="submit"
-              disabled={verifyPasscodeMutation.isPending}
-              className="w-full py-3 rounded-xl bg-[#0052B4] hover:bg-blue-700 text-white text-sm font-bold shadow-md disabled:opacity-60 cursor-pointer"
-            >
-              {verifyPasscodeMutation.isPending
-                ? "Verifying…"
-                : "Access Dashboard"}
-            </button>
-          </form>
+            </div>
 
-          <div className="mt-6 pt-4 border-t border-slate-100 text-center">
-            <Link href="/">
-              <span className="text-xs text-slate-500 hover:text-[#0052B4] transition-colors cursor-pointer inline-flex items-center gap-1">
-                ← Return to Public Website
-              </span>
-            </Link>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                  Administrator Passcode
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <KeyRound size={16} />
+                  </div>
+                  <input
+                    type="password"
+                    value={passcode}
+                    onChange={e => {
+                      setPasscode(e.target.value);
+                      setAuthError(false);
+                    }}
+                    placeholder="Enter admin passcode (e.g. manju2026)"
+                    autoFocus
+                    className={`w-full pl-10 pr-4 py-3 bg-[#0C1424] text-white rounded-xl border text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 transition-all ${
+                      authError
+                        ? "border-red-500 focus:ring-red-500/30"
+                        : "border-slate-700 focus:border-[#FF6C2C] focus:ring-[#FF6C2C]/20"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {authError && (
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-center gap-2">
+                  <AlertTriangle size={14} className="shrink-0" />
+                  <span>Invalid administrator passcode. Access denied.</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={verifyPasscodeMutation.isPending}
+                className="w-full py-3.5 rounded-xl bg-[#FF6C2C] hover:bg-[#E55A1B] active:scale-[0.99] text-white text-sm font-black tracking-wider uppercase shadow-lg shadow-[#FF6C2C]/25 disabled:opacity-60 transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                {verifyPasscodeMutation.isPending ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Authenticating...</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock size={15} />
+                    <span>Log In to cPanel</span>
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="mt-6 pt-5 border-t border-slate-800 text-center space-y-3">
+              <div className="flex items-center justify-center gap-3 text-[11px] text-slate-400">
+                <span className="flex items-center gap-1">
+                  <Server size={12} className="text-emerald-400" />
+                  srv1.manjugroup.lk
+                </span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <ShieldCheck size={12} className="text-blue-400" />
+                  Port 2083 (SSL)
+                </span>
+              </div>
+
+              <div>
+                <Link href="/">
+                  <span className="text-xs text-slate-400 hover:text-[#FF6C2C] transition-colors cursor-pointer inline-flex items-center gap-1 font-medium">
+                    ← Return to Public Website
+                  </span>
+                </Link>
+              </div>
+            </div>
           </div>
         </motion.div>
       </div>
     );
   }
 
-  // ── MAIN ENTERPRISE DASHBOARD ───────────────────────────────────────────
+  // ── CPANEL TOOLS DATA & CATEGORIES ──────────────────────────────────────
+  const tabTitles: Record<AdminTab, { category: string; title: string }> = {
+    tools: { category: "cPanel Suite", title: "Tools & Applications" },
+    dashboard: { category: "Marketing & Analytics", title: "Executive Dashboard" },
+    products: { category: "Product & Inventory Engine", title: "Products & Inventory" },
+    orders: { category: "Sales & Commerce Engine", title: "Orders & Fulfillment" },
+    customers: { category: "Sales & Commerce Engine", title: "Customers Directory" },
+    users: { category: "Sales & Commerce Engine", title: "User Accounts & Roles" },
+    reviews: { category: "Product & Inventory Engine", title: "Customer Reviews & Moderation" },
+    ads: { category: "Marketing & Media Studio", title: "Banner & Video Ads Manager" },
+    contacts_bank: { category: "Gateways & Preferences", title: "Hotlines, Map & Bank Accounts" },
+    showrooms: { category: "Branches & Showroom Control", title: "Showroom Network cPanel" },
+    inquiries: { category: "Gateways & Preferences", title: "Inquiries & Leads CRM" },
+    erp: { category: "System & Integration Gateways", title: "ERP Integration Gateway" },
+    ai_audit: { category: "System & Integration Gateways", title: "AI Assistant Audit Log" },
+  };
+
+  const cpanelCategories = useMemo(() => [
+    {
+      id: "showrooms",
+      title: "Branches & Showroom Control Panel",
+      icon: MapPin,
+      badge: `${adminShowrooms?.length ?? 9} Showrooms`,
+      description: "Island-wide retail showroom branches, GPS coordinates, store managers and real-time website sync",
+      tools: [
+        {
+          id: "showrooms" as AdminTab,
+          title: "Showroom Network cPanel",
+          description: "Full control: add new branches, edit details, toggle online/hidden status, inspect table or grid views",
+          badge: `${adminShowrooms?.length ?? 9} Online`,
+          badgeColor: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30",
+          icon: Building2,
+          iconBg: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+          keywords: "showrooms branches locations islandwide maps stores outlets negombo colombo kandy galle",
+        },
+        {
+          id: "showrooms" as AdminTab,
+          title: "Google Maps & GPS Auto-Parser",
+          description: "Auto-extract coordinates from Google Maps URLs, live inline map preview, and customer directions",
+          badge: "GPS Sync",
+          badgeColor: "bg-blue-500/15 text-blue-700 border-blue-500/30",
+          icon: Navigation,
+          iconBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+          keywords: "gps latitude longitude map google pins directions location",
+        },
+        {
+          id: "showrooms" as AdminTab,
+          title: "Branch Managers & Direct Call",
+          description: "Configure store managers, 1-click customer phone calling links, opening hours, and WhatsApp",
+          badge: "Direct Contact",
+          badgeColor: "bg-amber-500/15 text-amber-700 border-amber-500/30",
+          icon: PhoneCall,
+          iconBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+          keywords: "manager phone telephone hotline direct hours schedule contact",
+        },
+        {
+          id: "public_locations" as const,
+          title: "Public Showroom Page (/locations)",
+          description: "View the live public showroom directory with GPS distance finder, map directions, and service chips",
+          badge: "Public Site ↗",
+          badgeColor: "bg-slate-500/15 text-slate-700 border-slate-500/30",
+          icon: ExternalLink,
+          iconBg: "bg-slate-500/10 text-slate-600 border-slate-500/20",
+          isExternal: true,
+          externalUrl: "/locations",
+          keywords: "public customer website preview directory islandwide",
+        },
+      ],
+    },
+    {
+      id: "products",
+      title: "Product & Inventory Engine",
+      icon: Package,
+      badge: `${productsData?.total ?? productsList.length} SKUs`,
+      description: "Manage product lines for Dew Motors, Dew Plus, DEW+ AC, Manju Dew Super, stock and customer reviews",
+      tools: [
+        {
+          id: "products" as AdminTab,
+          title: "Products & Catalog Manager",
+          description: "Create and edit items across 4 flagship brands, manage specifications, variants and image galleries",
+          badge: `${productsData?.total ?? productsList.length} SKUs`,
+          badgeColor: "bg-indigo-500/15 text-indigo-700 border-indigo-500/30",
+          icon: Package,
+          iconBg: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+          keywords: "products catalog bikes air conditioners super solar inventory sku",
+        },
+        {
+          id: "products" as AdminTab,
+          title: "Stock & Pricing Inventory",
+          description: "Real-time stock quantities, sale pricing discounts, warranty terms, and instant out-of-stock toggles",
+          badge: "Realtime",
+          badgeColor: "bg-cyan-500/15 text-cyan-700 border-cyan-500/30",
+          icon: Layers,
+          iconBg: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
+          keywords: "stock quantity inventory price sale discount in stock out of stock",
+        },
+        {
+          id: "reviews" as AdminTab,
+          title: "Customer Reviews & Moderation",
+          description: "Moderate customer testimonials, approve 5-star ratings, verify buyer badges, and filter spam",
+          badge: `${adminReviewsData?.total ?? 0} Reviews`,
+          badgeColor: "bg-amber-500/15 text-amber-700 border-amber-500/30",
+          icon: Star,
+          iconBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+          keywords: "reviews ratings feedback stars testimonials comments moderation",
+        },
+      ],
+    },
+    {
+      id: "orders",
+      title: "Sales & Commerce Engine",
+      icon: ShoppingCart,
+      badge: `${ordersData?.total ?? ordersList.length} Orders`,
+      description: "Order dispatch workflow, payment verifications, shipping statuses and customer directory",
+      tools: [
+        {
+          id: "orders" as AdminTab,
+          title: "Orders & Fulfillment Manager",
+          description: "Track orders across pending, confirmed, processing, shipped, and delivered states with slips",
+          badge: `${ordersData?.total ?? ordersList.length} Orders`,
+          badgeColor: "bg-blue-500/15 text-blue-700 border-blue-500/30",
+          icon: ShoppingCart,
+          iconBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+          keywords: "orders sales cart fulfillment shipping delivery status invoice",
+        },
+        {
+          id: "customers" as AdminTab,
+          title: "Customer Directory & CRM",
+          description: "View customer profiles, lifetime purchase value, contact numbers, and delivery addresses",
+          badge: `${customersData?.total ?? 0} Customers`,
+          badgeColor: "bg-violet-500/15 text-violet-700 border-violet-500/30",
+          icon: UserCircle,
+          iconBg: "bg-violet-500/10 text-violet-600 border-violet-500/20",
+          keywords: "customers clients directory users contacts spend history",
+        },
+        {
+          id: "users" as AdminTab,
+          title: "User Accounts & Authentication",
+          description: "Manage registered user accounts, Supabase authentication providers and administrative roles",
+          badge: `${usersData?.total || 0} Accounts`,
+          badgeColor: "bg-purple-500/15 text-purple-700 border-purple-500/30",
+          icon: Users,
+          iconBg: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+          keywords: "users auth login google supabase roles admin permissions",
+        },
+      ],
+    },
+    {
+      id: "marketing",
+      title: "Marketing & Media Studio",
+      icon: Megaphone,
+      badge: "Media Studio",
+      description: "Hero slider banners, video showcase ads, promotional ribbon banners and executive analytics",
+      tools: [
+        {
+          id: "ads" as AdminTab,
+          title: "Banner & Video Ads Manager",
+          description: "Configure homepage hero slides, video reels showcase, promotional banners and button links",
+          badge: "Hero + Home",
+          badgeColor: "bg-rose-500/15 text-rose-700 border-rose-500/30",
+          icon: Megaphone,
+          iconBg: "bg-rose-500/10 text-rose-600 border-rose-500/20",
+          keywords: "ads banner hero video slides promo marketing campaign media",
+        },
+        {
+          id: "dashboard" as AdminTab,
+          title: "Executive Metrics & Analytics",
+          description: "Gross revenue charts, brand breakdown, order volume analytics and business intelligence",
+          badge: "BI Dashboard",
+          badgeColor: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30",
+          icon: LayoutDashboard,
+          iconBg: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+          keywords: "dashboard analytics revenue charts kpi metrics stats executive bi",
+        },
+      ],
+    },
+    {
+      id: "gateways",
+      title: "Gateways, Preferences & Hotlines",
+      icon: PhoneCall,
+      badge: "Gateways",
+      description: "Corporate hotline numbers, corporate bank accounts for manual slips and customer leads CRM",
+      tools: [
+        {
+          id: "contacts_bank" as AdminTab,
+          title: "Hotlines, Map & Bank Accounts",
+          description: "Manage 24/7 hotline numbers, WhatsApp link, corporate bank details (BOC, Commercial, Sampath)",
+          badge: "Live Sync",
+          badgeColor: "bg-teal-500/15 text-teal-700 border-teal-500/30",
+          icon: PhoneCall,
+          iconBg: "bg-teal-500/10 text-teal-600 border-teal-500/20",
+          keywords: "hotline phone whatsapp bank account boc commercial sampath slip",
+        },
+        {
+          id: "inquiries" as AdminTab,
+          title: "Inquiries & Leads CRM",
+          description: "Manage customer contact messages, quote requests, and showroom test ride inquiries",
+          badge: unreadInquiriesCount ? `${unreadInquiriesCount} New` : "Inbox",
+          badgeColor: unreadInquiriesCount ? "bg-red-500/15 text-red-700 border-red-500/30" : "bg-slate-500/15 text-slate-700 border-slate-500/30",
+          icon: Mail,
+          iconBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+          keywords: "inquiries messages leads contact test drive quotes questions",
+        },
+      ],
+    },
+    {
+      id: "system",
+      title: "System & Integration Gateways",
+      icon: Cpu,
+      badge: "Enterprise",
+      description: "ERP gateway synchronizer, AI assistant conversation audit logs and database health tools",
+      tools: [
+        {
+          id: "erp" as AdminTab,
+          title: "ERP Integration Gateway",
+          description: "Monitor ERP sync status, automated webhook synchronization and enterprise ledger feeds",
+          badge: "Connected",
+          badgeColor: "bg-blue-500/15 text-blue-700 border-blue-500/30",
+          icon: Cpu,
+          iconBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+          keywords: "erp sync gateway enterprise sap ledger integration webhook",
+        },
+        {
+          id: "ai_audit" as AdminTab,
+          title: "AI Assistant Audit Log",
+          description: "Audit automated AI assistant customer conversations, query sentiment and knowledge responses",
+          badge: "AI Active",
+          badgeColor: "bg-purple-500/15 text-purple-700 border-purple-500/30",
+          icon: Bot,
+          iconBg: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+          keywords: "ai bot assistant audit chat customer conversation log",
+        },
+      ],
+    },
+  ], [adminShowrooms?.length, productsData?.total, productsList.length, adminReviewsData?.total, ordersData?.total, ordersList.length, customersData?.total, usersData?.total, unreadInquiriesCount]);
+
+  const filteredCpanelCategories = useMemo(() => {
+    if (!cpanelSearch.trim()) return cpanelCategories;
+    const q = cpanelSearch.toLowerCase().trim();
+    return cpanelCategories
+      .map(cat => ({
+        ...cat,
+        tools: cat.tools.filter(
+          tool =>
+            tool.title.toLowerCase().includes(q) ||
+            tool.description.toLowerCase().includes(q) ||
+            tool.keywords.toLowerCase().includes(q)
+        ),
+      }))
+      .filter(cat => cat.tools.length > 0);
+  }, [cpanelCategories, cpanelSearch]);
+
+  // ── MAIN CPANEL DASHBOARD ───────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#F1F5F9] text-slate-800 flex flex-col">
-      <SEO title="Enterprise Command Center" noindex />
-      {/* ── TOP EXECUTIVE APPBAR ─────────────────────────────────────────── */}
-      <header className="bg-[#001A3D] text-white border-b border-blue-900/60 sticky top-0 z-40 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#0052B4] border border-white/80 flex items-center justify-center shadow-md">
-              <img
-                src="/manju-logo.webp"
-                alt="Logo"
-                className="w-8 h-8 object-contain"
-              />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-display font-black text-lg tracking-tight">
-                  MANJU GROUP
-                </span>
-                <span className="px-2 py-0.5 rounded-full bg-[#C9A84C]/20 border border-[#C9A84C]/50 text-[#C9A84C] text-[10px] font-black uppercase">
-                  ERP Control Center
-                </span>
+    <div className="min-h-screen bg-[#F1F5F9] text-slate-800 flex flex-col font-sans">
+      <SEO title="cPanel Control Center | Manju Group" noindex />
+
+      {/* ── TOP CPANEL APPBAR ────────────────────────────────────────────── */}
+      <header className="bg-[#0F172A] text-white border-b border-slate-800 border-t-2 border-t-[#FF6C2C] sticky top-0 z-40 shadow-xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+          {/* Left: cPanel Brand */}
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              onClick={() => setActiveTab("tools")}
+              className="flex items-center gap-2.5 text-left cursor-pointer group"
+              title="Return to cPanel Home"
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6C2C] to-[#E55A1B] text-white flex items-center justify-center font-black text-base shadow-lg shadow-[#FF6C2C]/25 group-hover:scale-105 transition-transform">
+                cP
               </div>
-              <p className="text-[11px] text-blue-200/80 font-medium">
-                Pioneering Manufacturing & Retail Command Suite
-              </p>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-black text-lg tracking-tight text-white flex items-center gap-1">
+                    cPanel<span className="text-[#FF6C2C] text-xs font-bold">®</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-[#FF6C2C]/20 border border-[#FF6C2C]/40 text-[#FF6C2C] text-[10px] font-black uppercase tracking-wider">
+                    Jupiter Pro
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 font-medium hidden sm:block">
+                  Manju Group Web & Branch Control Panel
+                </p>
+              </div>
+            </button>
+          </div>
+
+          {/* Center: Live Tool Search */}
+          <div className="flex-1 max-w-md hidden md:block">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <Search size={14} />
+              </div>
+              <input
+                type="text"
+                value={cpanelSearch}
+                onChange={e => {
+                  setCpanelSearch(e.target.value);
+                  if (activeTab !== "tools" && e.target.value) {
+                    setActiveTab("tools");
+                  }
+                }}
+                placeholder="Jump to a feature (e.g. showrooms, products, orders, maps)..."
+                className="w-full pl-9 pr-8 py-2 bg-[#1E293B] text-white rounded-xl border border-slate-700 text-xs placeholder:text-slate-500 focus:outline-none focus:border-[#FF6C2C] focus:ring-1 focus:ring-[#FF6C2C] transition-all"
+              />
+              {cpanelSearch && (
+                <button
+                  onClick={() => setCpanelSearch("")}
+                  className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-white cursor-pointer"
+                >
+                  <X size={13} />
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Live Sync Status */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+          {/* Right: Actions & Server Health */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            {/* Live Server Health Pill */}
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>ERP & Database: Connected</span>
+              <span>System Status: Online & Active</span>
             </div>
 
             <button
               onClick={handleTriggerERPSync}
               disabled={isSyncingERP}
-              className="px-3 py-1.5 rounded-lg bg-blue-600/30 hover:bg-blue-600/50 border border-blue-400/40 text-blue-200 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
               title="Manual ERP Sync"
             >
               <RefreshCw
                 size={13}
                 className={isSyncingERP ? "animate-spin" : ""}
               />
-              <span className="hidden md:inline">
+              <span className="hidden sm:inline">
                 {isSyncingERP ? "Syncing..." : "Sync ERP"}
               </span>
             </button>
 
             <Link href="/" target="_blank">
-              <button className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1 transition-all cursor-pointer">
-                <span>View Live Site</span>
+              <button className="px-3 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 text-blue-300 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer">
+                <span>View Site</span>
                 <ExternalLink size={13} />
               </button>
             </Link>
 
             <button
               onClick={handleLogout}
-              className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 text-xs font-bold transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-red-500/15 hover:bg-red-500/25 border border-red-500/40 text-red-300 text-xs font-bold transition-all cursor-pointer"
             >
               Exit
             </button>
@@ -1251,15 +1838,96 @@ export default function Admin() {
         </div>
       </header>
 
+      {/* ── CPANEL SUB-NAVIGATION RIBBON ─────────────────────────────────── */}
+      <div className="bg-[#131E31] border-b border-slate-800 px-4 sm:px-6 py-2">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5 text-xs">
+          {/* Breadcrumb Trail */}
+          <div className="flex items-center gap-2 text-slate-400 font-medium">
+            <button
+              onClick={() => setActiveTab("tools")}
+              className={`flex items-center gap-1 font-bold cursor-pointer transition-colors ${
+                activeTab === "tools"
+                  ? "text-[#FF6C2C]"
+                  : "text-slate-300 hover:text-[#FF6C2C]"
+              }`}
+            >
+              <Grid size={13} />
+              <span>cPanel Home</span>
+            </button>
+            {activeTab !== "tools" && (
+              <>
+                <span className="text-slate-600">/</span>
+                <span className="text-slate-400 hidden sm:inline">
+                  {tabTitles[activeTab]?.category || "Module"}
+                </span>
+                <span className="text-slate-600 hidden sm:inline">/</span>
+                <span className="text-white font-black">
+                  {tabTitles[activeTab]?.title || activeTab}
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* Quick-Jump Tool Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
+            {[
+              { id: "tools", label: "All Tools", icon: Grid },
+              { id: "showrooms", label: "Showrooms", icon: MapPin, badge: adminShowrooms?.length ?? 9 },
+              { id: "products", label: "Products", icon: Package, badge: productsData?.total ?? productsList.length },
+              { id: "orders", label: "Orders", icon: ShoppingCart, badge: ordersData?.total ?? ordersList.length },
+              { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+              { id: "contacts_bank", label: "Contacts & Bank", icon: PhoneCall },
+            ].map(pill => {
+              const Icon = pill.icon;
+              const isSelected = activeTab === pill.id;
+              return (
+                <button
+                  key={pill.id}
+                  onClick={() => setActiveTab(pill.id as AdminTab)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
+                    isSelected
+                      ? "bg-[#FF6C2C] text-white shadow-sm"
+                      : "bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60"
+                  }`}
+                >
+                  <Icon size={12} />
+                  <span>{pill.label}</span>
+                  {pill.badge !== undefined && (
+                    <span
+                      className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                        isSelected
+                          ? "bg-black/25 text-white"
+                          : "bg-slate-700 text-slate-300"
+                      }`}
+                    >
+                      {pill.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* ── LEFT NAVIGATION SIDEBAR (3 COLS) ────────────────────────────── */}
-        <aside className="lg:col-span-3 space-y-2">
+        <aside className="lg:col-span-3 space-y-4">
+          {/* cPanel Navigation Menu */}
           <div className="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm space-y-1">
+            <div className="px-3 py-1.5 mb-1 text-[11px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-between">
+              <span>cPanel Modules</span>
+              <span className="text-[10px] text-[#FF6C2C]">v118.0</span>
+            </div>
+
             {[
+              { id: "tools", label: "cPanel Tools (Home)", icon: Grid, badge: "Home" },
+              { id: "dashboard", label: "Executive Dashboard", icon: LayoutDashboard },
               {
-                id: "dashboard",
-                label: "Executive Dashboard",
-                icon: LayoutDashboard,
+                id: "showrooms",
+                label: "Showroom Network cPanel",
+                icon: MapPin,
+                badge: adminShowrooms?.length ?? SHOWROOMS_DATA.length,
               },
               {
                 id: "products",
@@ -1281,7 +1949,7 @@ export default function Admin() {
               },
               {
                 id: "users",
-                label: "Users & Customers",
+                label: "Users & Accounts",
                 icon: Users,
                 badge: usersData?.total || 0,
               },
@@ -1304,12 +1972,6 @@ export default function Admin() {
                 badge: "Live",
               },
               {
-                id: "showrooms",
-                label: "Showroom Network",
-                icon: MapPin,
-                badge: SHOWROOMS_DATA.length,
-              },
-              {
                 id: "inquiries",
                 label: "Inquiries & Leads CRM",
                 icon: Mail,
@@ -1324,21 +1986,21 @@ export default function Admin() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as AdminTab)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     isActive
-                      ? "bg-[#0052B4] text-white shadow-sm"
+                      ? "bg-[#0F172A] text-white border-l-4 border-l-[#FF6C2C] shadow-sm"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Icon size={16} />
+                    <Icon size={15} className={isActive ? "text-[#FF6C2C]" : "text-slate-500"} />
                     <span>{tab.label}</span>
                   </div>
                   {tab.badge !== undefined && (
                     <span
                       className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                         isActive
-                          ? "bg-white/20 text-white"
+                          ? "bg-[#FF6C2C] text-white"
                           : "bg-slate-100 text-slate-700"
                       }`}
                     >
@@ -1350,27 +2012,285 @@ export default function Admin() {
             })}
           </div>
 
-          {/* Quick Business Card */}
-          <div className="bg-gradient-to-br from-[#001D4A] to-[#003882] rounded-2xl p-4 text-white border border-blue-900 shadow-sm">
-            <div className="flex items-center gap-2 mb-2 text-[#C9A84C]">
-              <ShieldCheck size={16} />
+          {/* cPanel General Information Panel (Signature cPanel Feature) */}
+          <div className="bg-[#0F172A] text-white rounded-2xl p-4 border border-slate-800 shadow-md space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800 text-slate-300">
+              <div className="flex items-center gap-2">
+                <Server size={14} className="text-[#FF6C2C]" />
+                <span className="text-xs font-black uppercase tracking-wider">
+                  General Information
+                </span>
+              </div>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            </div>
+
+            <div className="space-y-2 text-[11px]">
+              <div className="flex items-center justify-between text-slate-400">
+                <span>Current User:</span>
+                <span className="font-mono font-bold text-white">admin (root)</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-400">
+                <span>Primary Domain:</span>
+                <span className="font-mono text-blue-300">manjugroup.lk</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-400">
+                <span>Shared IP:</span>
+                <span className="font-mono text-slate-200">104.21.58.102</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-400">
+                <span>SSL / TLS Certificate:</span>
+                <span className="text-emerald-400 font-bold">Active (TLS 1.3)</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-400">
+                <span>Server Time:</span>
+                <span className="text-slate-300">Asia/Colombo (UTC+5:30)</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-400 pt-1 border-t border-slate-800">
+                <span>ERP Live Sync:</span>
+                <span className="font-bold text-emerald-300">{lastSyncTime}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* cPanel Statistics & Usage Panel */}
+          <div className="bg-[#131E31] text-white rounded-2xl p-4 border border-slate-800 shadow-md space-y-3">
+            <div className="flex items-center gap-2 pb-2 border-b border-slate-800 text-slate-300">
+              <Activity size={14} className="text-cyan-400" />
               <span className="text-xs font-black uppercase tracking-wider">
-                Enterprise Status
+                Statistics & Quotas
               </span>
             </div>
-            <p className="text-xs text-blue-100 leading-relaxed font-medium">
-              4 Flagship brands synchronized across 9 island-wide showrooms with
-              real-time TiDB database persistence.
-            </p>
-            <div className="mt-3 pt-3 border-t border-white/15 flex items-center justify-between text-[11px] text-blue-200">
-              <span>ERP Sync:</span>
-              <span className="font-bold text-white">{lastSyncTime}</span>
+
+            <div className="space-y-3 text-[11px]">
+              <div>
+                <div className="flex items-center justify-between text-slate-400 mb-1">
+                  <span>Showroom Nodes</span>
+                  <span className="font-bold text-emerald-400">9 / 9 Online (100%)</span>
+                </div>
+                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: "100%" }} />
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-slate-400">
+                <span>Active Products:</span>
+                <span className="font-bold text-white">{productsData?.total ?? productsList.length} SKUs</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-400">
+                <span>Orders Handled:</span>
+                <span className="font-bold text-white">{ordersList.length} Processed</span>
+              </div>
             </div>
           </div>
         </aside>
 
         {/* ── RIGHT CONTENT CANVAS (9 COLS) ───────────────────────────────── */}
         <main className="lg:col-span-9 space-y-6">
+          {/* CPANEL TOOLS & APPLICATIONS (ICONIC CPANEL GRID VIEW) */}
+          {activeTab === "tools" && (
+            <div className="space-y-6">
+              {/* Top Welcome Banner */}
+              <div className="bg-gradient-to-br from-[#0F172A] via-[#131E31] to-[#1E293B] border border-slate-700/80 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF6C2C]/5 rounded-full blur-3xl pointer-events-none" />
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="w-6 h-6 rounded bg-[#FF6C2C] text-white flex items-center justify-center text-xs font-black shadow-md">
+                        cP
+                      </span>
+                      <h1 className="text-xl font-black font-display tracking-tight text-white">
+                        Tools & Module Center
+                      </h1>
+                      <span className="px-2 py-0.5 rounded-full bg-[#FF6C2C]/20 border border-[#FF6C2C]/40 text-[#FF6C2C] text-[10px] font-black uppercase tracking-wider">
+                        Enterprise Jupiter Theme
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
+                      Centralized cPanel control for island-wide showrooms, product catalogs, customer orders, multimedia ad campaigns, and enterprise backend gateways.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => setActiveTab("showrooms")}
+                      className="px-3.5 py-2 rounded-xl bg-[#FF6C2C] hover:bg-[#E55A1B] text-white text-xs font-black flex items-center gap-1.5 shadow-lg shadow-[#FF6C2C]/20 transition-all cursor-pointer"
+                    >
+                      <MapPin size={13} />
+                      <span>Showroom Network</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("products")}
+                      className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <Package size={13} />
+                      <span>Products</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("orders")}
+                      className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <ShoppingCart size={13} />
+                      <span>Orders</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Live Search Active Banner */}
+              {cpanelSearch && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between text-xs text-amber-800">
+                  <div className="flex items-center gap-2">
+                    <Search size={14} className="text-amber-600" />
+                    <span>Showing matching tools for: <strong>"{cpanelSearch}"</strong></span>
+                  </div>
+                  <button
+                    onClick={() => setCpanelSearch("")}
+                    className="text-amber-700 hover:underline font-bold cursor-pointer"
+                  >
+                    Clear Filter
+                  </button>
+                </div>
+              )}
+
+              {/* Categorized cPanel Accordions */}
+              <div className="space-y-5">
+                {filteredCpanelCategories.map(cat => {
+                  const CatIcon = cat.icon;
+                  const isCollapsed = !!collapsedCategories[cat.id];
+
+                  return (
+                    <div
+                      key={cat.id}
+                      className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+                    >
+                      {/* Section Header */}
+                      <div
+                        onClick={() => toggleCategory(cat.id)}
+                        className="px-5 py-3.5 bg-slate-50 hover:bg-slate-100/80 border-b border-slate-200/80 flex items-center justify-between cursor-pointer transition-colors select-none"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-7 h-7 rounded-lg bg-[#0F172A] text-[#FF6C2C] flex items-center justify-center shadow-xs">
+                            <CatIcon size={15} />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                                {cat.title}
+                              </h3>
+                              <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold">
+                                {cat.tools.length} Tools
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-500 hidden sm:block">
+                              {cat.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-slate-400">
+                          {isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                        </div>
+                      </div>
+
+                      {/* Tool Grid */}
+                      {!isCollapsed && (
+                        <div className="p-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                          {cat.tools.map((tool, idx) => {
+                            const ToolIcon = tool.icon;
+                            return (
+                              <div
+                                key={idx}
+                                onClick={() => {
+                                  if (tool.isExternal && tool.externalUrl) {
+                                    window.open(tool.externalUrl, "_blank");
+                                  } else {
+                                    setActiveTab(tool.id as AdminTab);
+                                    window.scrollTo({ top: 0, behavior: "smooth" });
+                                  }
+                                }}
+                                className="group p-4 rounded-xl border border-slate-200 hover:border-[#FF6C2C] hover:shadow-md bg-white hover:bg-slate-50/50 transition-all cursor-pointer flex flex-col justify-between"
+                              >
+                                <div>
+                                  <div className="flex items-start justify-between gap-2 mb-2.5">
+                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${tool.iconBg} group-hover:scale-105 transition-transform`}>
+                                      <ToolIcon size={18} />
+                                    </div>
+                                    {tool.badge && (
+                                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-black border ${tool.badgeColor}`}>
+                                        {tool.badge}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <h4 className="text-xs font-black text-slate-900 group-hover:text-[#FF6C2C] transition-colors leading-snug mb-1">
+                                    {tool.title}
+                                  </h4>
+                                  <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2">
+                                    {tool.description}
+                                  </p>
+                                </div>
+
+                                <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-400 group-hover:text-[#FF6C2C] transition-colors">
+                                  <span>{tool.isExternal ? "Open Website" : "Launch Module"}</span>
+                                  <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {filteredCpanelCategories.length === 0 && (
+                  <div className="p-12 text-center bg-white rounded-2xl border border-slate-200">
+                    <Search size={32} className="mx-auto mb-2 text-slate-400" />
+                    <p className="font-bold text-slate-700 text-sm">No cPanel tools matched "{cpanelSearch}"</p>
+                    <p className="text-xs text-slate-500 mt-1">Try searching for keywords like showroom, products, orders, maps, or bank.</p>
+                    <button
+                      onClick={() => setCpanelSearch("")}
+                      className="mt-3 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer"
+                    >
+                      Clear Search
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* BREADCRUMB STRIP FOR INDIVIDUAL MODULE WORKSPACES */}
+          {activeTab !== "tools" && (
+            <div className="bg-white rounded-xl px-4 py-2.5 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2 text-slate-500 font-medium">
+                <button
+                  onClick={() => setActiveTab("tools")}
+                  className="flex items-center gap-1 text-[#FF6C2C] hover:underline font-bold cursor-pointer"
+                >
+                  <Grid size={13} />
+                  <span>cPanel Home</span>
+                </button>
+                <span>/</span>
+                <span className="text-slate-400 hidden sm:inline">
+                  {tabTitles[activeTab]?.category || "Module"}
+                </span>
+                <span className="text-slate-400 hidden sm:inline">/</span>
+                <span className="text-slate-900 font-black">
+                  {tabTitles[activeTab]?.title || activeTab}
+                </span>
+              </div>
+
+              <button
+                onClick={() => setActiveTab("tools")}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+              >
+                <ChevronLeft size={13} />
+                <span>Return to All Tools</span>
+              </button>
+            </div>
+          )}
+
           {/* TAB 1: EXECUTIVE DASHBOARD */}
           {activeTab === "dashboard" && (
             <div className="space-y-6">
@@ -4161,7 +5081,7 @@ export default function Admin() {
                     <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-black uppercase text-[11px] tracking-wider">
                       <tr>
                         <th className="p-4">Customer</th>
-                        <th className="p-4">Product</th>
+                        <th className="p-4 min-w-[260px]">Product</th>
                         <th className="p-4">Rating</th>
                         <th className="p-4">Comment</th>
                         <th className="p-4">Status</th>
@@ -4209,13 +5129,104 @@ export default function Admin() {
                                 </div>
                               )}
                             </td>
-                            <td className="p-4">
-                              <div className="font-bold text-slate-800 line-clamp-1 max-w-[180px]">
-                                {rev.productName || `Product #${rev.productId}`}
-                              </div>
-                              <div className="text-[10px] text-slate-400 font-mono">
-                                ID: {rev.productId}
-                              </div>
+                            <td className="p-4 min-w-[260px]">
+                              {(() => {
+                                const staticMatch = !rev.productSlug
+                                  ? STATIC_PRODUCTS.find(
+                                      p =>
+                                        String(p.id) === String(rev.productId) ||
+                                        p.slug === String(rev.productId)
+                                    )
+                                  : null;
+
+                                const prodName =
+                                  rev.productName ||
+                                  staticMatch?.name ||
+                                  `Product #${rev.productId}`;
+                                const prodSlug =
+                                  rev.productSlug ||
+                                  staticMatch?.slug ||
+                                  rev.productId;
+                                const prodSku =
+                                  rev.productSku || staticMatch?.sku || null;
+                                const brandLabel =
+                                  rev.brandName ||
+                                  staticMatch?.brandName ||
+                                  null;
+                                const categoryLabel =
+                                  rev.categoryName ||
+                                  (staticMatch as any)?.category ||
+                                  null;
+                                const rawImage =
+                                  rev.productImageUrl ||
+                                  staticMatch?.imageUrl ||
+                                  null;
+                                const imgUrl = getProductImage(
+                                  rawImage,
+                                  prodName
+                                );
+                                const targetUrl = `/products/${prodSlug}#reviews`;
+
+                                return (
+                                  <Link
+                                    href={targetUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="group flex items-center gap-3 p-1.5 -m-1.5 rounded-xl hover:bg-blue-50/80 transition-all cursor-pointer min-w-[240px]"
+                                    title={`Click to view "${prodName}" in live showroom (opens in new tab)`}
+                                  >
+                                    {/* Product Thumbnail */}
+                                    <div className="relative w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center group-hover:border-blue-300 group-hover:shadow-md transition-all">
+                                      {imgUrl ? (
+                                        <img
+                                          src={imgUrl}
+                                          alt={prodName}
+                                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                          onError={e => {
+                                            (e.currentTarget as HTMLElement).style.display = "none";
+                                          }}
+                                        />
+                                      ) : (
+                                        <Package
+                                          size={20}
+                                          className="text-slate-400"
+                                        />
+                                      )}
+                                    </div>
+
+                                    {/* Product Meta */}
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="font-bold text-xs text-slate-900 group-hover:text-blue-600 transition-colors leading-snug line-clamp-2">
+                                          {prodName}
+                                        </span>
+                                        <ExternalLink
+                                          size={12}
+                                          className="text-slate-400 group-hover:text-blue-600 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        />
+                                      </div>
+
+                                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                        {brandLabel && (
+                                          <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-100/70 text-[#0052B4]">
+                                            {brandLabel}
+                                          </span>
+                                        )}
+                                        {categoryLabel && (
+                                          <span className="text-[10px] text-slate-500 font-medium">
+                                            {categoryLabel}
+                                          </span>
+                                        )}
+                                        <span className="text-[10px] text-slate-400 font-mono whitespace-nowrap">
+                                          {prodSku
+                                            ? `SKU: ${prodSku}`
+                                            : `ID: ${rev.productId}`}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </Link>
+                                );
+                              })()}
                             </td>
                             <td className="p-4">
                               <div className="flex items-center gap-1">
@@ -4316,67 +5327,581 @@ export default function Admin() {
             </div>
           )}
 
-          {/* TAB 4: SHOWROOMS */}
+          {/* TAB 4: SHOWROOMS & BRANCH NETWORK (cPanel) */}
           {activeTab === "showrooms" && (
-            <div className="space-y-4">
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-black text-slate-900">
-                    Island-Wide Showroom Network
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Live locations across Sri Lanka
-                  </p>
+            <div className="space-y-6">
+              {/* cPanel Header & Metric Summary Cards */}
+              <div className="bg-gradient-to-r from-slate-900 via-[#001D4A] to-[#002D62] p-6 rounded-3xl text-white shadow-xl border border-blue-900/40 relative overflow-hidden">
+                <div className="absolute right-0 top-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  <div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-black uppercase tracking-wider text-blue-300 mb-2">
+                      <MapPin size={13} className="text-blue-300" />
+                      <span>Manju Group • Showroom Control Panel (cPanel)</span>
+                    </div>
+                    <h2 className="text-2xl lg:text-3xl font-black font-display tracking-tight text-white">
+                      National Showroom & Experience Center Network
+                    </h2>
+                    <p className="text-blue-100/80 text-xs md:text-sm mt-1 max-w-2xl leading-relaxed">
+                      Control live branches, physical addresses, GPS pinpoints, direct hotline lines, branch managers, and customer services across Sri Lanka.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <a
+                      href="/locations"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-extrabold rounded-xl flex items-center gap-1.5 transition-all border border-white/20 backdrop-blur-sm cursor-pointer"
+                      title="View public showroom page in a new tab"
+                    >
+                      <ExternalLink size={14} />
+                      <span>View Public Page</span>
+                    </a>
+
+                    <button
+                      onClick={() => {
+                        if (confirm("Restore the complete 9 official Manju Group branches with full contact details and GPS coordinates?")) {
+                          seedLocationsMutation.mutate();
+                        }
+                      }}
+                      disabled={seedLocationsMutation.isPending}
+                      className="px-3.5 py-2.5 bg-slate-800/80 hover:bg-slate-800 text-blue-200 text-xs font-extrabold rounded-xl flex items-center gap-1.5 transition-all border border-blue-500/30 cursor-pointer disabled:opacity-50"
+                      title="Reset / sync official 9 showroom branches"
+                    >
+                      <RefreshCw size={14} className={seedLocationsMutation.isPending ? "animate-spin" : ""} />
+                      <span>{seedLocationsMutation.isPending ? "Syncing..." : "Sync 9 Official Branches"}</span>
+                    </button>
+
+                    <button
+                      onClick={handleOpenCreateLocation}
+                      className="px-4 py-2.5 bg-[#0052B4] hover:bg-blue-600 text-white text-xs font-black rounded-xl flex items-center gap-2 shadow-lg shadow-blue-900/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
+                    >
+                      <Plus size={16} />
+                      <span>Add New Showroom</span>
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() =>
-                    toast.info("New Showroom creation active in database mode")
-                  }
-                  className="px-3.5 py-2 bg-[#0052B4] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs"
-                >
-                  <Plus size={14} />
-                  <span>Add Showroom</span>
-                </button>
+
+                {/* 4 Metric Counter Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-white/10">
+                  <div className="bg-white/10 backdrop-blur-sm p-3.5 rounded-2xl border border-white/10">
+                    <span className="text-[11px] font-bold text-blue-200 uppercase tracking-wider block">
+                      Total Locations
+                    </span>
+                    <span className="text-2xl font-black text-white mt-1 block">
+                      {adminShowrooms.length}
+                    </span>
+                  </div>
+
+                  <div className="bg-white/10 backdrop-blur-sm p-3.5 rounded-2xl border border-white/10">
+                    <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-wider block">
+                      Active Online
+                    </span>
+                    <span className="text-2xl font-black text-emerald-400 mt-1 block">
+                      {adminShowrooms.filter(s => s.isActive).length}
+                    </span>
+                  </div>
+
+                  <div className="bg-white/10 backdrop-blur-sm p-3.5 rounded-2xl border border-white/10">
+                    <span className="text-[11px] font-bold text-blue-200 uppercase tracking-wider block">
+                      Provinces Covered
+                    </span>
+                    <span className="text-2xl font-black text-white mt-1 block">
+                      {new Set(adminShowrooms.map(s => s.province).filter(Boolean)).size || 5} / 9
+                    </span>
+                  </div>
+
+                  <div className="bg-white/10 backdrop-blur-sm p-3.5 rounded-2xl border border-white/10">
+                    <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider block">
+                      Flagship Centers
+                    </span>
+                    <span className="text-2xl font-black text-amber-300 mt-1 block">
+                      {adminShowrooms.filter(s => s.featured).length}
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {SHOWROOMS_DATA.map(s => (
-                  <div
-                    key={s.id}
-                    className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-sm text-slate-900">
-                        {s.name}
-                      </h4>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black">
-                        Active Branch
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-600 font-medium flex items-center gap-1.5">
-                      <MapPin size={13} className="text-[#0052B4]" />
-                      <span>{s.address}</span>
-                    </p>
-                    <p className="text-xs text-slate-600 font-medium flex items-center gap-1.5">
-                      <Phone size={13} className="text-emerald-600" />
-                      <span>
-                        {s.phone} • Mgr: {s.manager}
-                      </span>
-                    </p>
-                    <div className="pt-2 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100">
-                      <span>Hours: {s.hours}</span>
+              {/* cPanel Filter & Control Toolbar */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                <div className="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                  {/* Search */}
+                  <div className="relative flex-1">
+                    <Search
+                      size={15}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Search showroom by name, city, address, or manager..."
+                      value={showroomSearch}
+                      onChange={e => setShowroomSearch(e.target.value)}
+                      className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-[#0052B4] focus:bg-white transition-all text-slate-900 placeholder:text-slate-400"
+                    />
+                    {showroomSearch && (
                       <button
-                        onClick={() =>
-                          toast.success(`Branch ${s.name} details saved`)
-                        }
-                        className="text-blue-600 font-bold hover:underline cursor-pointer"
+                        onClick={() => setShowroomSearch("")}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-slate-600"
                       >
-                        Edit Branch
+                        ✕
                       </button>
-                    </div>
+                    )}
                   </div>
-                ))}
+
+                  {/* Province Filter */}
+                  <div className="w-full sm:w-48">
+                    <select
+                      value={showroomProvinceFilter}
+                      onChange={e => setShowroomProvinceFilter(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold rounded-xl py-2 px-3 outline-none focus:ring-2 focus:ring-[#0052B4] cursor-pointer"
+                    >
+                      <option value="All">All Provinces</option>
+                      <option value="Western Province">Western Province</option>
+                      <option value="Central Province">Central Province</option>
+                      <option value="Southern Province">Southern Province</option>
+                      <option value="North Western Province">North Western Province</option>
+                      <option value="Northern Province">Northern Province</option>
+                      <option value="North Central Province">North Central Province</option>
+                      <option value="Sabaragamuwa Province">Sabaragamuwa</option>
+                      <option value="Uva Province">Uva Province</option>
+                      <option value="Eastern Province">Eastern Province</option>
+                    </select>
+                  </div>
+
+                  {/* Status Filter */}
+                  <div className="inline-flex p-1 bg-slate-100 rounded-xl">
+                    <button
+                      onClick={() => setShowroomStatusFilter("all")}
+                      className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        showroomStatusFilter === "all"
+                          ? "bg-white text-slate-900 shadow-xs"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      All ({adminShowrooms.length})
+                    </button>
+                    <button
+                      onClick={() => setShowroomStatusFilter("active")}
+                      className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        showroomStatusFilter === "active"
+                          ? "bg-emerald-600 text-white shadow-xs"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      Active
+                    </button>
+                    <button
+                      onClick={() => setShowroomStatusFilter("inactive")}
+                      className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        showroomStatusFilter === "inactive"
+                          ? "bg-amber-600 text-white shadow-xs"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      Hidden
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-end md:self-auto">
+                  {/* View Mode Toggle */}
+                  <div className="inline-flex p-1 bg-slate-100 rounded-xl">
+                    <button
+                      onClick={() => setShowroomsViewMode("table")}
+                      className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                        showroomsViewMode === "table"
+                          ? "bg-white text-slate-900 shadow-xs"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                      title="High-density cPanel data table"
+                    >
+                      <Layers size={13} />
+                      <span>Table</span>
+                    </button>
+                    <button
+                      onClick={() => setShowroomsViewMode("grid")}
+                      className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                        showroomsViewMode === "grid"
+                          ? "bg-white text-slate-900 shadow-xs"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                      title="Visual card grid view"
+                    >
+                      <Building2 size={13} />
+                      <span>Cards</span>
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => refetchAdminShowrooms()}
+                    disabled={isAdminShowroomsLoading}
+                    className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors cursor-pointer"
+                    title="Refresh data"
+                  >
+                    <RefreshCw size={14} className={isAdminShowroomsLoading ? "animate-spin" : ""} />
+                  </button>
+                </div>
               </div>
+
+              {/* Loading State */}
+              {isAdminShowroomsLoading && adminShowrooms.length === 0 && (
+                <div className="p-12 text-center bg-white rounded-3xl border border-slate-200 shadow-sm">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#0052B4] mx-auto mb-3" />
+                  <p className="text-sm font-bold text-slate-600">Loading showroom network records...</p>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {!isAdminShowroomsLoading && adminShowrooms.length === 0 && (
+                <div className="p-12 text-center bg-white rounded-3xl border border-slate-200 shadow-sm space-y-3">
+                  <MapPin size={36} className="text-slate-300 mx-auto" />
+                  <h4 className="text-base font-black text-slate-800">No showrooms match your filter</h4>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    Try clearing the search or reset the official 9 showrooms catalog.
+                  </p>
+                  <div className="flex items-center justify-center gap-2 pt-2">
+                    <button
+                      onClick={() => {
+                        setShowroomSearch("");
+                        setShowroomProvinceFilter("All");
+                        setShowroomStatusFilter("all");
+                      }}
+                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer"
+                    >
+                      Clear Filters
+                    </button>
+                    <button
+                      onClick={() => seedLocationsMutation.mutate()}
+                      disabled={seedLocationsMutation.isPending}
+                      className="px-4 py-2 bg-[#0052B4] text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5"
+                    >
+                      <RefreshCw size={13} className={seedLocationsMutation.isPending ? "animate-spin" : ""} />
+                      <span>Sync 9 Official Branches</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* TABLE VIEW (cPanel Style High-Density Table) */}
+              {showroomsViewMode === "table" && adminShowrooms.length > 0 && (
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-extrabold uppercase tracking-wider text-[11px]">
+                          <th className="py-3 px-4">Branch / Showroom</th>
+                          <th className="py-3 px-4">Type & Province</th>
+                          <th className="py-3 px-4">Manager & Contact</th>
+                          <th className="py-3 px-4">GPS & Address</th>
+                          <th className="py-3 px-4">In-Store Services</th>
+                          <th className="py-3 px-4 text-center">Status</th>
+                          <th className="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-medium">
+                        {adminShowrooms.map(loc => (
+                          <tr
+                            key={loc.id}
+                            className={`hover:bg-blue-50/40 transition-colors ${
+                              !loc.isActive ? "bg-slate-50/60 opacity-75" : ""
+                            }`}
+                          >
+                            {/* Branch details */}
+                            <td className="py-3.5 px-4">
+                              <div className="flex items-center gap-3">
+                                {loc.imageUrl ? (
+                                  <img
+                                    src={loc.imageUrl}
+                                    alt={loc.name}
+                                    className="w-10 h-10 rounded-xl object-cover border border-slate-200 shrink-0"
+                                  />
+                                ) : (
+                                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 text-[#0052B4] flex items-center justify-center font-black text-sm shrink-0 border border-blue-200">
+                                    <MapPin size={18} />
+                                  </div>
+                                )}
+                                <div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-extrabold text-slate-900 text-xs">
+                                      {loc.name}
+                                    </span>
+                                    {loc.featured && (
+                                      <span
+                                        className="text-amber-500"
+                                        title="Featured Flagship Experience Center"
+                                      >
+                                        <Star size={13} className="fill-amber-400" />
+                                      </span>
+                                    )}
+                                  </div>
+                                  {loc.badge && (
+                                    <span className="inline-block mt-0.5 text-[10px] font-bold text-[#0052B4] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                                      {loc.badge}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Type & Province */}
+                            <td className="py-3.5 px-4">
+                              <div className="space-y-0.5">
+                                <span className="inline-block font-extrabold uppercase text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                                  {loc.type || "showroom"}
+                                </span>
+                                <div className="font-bold text-slate-900">
+                                  📍 {loc.city}
+                                </div>
+                                <div className="text-[11px] text-slate-500">
+                                  {loc.province || "Western"}
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Manager & Contact */}
+                            <td className="py-3.5 px-4">
+                              <div className="space-y-1">
+                                {loc.manager && (
+                                  <div className="font-bold text-slate-800 flex items-center gap-1">
+                                    <UserCircle size={13} className="text-blue-500 shrink-0" />
+                                    <span>{loc.manager}</span>
+                                  </div>
+                                )}
+                                {loc.phone && (
+                                  <div className="text-slate-600 flex items-center gap-1">
+                                    <Phone size={12} className="text-slate-400 shrink-0" />
+                                    <a
+                                      href={`tel:${loc.directCall || loc.phone}`}
+                                      className="hover:text-blue-600 font-semibold"
+                                    >
+                                      {loc.phone}
+                                    </a>
+                                  </div>
+                                )}
+                                {loc.email && (
+                                  <div className="text-[11px] text-slate-400">
+                                    {loc.email}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* GPS & Address */}
+                            <td className="py-3.5 px-4 max-w-xs">
+                              <div className="space-y-1">
+                                <p className="text-[11px] text-slate-700 line-clamp-2 font-medium">
+                                  {loc.address}
+                                </p>
+                                <button
+                                  onClick={() => setPreviewMapLocation(loc)}
+                                  className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                >
+                                  <Navigation size={11} />
+                                  <span>{loc.latitude}, {loc.longitude}</span>
+                                </button>
+                              </div>
+                            </td>
+
+                            {/* Services */}
+                            <td className="py-3.5 px-4 max-w-xs">
+                              <div className="flex flex-wrap gap-1">
+                                {Array.isArray(loc.services) && loc.services.length > 0 ? (
+                                  loc.services.slice(0, 2).map((srv: string, i: number) => (
+                                    <span
+                                      key={i}
+                                      className="text-[10px] font-bold bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded"
+                                    >
+                                      ✓ {srv}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="text-[11px] text-slate-400 italic">None specified</span>
+                                )}
+                                {Array.isArray(loc.services) && loc.services.length > 2 && (
+                                  <span className="text-[10px] font-extrabold text-blue-600 px-1 py-0.5">
+                                    +{loc.services.length - 2} more
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Active Toggle Switch */}
+                            <td className="py-3.5 px-4 text-center">
+                              <button
+                                onClick={() =>
+                                  toggleLocationActiveMutation.mutate({
+                                    id: loc.id,
+                                    isActive: !loc.isActive,
+                                  })
+                                }
+                                disabled={toggleLocationActiveMutation.isPending}
+                                className={`px-2.5 py-1 rounded-full text-[10px] font-black cursor-pointer transition-all inline-flex items-center gap-1 shadow-xs ${
+                                  loc.isActive
+                                    ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                                    : "bg-slate-200 text-slate-600 hover:bg-slate-300"
+                                }`}
+                                title="Click to toggle showroom visibility"
+                              >
+                                <span
+                                  className={`w-1.5 h-1.5 rounded-full ${
+                                    loc.isActive ? "bg-emerald-600" : "bg-slate-400"
+                                  }`}
+                                />
+                                <span>{loc.isActive ? "Online" : "Hidden"}</span>
+                              </button>
+                            </td>
+
+                            {/* Actions */}
+                            <td className="py-3.5 px-4 text-right">
+                              <div className="inline-flex items-center gap-1.5">
+                                <button
+                                  onClick={() => setPreviewMapLocation(loc)}
+                                  className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                  title="Inspect Google Map"
+                                >
+                                  <Navigation size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleOpenEditLocation(loc)}
+                                  className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                  title="Edit Showroom"
+                                >
+                                  <Edit2 size={14} />
+                                </button>
+                                <button
+                                  onClick={() => setDeletingLocation(loc)}
+                                  className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                  title="Delete Showroom"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* GRID VIEW (Visual Cards) */}
+              {showroomsViewMode === "grid" && adminShowrooms.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {adminShowrooms.map(loc => (
+                    <div
+                      key={loc.id}
+                      className={`bg-white rounded-2xl border p-5 flex flex-col justify-between transition-all duration-200 shadow-sm hover:shadow-md ${
+                        loc.isActive
+                          ? "border-slate-200 hover:border-blue-400"
+                          : "border-slate-200 bg-slate-50/70 opacity-75"
+                      }`}
+                    >
+                      <div>
+                        {loc.imageUrl && (
+                          <div className="w-full h-36 rounded-xl overflow-hidden mb-3.5 bg-slate-100 border border-slate-200 relative">
+                            <img
+                              src={loc.imageUrl}
+                              alt={loc.name}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                            <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold">
+                              {loc.city}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="text-[11px] font-extrabold uppercase text-[#0052B4] tracking-wider truncate">
+                            {loc.badge || loc.type || "Showroom"}
+                          </span>
+                          <button
+                            onClick={() =>
+                              toggleLocationActiveMutation.mutate({
+                                id: loc.id,
+                                isActive: !loc.isActive,
+                              })
+                            }
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-black cursor-pointer ${
+                              loc.isActive
+                                ? "bg-emerald-100 text-emerald-800"
+                                : "bg-slate-200 text-slate-600"
+                            }`}
+                          >
+                            {loc.isActive ? "● Online" : "○ Hidden"}
+                          </button>
+                        </div>
+
+                        <h4 className="font-black text-base text-slate-900 leading-snug mb-2 flex items-center gap-1.5">
+                          <span>{loc.name}</span>
+                          {loc.featured && (
+                            <Star size={14} className="fill-amber-400 text-amber-400 shrink-0" />
+                          )}
+                        </h4>
+
+                        <div className="space-y-1.5 text-xs text-slate-600 font-medium mb-3">
+                          <p className="flex items-start gap-1.5">
+                            <MapPin size={13} className="text-[#0052B4] shrink-0 mt-0.5" />
+                            <span>{loc.address}</span>
+                          </p>
+                          <p className="flex items-center gap-1.5">
+                            <Phone size={13} className="text-emerald-600 shrink-0" />
+                            <span>{loc.phone || "No phone"} • Mgr: {loc.manager || "N/A"}</span>
+                          </p>
+                          <p className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                            <Clock size={12} className="shrink-0" />
+                            <span>{loc.hours}</span>
+                          </p>
+                        </div>
+
+                        {Array.isArray(loc.services) && loc.services.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-4 pt-2 border-t border-slate-100">
+                            {loc.services.slice(0, 3).map((srv: string, idx: number) => (
+                              <span
+                                key={idx}
+                                className="text-[10px] bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded"
+                              >
+                                ✓ {srv}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Card Footer Actions */}
+                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <button
+                          onClick={() => setPreviewMapLocation(loc)}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <Navigation size={12} className="text-[#0052B4]" />
+                          <span>Map</span>
+                        </button>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleOpenEditLocation(loc)}
+                            className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#0052B4] rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                          >
+                            <Edit2 size={12} />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={() => setDeletingLocation(loc)}
+                            className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold cursor-pointer transition-colors"
+                            title="Delete showroom"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -5478,6 +7003,619 @@ export default function Admin() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+        {/* MODAL: ADD / EDIT SHOWROOM (cPanel Form) */}
+        {isLocationModalOpen && editingLocation && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-white rounded-3xl p-6 md:p-8 max-w-3xl w-full shadow-2xl border border-slate-200 text-xs my-8 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-100">
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 text-[#0052B4] font-black text-[10px] uppercase mb-1">
+                    <MapPin size={11} />
+                    <span>Showroom Control Panel</span>
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900">
+                    {editingLocation.id ? `Edit Showroom: ${editingLocation.name}` : "Add New Showroom Branch"}
+                  </h3>
+                  <p className="text-slate-500 text-xs">
+                    Configure branch details, Google Maps GPS coordinates, hotline numbers, and customer services.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLocationModalOpen(false);
+                    setEditingLocation(null);
+                  }}
+                  className="p-2 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveLocation} className="space-y-6">
+                {/* Section 1: Basic Identity */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                  <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider block">
+                    1. Branch Identity &amp; Type
+                  </span>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="md:col-span-2">
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Showroom Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editingLocation.name}
+                        onChange={e => setEditingLocation({ ...editingLocation, name: e.target.value })}
+                        placeholder="e.g. Manju Group — Colombo Flagship Store"
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-[#0052B4] outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Badge / Subtitle
+                      </label>
+                      <input
+                        type="text"
+                        value={editingLocation.badge}
+                        onChange={e => setEditingLocation({ ...editingLocation, badge: e.target.value })}
+                        placeholder="e.g. Headquarters &amp; Experience Center"
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-medium text-slate-900 focus:ring-2 focus:ring-[#0052B4] outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Branch Type
+                      </label>
+                      <select
+                        value={editingLocation.type}
+                        onChange={e => setEditingLocation({ ...editingLocation, type: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-[#0052B4] outline-none cursor-pointer"
+                      >
+                        <option value="showroom">Showroom</option>
+                        <option value="experience_center">Experience Center</option>
+                        <option value="service_center">Service Center</option>
+                        <option value="flagship">Flagship Store</option>
+                        <option value="megastore">Megastore</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Branch Manager Name
+                      </label>
+                      <input
+                        type="text"
+                        value={editingLocation.manager}
+                        onChange={e => setEditingLocation({ ...editingLocation, manager: e.target.value })}
+                        placeholder="e.g. Saman Jayawardena"
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-medium text-slate-900 focus:ring-2 focus:ring-[#0052B4] outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Sort Order (Display Sequence)
+                      </label>
+                      <input
+                        type="number"
+                        value={editingLocation.sortOrder}
+                        onChange={e => setEditingLocation({ ...editingLocation, sortOrder: Number(e.target.value) || 0 })}
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-[#0052B4] outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Address & Province */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                  <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider block">
+                    2. Physical Location &amp; Address
+                  </span>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">
+                        City <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editingLocation.city}
+                        onChange={e => setEditingLocation({ ...editingLocation, city: e.target.value })}
+                        placeholder="e.g. Colombo, Kandy, Galle"
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-[#0052B4] outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Province
+                      </label>
+                      <select
+                        value={editingLocation.province}
+                        onChange={e => setEditingLocation({ ...editingLocation, province: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-[#0052B4] outline-none cursor-pointer"
+                      >
+                        <option value="Western Province">Western Province</option>
+                        <option value="Central Province">Central Province</option>
+                        <option value="Southern Province">Southern Province</option>
+                        <option value="North Western Province">North Western Province</option>
+                        <option value="Northern Province">Northern Province</option>
+                        <option value="North Central Province">North Central Province</option>
+                        <option value="Sabaragamuwa Province">Sabaragamuwa Province</option>
+                        <option value="Uva Province">Uva Province</option>
+                        <option value="Eastern Province">Eastern Province</option>
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Full Street Address <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editingLocation.address}
+                        onChange={e => setEditingLocation({ ...editingLocation, address: e.target.value })}
+                        placeholder="e.g. No. 234, Galle Road, Kollupitiya, Colombo 03"
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-medium text-slate-900 focus:ring-2 focus:ring-[#0052B4] outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 3: GPS Coordinates & Google Map */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider block">
+                      3. GPS Coordinates &amp; Map Pinpoint
+                    </span>
+                    <span className="text-[10px] text-blue-600 font-bold">
+                      Interactive Live Google Map
+                    </span>
+                  </div>
+
+                  {/* Auto-Parse Helper Box */}
+                  <div className="bg-blue-50/70 p-3 rounded-xl border border-blue-200 space-y-2">
+                    <label className="font-extrabold text-[#0052B4] text-[11px] flex items-center gap-1.5">
+                      <Navigation size={13} />
+                      <span>Quick-Paste Google Maps Link or Coordinates:</span>
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Paste maps link (e.g. https://maps.google.com/?q=6.9034,79.8524 or 6.9034, 79.8524)"
+                        value={quickCoordInput}
+                        onChange={e => setQuickCoordInput(e.target.value)}
+                        className="flex-1 px-3 py-1.5 bg-white border border-blue-200 rounded-lg text-xs font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-[#0052B4]"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAutoParseCoordinates}
+                        className="px-3 py-1.5 bg-[#0052B4] hover:bg-blue-700 text-white rounded-lg font-bold text-xs shrink-0 cursor-pointer shadow-xs transition-colors"
+                      >
+                        Auto-Parse GPS
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Latitude
+                      </label>
+                      <input
+                        type="text"
+                        value={editingLocation.latitude}
+                        onChange={e => setEditingLocation({ ...editingLocation, latitude: e.target.value })}
+                        placeholder="e.g. 6.9034"
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl font-mono text-xs font-bold text-slate-900 focus:ring-2 focus:ring-[#0052B4] outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Longitude
+                      </label>
+                      <input
+                        type="text"
+                        value={editingLocation.longitude}
+                        onChange={e => setEditingLocation({ ...editingLocation, longitude: e.target.value })}
+                        placeholder="e.g. 79.8524"
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl font-mono text-xs font-bold text-slate-900 focus:ring-2 focus:ring-[#0052B4] outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Inline Live Google Maps Preview */}
+                  {editingLocation.latitude && editingLocation.longitude && (
+                    <div className="pt-2">
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1.5">
+                        Live Map Pin Preview:
+                      </span>
+                      <div className="h-40 rounded-xl overflow-hidden border border-slate-300 relative shadow-inner">
+                        <iframe
+                          key={`${editingLocation.latitude}-${editingLocation.longitude}`}
+                          src={`https://maps.google.com/maps?q=${editingLocation.latitude},${editingLocation.longitude}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0 }}
+                          loading="lazy"
+                          title="GPS Preview"
+                          className="w-full h-full"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Section 4: Contact & Hours */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                  <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider block">
+                    4. Contact Numbers &amp; Operating Hours
+                  </span>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Public Phone (Display)
+                      </label>
+                      <input
+                        type="text"
+                        value={editingLocation.phone}
+                        onChange={e => setEditingLocation({ ...editingLocation, phone: e.target.value })}
+                        placeholder="+94 11 234 5678"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-semibold text-slate-900 focus:ring-2 focus:ring-[#0052B4] outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Direct Call / WhatsApp (tel:)
+                      </label>
+                      <input
+                        type="text"
+                        value={editingLocation.directCall}
+                        onChange={e => setEditingLocation({ ...editingLocation, directCall: e.target.value })}
+                        placeholder="+94112345678"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-semibold text-slate-900 focus:ring-2 focus:ring-[#0052B4] outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Branch Email
+                      </label>
+                      <input
+                        type="email"
+                        value={editingLocation.email}
+                        onChange={e => setEditingLocation({ ...editingLocation, email: e.target.value })}
+                        placeholder="colombo@manjugroup.lk"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-semibold text-slate-900 focus:ring-2 focus:ring-[#0052B4] outline-none"
+                      />
+                    </div>
+
+                    <div className="md:col-span-3">
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Opening &amp; Closing Hours
+                      </label>
+                      <input
+                        type="text"
+                        value={editingLocation.hours}
+                        onChange={e => setEditingLocation({ ...editingLocation, hours: e.target.value })}
+                        placeholder="Mon–Sat: 8:30 AM – 7:00 PM | Sun: 9:00 AM – 4:00 PM"
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-medium text-slate-900 focus:ring-2 focus:ring-[#0052B4] outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 5: Services Offered (Tag Manager) */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider block">
+                      5. In-Store Services &amp; Highlights (Tags)
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      {locationServicesChips.length} active tags
+                    </span>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Add service tag (e.g. Electric Bike Test Rides, Water Test Lab, Same-Day Pickup)..."
+                      value={newServiceChipInput}
+                      onChange={e => setNewServiceChipInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddServiceChip();
+                        }
+                      }}
+                      className="flex-1 px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-[#0052B4]"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddServiceChip}
+                      className="px-4 py-2 bg-[#0052B4] hover:bg-blue-700 text-white rounded-xl font-bold text-xs cursor-pointer shadow-xs"
+                    >
+                      + Add Tag
+                    </button>
+                  </div>
+
+                  {/* Quick Preset Suggestions */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-[10px] font-bold text-slate-400 mr-1">Suggestions:</span>
+                    {[
+                      "All 4 Core Brands Showcase",
+                      "Electric Bike Test Rides",
+                      "Dew Plus 4K TVs Demo",
+                      "DEW+ AC Demo Units",
+                      "Water Test Lab",
+                      "RO Water Filter Installations",
+                      "Same-Day Pickup",
+                      "Instant Installment Approval",
+                      "Spare Parts Depot",
+                      "After-Sales Service Center",
+                    ].map(tag => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => {
+                          if (!locationServicesChips.includes(tag)) {
+                            setLocationServicesChips(prev => [...prev, tag]);
+                          }
+                        }}
+                        className="text-[10px] font-semibold bg-white hover:bg-blue-50 text-slate-600 hover:text-blue-700 px-2 py-0.5 rounded-lg border border-slate-200 transition-colors cursor-pointer"
+                      >
+                        + {tag}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Active Chips List */}
+                  {locationServicesChips.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-200/60">
+                      {locationServicesChips.map((chip, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold bg-blue-100 text-[#0052B4] px-3 py-1 rounded-lg border border-blue-200 shadow-2xs"
+                        >
+                          <span>✓ {chip}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveServiceChip(chip)}
+                            className="hover:text-red-600 cursor-pointer font-black"
+                            title="Remove tag"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Section 6: Media & Visibility */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                  <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider block">
+                    6. Photo &amp; Online Status
+                  </span>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">
+                      Showroom Photo URL (Exterior / Interior)
+                    </label>
+                    <input
+                      type="text"
+                      value={editingLocation.imageUrl}
+                      onChange={e => setEditingLocation({ ...editingLocation, imageUrl: e.target.value })}
+                      placeholder="https://images.unsplash.com/photo-... or upload using Media Uploader"
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-medium text-slate-900 focus:ring-2 focus:ring-[#0052B4] outline-none"
+                    />
+                    {editingLocation.imageUrl && (
+                      <div className="mt-2.5 flex items-center gap-3 bg-white p-2.5 rounded-xl border border-slate-200">
+                        <img
+                          src={editingLocation.imageUrl}
+                          alt="Thumbnail preview"
+                          className="w-16 h-12 rounded-lg object-cover border border-slate-200 shrink-0"
+                        />
+                        <span className="text-[11px] text-emerald-700 font-bold">
+                          ✓ Image Link Active
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="featuredShowroomToggle"
+                        checked={editingLocation.featured}
+                        onChange={e => setEditingLocation({ ...editingLocation, featured: e.target.checked })}
+                        className="w-4 h-4 rounded border-slate-300 text-[#0052B4] focus:ring-[#0052B4] cursor-pointer"
+                      />
+                      <label
+                        htmlFor="featuredShowroomToggle"
+                        className="font-bold text-slate-800 cursor-pointer text-xs"
+                      >
+                        ⭐ Featured Flagship Experience Center
+                      </label>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="activeShowroomToggle"
+                        checked={editingLocation.isActive}
+                        onChange={e => setEditingLocation({ ...editingLocation, isActive: e.target.checked })}
+                        className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                      />
+                      <label
+                        htmlFor="activeShowroomToggle"
+                        className="font-bold text-slate-800 cursor-pointer text-xs"
+                      >
+                        🟢 Published &amp; Active on Live Website
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Footer Buttons */}
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsLocationModalOpen(false);
+                      setEditingLocation(null);
+                    }}
+                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl cursor-pointer transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={createLocationMutation.isPending || updateLocationMutation.isPending}
+                    className="px-6 py-2.5 bg-[#0052B4] hover:bg-blue-700 text-white font-black rounded-xl shadow-lg shadow-blue-900/20 cursor-pointer transition-all disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {(createLocationMutation.isPending || updateLocationMutation.isPending) && (
+                      <Loader2 size={14} className="animate-spin" />
+                    )}
+                    <span>
+                      {editingLocation.id
+                        ? updateLocationMutation.isPending
+                          ? "Saving Changes..."
+                          : "Save Showroom Changes"
+                        : createLocationMutation.isPending
+                        ? "Creating Showroom..."
+                        : "Create Showroom"}
+                    </span>
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* MODAL: INTERACTIVE MAP PREVIEW */}
+        {previewMapLocation && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl p-6 max-w-2xl w-full shadow-2xl border border-slate-200 text-xs space-y-4"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <h4 className="text-base font-black text-slate-900">
+                    Google Maps Pinpoint: {previewMapLocation.name}
+                  </h4>
+                  <p className="text-xs text-slate-500">
+                    {previewMapLocation.address} ({previewMapLocation.latitude}, {previewMapLocation.longitude})
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreviewMapLocation(null)}
+                  className="p-1.5 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="h-80 rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
+                <iframe
+                  src={`https://maps.google.com/maps?q=${previewMapLocation.latitude},${previewMapLocation.longitude}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  title={previewMapLocation.name}
+                  className="w-full h-full"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${previewMapLocation.latitude},${previewMapLocation.longitude}&travelmode=driving`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-[#0052B4] hover:bg-blue-700 text-white rounded-xl font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                >
+                  <Navigation size={13} />
+                  <span>Open in Google Maps App</span>
+                  <ExternalLink size={12} />
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setPreviewMapLocation(null)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* MODAL: DELETE CONFIRMATION */}
+        {deletingLocation && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 text-xs space-y-4"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto">
+                <Trash2 size={22} />
+              </div>
+
+              <div className="text-center space-y-1">
+                <h4 className="text-base font-black text-slate-900">
+                  Delete Showroom Branch?
+                </h4>
+                <p className="text-slate-600 leading-relaxed">
+                  Are you sure you want to permanently remove <strong className="text-slate-900">{deletingLocation.name}</strong> from the website directory?
+                </p>
+              </div>
+
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setDeletingLocation(null)}
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={deleteLocationMutation.isPending}
+                  onClick={() => deleteLocationMutation.mutate({ id: deletingLocation.id })}
+                  className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl shadow-md cursor-pointer transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  {deleteLocationMutation.isPending ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : null}
+                  <span>{deleteLocationMutation.isPending ? "Deleting..." : "Yes, Delete"}</span>
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
