@@ -7410,34 +7410,43 @@ export default function Admin() {
                 </div>
 
                 {/* Section 6: Media & Visibility */}
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
-                  <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider block">
-                    6. Photo &amp; Online Status
-                  </span>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider block">
+                      6. Photo &amp; Online Status
+                    </span>
+                    <span className="text-[10px] font-extrabold text-blue-700 bg-blue-100/70 border border-blue-200 px-2.5 py-0.5 rounded-full">
+                      Direct Photo Upload
+                    </span>
+                  </div>
 
                   <div>
-                    <label className="font-bold text-slate-700 block mb-1">
-                      Showroom Photo URL (Exterior / Interior)
+                    <MediaUploader
+                      label="Upload Showroom Photo (Exterior / Interior)"
+                      currentUrl={editingLocation.imageUrl || ""}
+                      accept="image"
+                      recommendedDimensions="Landscape 1200×800 or 16:9 HD"
+                      onUploaded={url => {
+                        setEditingLocation({
+                          ...editingLocation,
+                          imageUrl: url,
+                        });
+                      }}
+                    />
+                  </div>
+
+                  {/* Fallback URL input for external links if needed */}
+                  <div className="pt-2 border-t border-slate-200/70">
+                    <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                      Or Paste Image URL (Optional Fallback):
                     </label>
                     <input
                       type="text"
-                      value={editingLocation.imageUrl}
+                      value={editingLocation.imageUrl || ""}
                       onChange={e => setEditingLocation({ ...editingLocation, imageUrl: e.target.value })}
-                      placeholder="https://images.unsplash.com/photo-... or upload using Media Uploader"
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-medium text-slate-900 focus:ring-2 focus:ring-[#0052B4] outline-none"
+                      placeholder="https://images.unsplash.com/... or uploaded photo link"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-700 focus:ring-2 focus:ring-[#0052B4] outline-none"
                     />
-                    {editingLocation.imageUrl && (
-                      <div className="mt-2.5 flex items-center gap-3 bg-white p-2.5 rounded-xl border border-slate-200">
-                        <img
-                          src={editingLocation.imageUrl}
-                          alt="Thumbnail preview"
-                          className="w-16 h-12 rounded-lg object-cover border border-slate-200 shrink-0"
-                        />
-                        <span className="text-[11px] text-emerald-700 font-bold">
-                          ✓ Image Link Active
-                        </span>
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
