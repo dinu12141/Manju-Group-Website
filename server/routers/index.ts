@@ -15,6 +15,7 @@ import { faqRouter } from "./faq";
 import { contactRouter } from "./contact";
 import { adminRouter } from "./admin";
 import { aiRouter } from "./ai";
+import { catalogsRouter } from "./catalogs";
 import { TRPCError } from "@trpc/server";
 
 export const appRouter = router({
@@ -38,6 +39,7 @@ export const appRouter = router({
   contact: contactRouter,
   admin: adminRouter,
   ai: aiRouter,
+  catalogs: catalogsRouter,
 });
 
 export type AppRouter = typeof appRouter;

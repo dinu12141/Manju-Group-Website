@@ -27,6 +27,8 @@ const ALLOWED_MIME_TYPES = new Set([
   "image/webp",
   "image/gif",
   "image/svg+xml",
+  // Documents
+  "application/pdf",
 ]);
 
 const EXTENSION_MAP: Record<string, string> = {
@@ -39,6 +41,7 @@ const EXTENSION_MAP: Record<string, string> = {
   "image/webp": ".webp",
   "image/gif": ".gif",
   "image/svg+xml": ".svg",
+  "application/pdf": ".pdf",
 };
 
 // Magic bytes validation to prevent disguised malicious files
@@ -98,6 +101,9 @@ function isValidFileSignature(buffer: Buffer, mimetype: string): boolean {
     case "video/ogg":
       return buffer.subarray(0, 4).toString("ascii") === "OggS";
 
+    case "application/pdf":
+      return buffer.subarray(0, 4).toString("ascii") === "%PDF";
+
     default:
       return false;
   }
@@ -116,7 +122,7 @@ try {
   // Ignored in read-only serverless environments like AWS Lambda / Vercel
 }
 
-// Multer memory storage (50MB cap for video, 10MB for image)
+// Multer memory storage (50MB cap for video & PDF, 10MB for image)
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -126,7 +132,7 @@ const upload = multer({
     if (!ALLOWED_MIME_TYPES.has(file.mimetype.toLowerCase())) {
       return cb(
         new Error(
-          "Unsupported file type. Allowed: MP4, WebM, QuickTime, WebP, PNG, JPEG, GIF, SVG"
+          "Unsupported file type. Allowed: MP4, WebM, QuickTime, WebP, PNG, JPEG, GIF, SVG, PDF"
         )
       );
     }
@@ -162,12 +168,14 @@ export function registerUploadRoute(app: Express) {
 
         const { buffer, mimetype, size } = req.file;
 
-        // Size check: images max 10MB, videos max 50MB
+        // Size check: images max 10MB, videos & documents max 50MB
         const isVideo = mimetype.startsWith("video/");
-        const maxAllowed = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+        const isPdf = mimetype === "application/pdf";
+        const isLargeFile = isVideo || isPdf;
+        const maxAllowed = isLargeFile ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
         if (size > maxAllowed) {
           res.status(400).json({
-            error: `File too large. Maximum size for ${isVideo ? "videos" : "images"} is ${maxAllowed / (1024 * 1024)}MB.`,
+            error: `File too large. Maximum size for ${isLargeFile ? "videos and PDFs" : "images"} is ${maxAllowed / (1024 * 1024)}MB.`,
           });
           return;
         }
@@ -183,7 +191,7 @@ export function registerUploadRoute(app: Express) {
 
         // 3. Generate secure safe filename
         const ext = EXTENSION_MAP[mimetype.toLowerCase()] || ".bin";
-        const prefix = isVideo ? "ad_video" : "ad_img";
+        const prefix = isVideo ? "ad_video" : isPdf ? "catalog_doc" : "ad_img";
         const filename = `${prefix}_${Date.now()}_${nanoid(8)}${ext}`;
         const targetPath = path.join(UPLOADS_DIR, filename);
 

@@ -63,6 +63,7 @@ import {
   Grid,
   CheckCircle,
   ChevronLeft,
+  BookOpen,
 } from "lucide-react";
 import {
   AreaChart,
@@ -98,6 +99,8 @@ import {
   extractEmbedUrl,
 } from "@/lib/siteSettings";
 import { MediaUploader } from "@/components/admin/MediaUploader";
+import { ProductCatalogAdmin } from "@/components/admin/ProductCatalogAdmin";
+import { CategoryManagerModal } from "@/components/admin/CategoryManagerModal";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
@@ -107,6 +110,7 @@ type AdminTab =
   | "tools"
   | "dashboard"
   | "products"
+  | "catalogs"
   | "orders"
   | "customers"
   | "users"
@@ -480,6 +484,10 @@ export default function Admin() {
     }
   );
 
+  const { data: adminCatalogs = [] } = trpc.catalogs.adminList.useQuery(undefined, {
+    enabled: isAdmin,
+  });
+
   const staticAdminProducts: AdminProduct[] = useMemo(
     () =>
       STATIC_PRODUCTS.map(p => ({
@@ -785,6 +793,7 @@ export default function Admin() {
     null
   );
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
   // Specifications Builder State
   const [specRows, setSpecRows] = useState<{ key: string; value: string }[]>(
@@ -1360,134 +1369,12 @@ export default function Admin() {
   // Server already applies status filtering for ordersList
   const filteredOrders = ordersList;
 
-  // ── AUTH GATE: CPANEL PASSCODE LOGIN ─────────────────────────────────────
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-[#0A101D] text-slate-200 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-        <SEO title="cPanel Login | Manju Group Enterprise" noindex />
-
-        {/* Ambient Server Rack Glow */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#FF6C2C]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-10 left-10 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96, y: 12 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="w-full max-w-md bg-[#131E31] border border-slate-700/80 rounded-2xl shadow-2xl relative overflow-hidden z-10"
-        >
-          {/* Top cPanel Brand Strip */}
-          <div className="h-1.5 bg-gradient-to-r from-[#FF6C2C] via-[#FF854D] to-[#0052B4]" />
-
-          <div className="p-8">
-            <div className="text-center mb-6">
-              {/* cPanel Iconic Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-[#FF6C2C]/15 border border-[#FF6C2C]/40 text-[#FF6C2C] text-xs font-black tracking-wider uppercase mb-3">
-                <span className="w-5 h-5 rounded bg-[#FF6C2C] text-white flex items-center justify-center text-[11px] font-black">
-                  cP
-                </span>
-                <span>cPanel® Suite v118.0</span>
-              </div>
-
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <img
-                  src="/manju-logo.webp"
-                  alt="Manju Group"
-                  className="w-8 h-8 object-contain"
-                />
-                <h1 className="text-2xl font-black font-display tracking-tight text-white">
-                  MANJU GROUP
-                </h1>
-              </div>
-              <p className="text-xs text-slate-400 font-medium">
-                Enterprise Web & Branch Control Panel
-              </p>
-            </div>
-
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Administrator Passcode
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <KeyRound size={16} />
-                  </div>
-                  <input
-                    type="password"
-                    value={passcode}
-                    onChange={e => {
-                      setPasscode(e.target.value);
-                      setAuthError(false);
-                    }}
-                    placeholder="Enter admin passcode (e.g. manju2026)"
-                    autoFocus
-                    className={`w-full pl-10 pr-4 py-3 bg-[#0C1424] text-white rounded-xl border text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 transition-all ${
-                      authError
-                        ? "border-red-500 focus:ring-red-500/30"
-                        : "border-slate-700 focus:border-[#FF6C2C] focus:ring-[#FF6C2C]/20"
-                    }`}
-                  />
-                </div>
-              </div>
-
-              {authError && (
-                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-center gap-2">
-                  <AlertTriangle size={14} className="shrink-0" />
-                  <span>Invalid administrator passcode. Access denied.</span>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={verifyPasscodeMutation.isPending}
-                className="w-full py-3.5 rounded-xl bg-[#FF6C2C] hover:bg-[#E55A1B] active:scale-[0.99] text-white text-sm font-black tracking-wider uppercase shadow-lg shadow-[#FF6C2C]/25 disabled:opacity-60 transition-all cursor-pointer flex items-center justify-center gap-2"
-              >
-                {verifyPasscodeMutation.isPending ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    <span>Authenticating...</span>
-                  </>
-                ) : (
-                  <>
-                    <Lock size={15} />
-                    <span>Log In to cPanel</span>
-                  </>
-                )}
-              </button>
-            </form>
-
-            <div className="mt-6 pt-5 border-t border-slate-800 text-center space-y-3">
-              <div className="flex items-center justify-center gap-3 text-[11px] text-slate-400">
-                <span className="flex items-center gap-1">
-                  <Server size={12} className="text-emerald-400" />
-                  srv1.manjugroup.lk
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <ShieldCheck size={12} className="text-blue-400" />
-                  Port 2083 (SSL)
-                </span>
-              </div>
-
-              <div>
-                <Link href="/">
-                  <span className="text-xs text-slate-400 hover:text-[#FF6C2C] transition-colors cursor-pointer inline-flex items-center gap-1 font-medium">
-                    ← Return to Public Website
-                  </span>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
   // ── CPANEL TOOLS DATA & CATEGORIES ──────────────────────────────────────
   const tabTitles: Record<AdminTab, { category: string; title: string }> = {
     tools: { category: "cPanel Suite", title: "Tools & Applications" },
     dashboard: { category: "Marketing & Analytics", title: "Executive Dashboard" },
     products: { category: "Product & Inventory Engine", title: "Products & Inventory" },
+    catalogs: { category: "Product & Inventory Engine", title: "Product Catalogs & e-Brochures" },
     orders: { category: "Sales & Commerce Engine", title: "Orders & Fulfillment" },
     customers: { category: "Sales & Commerce Engine", title: "Customers Directory" },
     users: { category: "Sales & Commerce Engine", title: "User Accounts & Roles" },
@@ -1588,6 +1475,28 @@ export default function Admin() {
           icon: Star,
           iconBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
           keywords: "reviews ratings feedback stars testimonials comments moderation",
+        },
+        {
+          id: "catalogs" as AdminTab,
+          title: "Product Catalogs & PDF Brochures",
+          description: "Upload and publish digital product catalogs, engineering spec sheets, and brand brochures for customer download",
+          badge: `${adminCatalogs.length} Catalogs`,
+          badgeColor: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30",
+          icon: BookOpen,
+          iconBg: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+          keywords: "catalogs brochures pdf documents downloads specifications booklets",
+        },
+        {
+          id: "products" as AdminTab,
+          title: "Product Categories & Taxonomies",
+          description: "Create and organize product categories, edit slugs and sort priorities for public Products page",
+          badge: `${categoryOptions?.length ?? 4} Categories`,
+          badgeColor: "bg-teal-500/15 text-teal-700 border-teal-500/30",
+          icon: Layers,
+          iconBg: "bg-teal-500/10 text-teal-600 border-teal-500/20",
+          keywords: "categories taxonomy tags collections solar bikes ac tv water filters new",
+          isCustom: true,
+          onCustomClick: () => setIsCategoryModalOpen(true),
         },
       ],
     },
@@ -1735,6 +1644,130 @@ export default function Admin() {
       .filter(cat => cat.tools.length > 0);
   }, [cpanelCategories, cpanelSearch]);
 
+  // ── AUTH GATE: CPANEL PASSCODE LOGIN ─────────────────────────────────────
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-[#0A101D] text-slate-200 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <SEO title="cPanel Login | Manju Group Enterprise" noindex />
+
+        {/* Ambient Server Rack Glow */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#FF6C2C]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 left-10 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 12 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="w-full max-w-md bg-[#131E31] border border-slate-700/80 rounded-2xl shadow-2xl relative overflow-hidden z-10"
+        >
+          {/* Top cPanel Brand Strip */}
+          <div className="h-1.5 bg-gradient-to-r from-[#FF6C2C] via-[#FF854D] to-[#0052B4]" />
+
+          <div className="p-8">
+            <div className="text-center mb-6">
+              {/* cPanel Iconic Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-[#FF6C2C]/15 border border-[#FF6C2C]/40 text-[#FF6C2C] text-xs font-black tracking-wider uppercase mb-3">
+                <span className="w-5 h-5 rounded bg-[#FF6C2C] text-white flex items-center justify-center text-[11px] font-black">
+                  cP
+                </span>
+                <span>cPanel® Suite v118.0</span>
+              </div>
+
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <img
+                  src="/manju-logo.webp"
+                  alt="Manju Group"
+                  className="w-8 h-8 object-contain"
+                />
+                <h1 className="text-2xl font-black font-display tracking-tight text-white">
+                  MANJU GROUP
+                </h1>
+              </div>
+              <p className="text-xs text-slate-400 font-medium">
+                Enterprise Web & Branch Control Panel
+              </p>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                  Administrator Passcode
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <KeyRound size={16} />
+                  </div>
+                  <input
+                    type="password"
+                    value={passcode}
+                    onChange={e => {
+                      setPasscode(e.target.value);
+                      setAuthError(false);
+                    }}
+                    placeholder="Enter admin passcode (e.g. manju2026)"
+                    autoFocus
+                    className={`w-full pl-10 pr-4 py-3 bg-[#0C1424] text-white rounded-xl border text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 transition-all ${
+                      authError
+                        ? "border-red-500 focus:ring-red-500/30"
+                        : "border-slate-700 focus:border-[#FF6C2C] focus:ring-[#FF6C2C]/20"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {authError && (
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-center gap-2">
+                  <AlertTriangle size={14} className="shrink-0" />
+                  <span>Invalid administrator passcode. Access denied.</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={verifyPasscodeMutation.isPending}
+                className="w-full py-3.5 rounded-xl bg-[#FF6C2C] hover:bg-[#E55A1B] active:scale-[0.99] text-white text-sm font-black tracking-wider uppercase shadow-lg shadow-[#FF6C2C]/25 disabled:opacity-60 transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                {verifyPasscodeMutation.isPending ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Authenticating...</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock size={15} />
+                    <span>Log In to cPanel</span>
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="mt-6 pt-5 border-t border-slate-800 text-center space-y-3">
+              <div className="flex items-center justify-center gap-3 text-[11px] text-slate-400">
+                <span className="flex items-center gap-1">
+                  <Server size={12} className="text-emerald-400" />
+                  srv1.manjugroup.lk
+                </span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <ShieldCheck size={12} className="text-blue-400" />
+                  Port 2083 (SSL)
+                </span>
+              </div>
+
+              <div>
+                <Link href="/">
+                  <span className="text-xs text-slate-400 hover:text-[#FF6C2C] transition-colors cursor-pointer inline-flex items-center gap-1 font-medium">
+                    ← Return to Public Website
+                  </span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+
   // ── MAIN CPANEL DASHBOARD ───────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#F1F5F9] text-slate-800 flex flex-col font-sans">
@@ -1874,6 +1907,7 @@ export default function Admin() {
               { id: "tools", label: "All Tools", icon: Grid },
               { id: "showrooms", label: "Showrooms", icon: MapPin, badge: adminShowrooms?.length ?? 9 },
               { id: "products", label: "Products", icon: Package, badge: productsData?.total ?? productsList.length },
+              { id: "catalogs", label: "Catalogs", icon: BookOpen, badge: adminCatalogs?.length || 0 },
               { id: "orders", label: "Orders", icon: ShoppingCart, badge: ordersData?.total ?? ordersList.length },
               { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
               { id: "contacts_bank", label: "Contacts & Bank", icon: PhoneCall },
@@ -1934,6 +1968,12 @@ export default function Admin() {
                 label: "Products & Inventory",
                 icon: Package,
                 badge: productsData?.total ?? productsList.length,
+              },
+              {
+                id: "catalogs",
+                label: "Product Catalogs (PDF)",
+                icon: BookOpen,
+                badge: adminCatalogs?.length || 0,
               },
               {
                 id: "orders",
@@ -2197,12 +2237,15 @@ export default function Admin() {
                         <div className="p-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                           {cat.tools.map((tool, idx) => {
                             const ToolIcon = tool.icon;
+                            const anyTool = tool as any;
                             return (
                               <div
                                 key={idx}
                                 onClick={() => {
-                                  if (tool.isExternal && tool.externalUrl) {
-                                    window.open(tool.externalUrl, "_blank");
+                                  if (anyTool.onCustomClick) {
+                                    anyTool.onCustomClick();
+                                  } else if (anyTool.isExternal && anyTool.externalUrl) {
+                                    window.open(anyTool.externalUrl, "_blank");
                                   } else {
                                     setActiveTab(tool.id as AdminTab);
                                     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -2231,7 +2274,7 @@ export default function Admin() {
                                 </div>
 
                                 <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-400 group-hover:text-[#FF6C2C] transition-colors">
-                                  <span>{tool.isExternal ? "Open Website" : "Launch Module"}</span>
+                                  <span>{anyTool.isExternal ? "Open Website" : anyTool.onCustomClick ? "Open Manager" : "Launch Module"}</span>
                                   <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
                                 </div>
                               </div>
@@ -2551,6 +2594,11 @@ export default function Admin() {
             </div>
           )}
 
+          {/* TAB: PRODUCT CATALOGS & PDF BROCHURES */}
+          {activeTab === "catalogs" && (
+            <ProductCatalogAdmin />
+          )}
+
           {/* TAB 2: PRODUCTS & INVENTORY CONTROL */}
           {activeTab === "products" && (
             <div className="space-y-4">
@@ -2641,13 +2689,23 @@ export default function Admin() {
                   </button>
                 </div>
 
-                <button
-                  onClick={handleOpenAddProduct}
-                  className="px-4 py-2.5 bg-[#0052B4] hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
-                >
-                  <Plus size={15} />
-                  <span>Add New Product</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsCategoryModalOpen(true)}
+                    className="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
+                  >
+                    <Layers size={14} />
+                    <span>Manage Categories</span>
+                  </button>
+                  <button
+                    onClick={handleOpenAddProduct}
+                    className="px-4 py-2.5 bg-[#0052B4] hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
+                  >
+                    <Plus size={15} />
+                    <span>Add New Product</span>
+                  </button>
+                </div>
               </div>
 
               {/* Product Table */}
@@ -6221,9 +6279,20 @@ export default function Admin() {
                   </div>
 
                   <div>
-                    <label className="font-bold text-slate-700 block mb-1">
-                      Category
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="font-bold text-slate-700 block">
+                        Category
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setIsCategoryModalOpen(true)}
+                        className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 hover:underline cursor-pointer"
+                        title="Add a new category"
+                      >
+                        <Plus size={12} />
+                        <span>+ Add Category</span>
+                      </button>
+                    </div>
                     <select
                       value={editingProduct.categoryId || 1}
                       onChange={e => {
@@ -7628,6 +7697,25 @@ export default function Admin() {
             </motion.div>
           </div>
         )}
+
+        {/* MODAL: CATEGORY MANAGER */}
+        <CategoryManagerModal
+          isOpen={isCategoryModalOpen}
+          onClose={() => setIsCategoryModalOpen(false)}
+          onCategoryCreated={newCat => {
+            if (editingProduct) {
+              setEditingProduct(prev =>
+                prev
+                  ? {
+                      ...prev,
+                      categoryId: newCat.id,
+                      category: newCat.name,
+                    }
+                  : null
+              );
+            }
+          }}
+        />
       </AnimatePresence>
     </div>
   );

@@ -14,10 +14,13 @@ import {
   Wind,
   Droplets,
   ShoppingBag,
+  BookOpen,
+  Layers,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import MainLayout from "@/components/MainLayout";
 import ProductCard from "@/components/ProductCard";
+import { ProductCatalogSection } from "@/components/products/ProductCatalogSection";
 import { STATIC_PRODUCTS, STATIC_BRANDS } from "@/lib/staticData";
 import { cleanText } from "@/lib/data";
 import SEO from "@/components/SEO";
@@ -59,12 +62,15 @@ const DEFAULT_FILTERS: FilterState = {
   newArrivalsOnly: false,
 };
 
-const CATEGORY_ICONS: Record<string, any> = {
-  "electric-bikes": Zap,
-  "smart-tvs": Tv,
-  "air-conditioners": Wind,
-  "water-filters": Droplets,
-};
+function getCategoryIcon(slug?: string, name?: string) {
+  const s = (slug || name || "").toLowerCase();
+  if (s.includes("bike") || s.includes("scooter") || s.includes("motor") || s.includes("cycle")) return Zap;
+  if (s.includes("tv") || s.includes("smart-tv") || s.includes("screen") || s.includes("display")) return Tv;
+  if (s.includes("air") || s.includes("ac") || s.includes("cool")) return Wind;
+  if (s.includes("water") || s.includes("filter") || s.includes("purifier") || s.includes("ro")) return Droplets;
+  if (s.includes("solar") || s.includes("sun") || s.includes("power")) return Sparkles;
+  return Layers;
+}
 
 export default function Products() {
   const [_location] = useLocation();
@@ -329,8 +335,15 @@ export default function Products() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-sm font-semibold text-white">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <a
+                href="#product-catalogs-section"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#F85606] hover:bg-orange-600 transition-all text-xs sm:text-sm font-extrabold text-white shadow-lg shadow-orange-500/30 cursor-pointer"
+              >
+                <BookOpen size={15} />
+                <span>e-Catalogs &amp; Brochures</span>
+              </a>
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-xs sm:text-sm font-semibold text-white">
                 <ShoppingBag size={15} className="text-orange-400" />
                 <span className="font-bold">{totalCount}</span> Products Found
               </span>
@@ -355,8 +368,7 @@ export default function Products() {
               </button>
 
               {categories.map(cat => {
-                const IconComp =
-                  (cat.slug && CATEGORY_ICONS[cat.slug]) || ShoppingBag;
+                const IconComp = getCategoryIcon(cat.slug, cat.name);
                 const isActive = filters.categoryId === cat.id;
                 return (
                   <button
@@ -386,6 +398,9 @@ export default function Products() {
       {/* ── Main Catalog Body ─────────────────────────────────────────── */}
       <section className="bg-gray-50/70 py-8 md:py-12 min-h-screen">
         <div className="container">
+          {/* Official 2026 Product Catalogs & Brochures (Downloadable PDFs) */}
+          <ProductCatalogSection />
+
           <div className="flex gap-8 items-start">
             {/* ── Desktop Filter Sidebar ──────────────────────── */}
             <aside className="hidden lg:block w-72 flex-shrink-0 sticky top-24 text-slate-900">
